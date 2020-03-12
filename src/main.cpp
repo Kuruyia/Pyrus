@@ -2,11 +2,7 @@
 #include <nrf_gpio.h>
 #include <libraries/button/app_button.h>
 #include <nrfx_spim.h>
-#include <cstdlib>
-#include <ctime>
-#include <libraries/log/nrf_log_ctrl.h>
-#include <libraries/log/nrf_log_default_backends.h>
-#include <libraries/log/nrf_log.h>
+
 #include "Hardware/LCD/ST7789.h"
 
 void buttonHandler(uint8_t pinNo, uint8_t buttonAction)
@@ -16,14 +12,6 @@ void buttonHandler(uint8_t pinNo, uint8_t buttonAction)
 
 int main()
 {
-    NRF_LOG_INIT(NULL);
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
-
-    NRF_LOG_INFO("Pyrus!\n");
-
-    nrf_gpio_cfg_output(20);
-    nrf_gpio_pin_clear(20);
-
     // Set backlight pins as output
     nrf_gpio_cfg_output(14);
     nrf_gpio_cfg_output(22);
@@ -57,7 +45,18 @@ int main()
 
     // Instanciate a new LCD
     Hardware::LCD::ST7789 lcd(240, 240, 3, 4, 2, 25, 18, 26);
-    lcd.drawRectangle(0, 0, 240, 240, 0x5678);
+    Hardware::LCD::ST7789::color_t color{};
+    color.r = 31;
+    color.g = 63;
+    color.b = 31;
+
+    for (uint8_t i = 0; i < 0x1F; ++i)
+    {
+        lcd.drawRectangle(0x4 * i, 0x4 * i, 240 - 0x4 * (i * 2), 240 - 0x4 * (i * 2), color);
+        --color.r,
+        color.g -= 2;
+        --color.b;
+    }
 
     while (true)
     {

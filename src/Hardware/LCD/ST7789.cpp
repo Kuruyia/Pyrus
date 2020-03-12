@@ -1,20 +1,24 @@
+#include <cstring>
+#include <cstdlib>
+
 #include <drivers/include/nrfx_spim.h>
 #include <hal/nrf_gpio.h>
 #include <libraries/delay/nrf_delay.h>
-#include <libraries/log/nrf_log.h>
 
 #include "ST7789.h"
 
 #define ST7789_CMD_SWRESET 0x01
 #define ST7789_CMD_SLPOUT  0x11
-#define ST7789_CMD_COLMOD  0x3A
-#define ST7789_CMD_MADCTL  0x36
+#define ST7789_CMD_NORON   0x13
+#define ST7789_CMD_INVON   0x21
+#define ST7789_CMD_DISPON  0x29
 #define ST7789_CMD_CASET   0x2A
 #define ST7789_CMD_RASET   0x2B
-#define ST7789_CMD_INVON   0x21
-#define ST7789_CMD_NORON   0x13
-#define ST7789_CMD_DISPON  0x29
 #define ST7789_CMD_RAMWR   0x2C
+#define ST7789_CMD_COLMOD  0x3A
+#define ST7789_CMD_MADCTL  0x36
+
+#define BUFFER_SIZE 254
 
 static const nrfx_spim_t lcdSpi = NRFX_SPIM_INSTANCE(0);
 
@@ -45,9 +49,6 @@ Hardware::LCD::ST7789::ST7789(uint8_t width, uint8_t height, const uint8_t mosi,
 
     // Initialize the hardware
     init();
-
-    NRF_LOG_INFO("ST7789 init!\n");
-    nrf_gpio_pin_set(20);
 }
 
 void Hardware::LCD::ST7789::init()
@@ -147,8 +148,8 @@ inline void Hardware::LCD::ST7789::setDataPin()
 
 void Hardware::LCD::ST7789::setWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
-    const uint16_t endX = x + width;
-    const uint16_t endY = y + height;
+    const uint16_t endX = x + width - 1;
+    const uint16_t endY = y + height - 1;
 
     // Set the column address
     static uint8_t lcdTxCasetCmd  = ST7789_CMD_CASET;
@@ -183,16 +184,19 @@ void Hardware::LCD::ST7789::setWindow(uint16_t x, uint16_t y, uint16_t width, ui
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRasetData, 0));
 }
 
-void Hardware::LCD::ST7789::drawPixel(uint16_t x, uint16_t y, uint16_t color)
+void Hardware::LCD::ST7789::drawPixel(uint16_t x, uint16_t y, color_t color)
 {
     // Set the window
     setWindow(x, y, 1, 1);
 
+    // Get raw color
+    uint16_t rawColor = ((color.g & 0x7) << 13) | (color.b << 8) | (color.r << 3) | (color.g >> 3);
+
     // Send the color to draw
     static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
     uint8_t lcdTxRamwrData[] = {
-            static_cast<uint8_t>(color >> 8),
-            static_cast<uint8_t>(color & 0xFF)
+            static_cast<uint8_t>(rawColor >> 8),
+            static_cast<uint8_t>(rawColor & 0xFF)
     };
     nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
     nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, sizeof(lcdTxRamwrData));
@@ -203,24 +207,30 @@ void Hardware::LCD::ST7789::drawPixel(uint16_t x, uint16_t y, uint16_t color)
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
 }
 
-void Hardware::LCD::ST7789::drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color)
+void Hardware::LCD::ST7789::drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color_t color)
 {
     // Set the window
     setWindow(x, y, width, height);
 
+    // Get raw color
+    uint16_t rawColor = ((color.g & 0x7) << 13) | (color.b << 8) | (color.r << 3) | (color.g >> 3);
+
     // Send the color to draw
     static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
-    uint8_t lcdTxRamwrData[] = {
-            static_cast<uint8_t>(color >> 8),
-            static_cast<uint8_t>(color & 0xFF)
-    };
+
+    // Prepare a large buffer of pixels for faster transmission
+    auto *lcdTxRamwrData = (uint8_t *)malloc(BUFFER_SIZE);
+    for (size_t i = 0; i < BUFFER_SIZE; i += sizeof(rawColor))
+    {
+        memcpy(lcdTxRamwrData + i, &rawColor, sizeof(rawColor));
+    }
     nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
-    nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, sizeof(lcdTxRamwrData));
+    nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, BUFFER_SIZE);
 
     setCommandPin();
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
     setDataPin();
-    for (uint32_t i = 0; i < width * height; ++i)
+    for (uint32_t i = 0; i < (width * height) / (BUFFER_SIZE / 2); ++i)
     {
         APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
     }

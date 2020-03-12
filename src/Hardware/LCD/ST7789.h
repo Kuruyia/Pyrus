@@ -11,11 +11,18 @@ namespace LCD
 
 class ST7789 {
 public:
+    struct color_t
+    {
+        uint8_t r : 5;
+        uint8_t g : 6;
+        uint8_t b : 5;
+    };
+
     ST7789(uint8_t width, uint8_t height, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
 
     void setWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-    void drawPixel(uint16_t x, uint16_t y, uint16_t color);
-    void drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color);
+    void drawPixel(uint16_t x, uint16_t y, color_t color);
+    void drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color_t color);
 
 private:
     void setCommandPin();
@@ -26,7 +33,7 @@ private:
     const uint8_t m_width;
     const uint8_t m_height;
 
-    nrfx_spim_config_t m_lcdSpiConfig;
+    nrfx_spim_config_t m_lcdSpiConfig{};
     const uint8_t m_mosi;
     const uint8_t m_miso;
     const uint8_t m_clk;
