@@ -23,6 +23,8 @@ nRF5x_addAppButton()
 add_definitions(-DCONFIG_GPIO_AS_PINRESET)
 
 include_directories(.)
-list(APPEND SOURCE_FILES main.cpp)
+list(APPEND SOURCE_FILES
+        Hardware/LCD/ST7789.cpp
+        main.cpp)
 
 nRF5x_addExecutable(Pyrus-fw "${SOURCE_FILES}")
