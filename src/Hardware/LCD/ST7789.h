@@ -21,8 +21,11 @@ public:
     ST7789(uint8_t width, uint8_t height, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
 
     void setWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+
     void drawPixel(uint16_t x, uint16_t y, color_t color);
     void drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color_t color);
+
+    void drawChar(uint16_t x, uint16_t y, char c, color_t color);
 
 private:
     void setCommandPin();

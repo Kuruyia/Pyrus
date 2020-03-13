@@ -230,8 +230,15 @@ void Hardware::LCD::ST7789::drawRectangle(uint16_t x, uint16_t y, uint16_t width
     setCommandPin();
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
     setDataPin();
-    for (uint32_t i = 0; i < (width * height) / (BUFFER_SIZE / 2); ++i)
+
+    // Send the pixels
+    uint32_t i = 0;
+    for (; i < (width * height) / (BUFFER_SIZE / 2); ++i)
     {
         APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
     }
+
+    // Send the remaining pixels that were not part of a full BUFFER_SIZE block
+    lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, static_cast<size_t>((width * height) % (BUFFER_SIZE / 2) * 2));
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
 }

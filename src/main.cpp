@@ -45,18 +45,7 @@ int main()
 
     // Instanciate a new LCD
     Hardware::LCD::ST7789 lcd(240, 240, 3, 4, 2, 25, 18, 26);
-    Hardware::LCD::ST7789::color_t color{};
-    color.r = 31;
-    color.g = 63;
-    color.b = 31;
-
-    for (uint8_t i = 0; i < 0x1F; ++i)
-    {
-        lcd.drawRectangle(0x4 * i, 0x4 * i, 240 - 0x4 * (i * 2), 240 - 0x4 * (i * 2), color);
-        --color.r,
-        color.g -= 2;
-        --color.b;
-    }
+    lcd.drawRectangle(0, 0, 240, 240, {0, 63, 0});
 
     while (true)
     {
