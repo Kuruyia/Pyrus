@@ -3,7 +3,7 @@ Pyrus is yet another PineTime firmware whose goal is to run bare metal, without 
 This project is based on JF002's [nrf52-baseproject](https://github.com/JF002/nrf52-baseproject), which is a base to get CMake to work with the nRF52 MCU and SDK.
 
 ## Building
-You should follow the [instructions of the nrf52-baseproject](https://github.com/JF002/nrf52-baseproject/wiki/Build,-program-and-debug-NRF52-project-with-JLink,-CMake-and-CLion) to get a build environment ready to compile Pyrus.  
+You should follow the [instructions of the nrf52-baseproject](https://github.com/JF002/nrf52-baseproject/blob/master/README.md#nrf52-baseproject) to get a build environment ready to compile Pyrus.  
 This project is currently being compiled using [gcc-arm-none-eabi-8-2019-q3-update](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) (GCC 9 is known **not** to work), and the [nRF5 SDK 16.0.0](https://www.nordicsemi.com/Software-and-tools/Software/nRF5-SDK/Download#infotabs).
 
 Once your environment is ready, you just have to run the following commands to compile this firmware:
@@ -23,3 +23,8 @@ you can flash this image to the smartwatch with the following command:
 ```sh
 nrfjprog --program Pyrus-fw.hex --sectorerase
 ```
+
+## Acknowledgments
+- JF002 for creating the [nrf52-baseproject](https://github.com/JF002/nrf52-baseproject) to easily get started on the nRF52 with CMake and CLion
+- Pine64 and The PineTime community for all the precious information written in [the wiki](https://wiki.pine64.org/index.php/PineTime)
+- Canonical for the [Ubuntu font](https://design.ubuntu.com/font/) (License for this font is provided [here](https://github.com/Arc13/Pyrus/tree/master/src/Fonts/ubuntu-font-licence-1.0.txt))

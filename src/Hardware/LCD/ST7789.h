@@ -1,7 +1,12 @@
 #ifndef PYRUS_ST7789_H
 #define PYRUS_ST7789_H
 
-#include <cstdint>
+#include <string>
+
+#include <nrf_font.h>
+
+#include "Graphics/Color.h"
+#include "Graphics/Vec2D.h"
 
 namespace Hardware
 {
@@ -11,21 +16,17 @@ namespace LCD
 
 class ST7789 {
 public:
-    struct color_t
-    {
-        uint8_t r : 5;
-        uint8_t g : 6;
-        uint8_t b : 5;
-    };
-
     ST7789(uint8_t width, uint8_t height, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
 
-    void setWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+    void setWindow(const Vec2D_t &position, const Vec2D_t &size);
 
-    void drawPixel(uint16_t x, uint16_t y, color_t color);
-    void drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color_t color);
+    void drawPixel(const Vec2D_t &position, Color565_t color);
+    void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color);
 
-    void drawChar(uint16_t x, uint16_t y, char c, color_t color);
+    uint16_t drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
+                      const Color565_t &backgroundColor);
+    void drawString(Vec2D_t position, const std::string &text, const FONT_INFO &fontInfo,
+                    const Color565_t &textColor, const Color565_t &backgroundColor);
 
 private:
     void setCommandPin();

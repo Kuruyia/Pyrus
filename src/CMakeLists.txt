@@ -24,6 +24,9 @@ add_definitions(-DCONFIG_GPIO_AS_PINRESET)
 
 include_directories(.)
 list(APPEND SOURCE_FILES
+        Fonts/Ubuntu36Font.c
+        Graphics/Color.h
+        Graphics/Vec2D.h
         Hardware/LCD/ST7789.cpp
         main.cpp)
 

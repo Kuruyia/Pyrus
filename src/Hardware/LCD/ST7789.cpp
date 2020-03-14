@@ -146,16 +146,16 @@ inline void Hardware::LCD::ST7789::setDataPin()
     nrf_gpio_pin_set(m_cd);
 }
 
-void Hardware::LCD::ST7789::setWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t height)
+void Hardware::LCD::ST7789::setWindow(const Vec2D_t &position, const Vec2D_t &size)
 {
-    const uint16_t endX = x + width - 1;
-    const uint16_t endY = y + height - 1;
+    const uint16_t endX = position.x + size.x - 1;
+    const uint16_t endY = position.y + size.y - 1;
 
     // Set the column address
     static uint8_t lcdTxCasetCmd  = ST7789_CMD_CASET;
     uint8_t lcdTxCasetData[] = {
-            static_cast<uint8_t>(x >> 8),
-            static_cast<uint8_t>(x & 0xFF),
+            static_cast<uint8_t>(position.x >> 8),
+            static_cast<uint8_t>(position.x & 0xFF),
             static_cast<uint8_t>(endX >> 8),
             static_cast<uint8_t>(endX & 0xFF)
     };
@@ -170,8 +170,8 @@ void Hardware::LCD::ST7789::setWindow(uint16_t x, uint16_t y, uint16_t width, ui
     // Set the row address
     static uint8_t lcdTxRasetCmd  = ST7789_CMD_RASET;
     uint8_t lcdTxRasetData[] = {
-            static_cast<uint8_t>(y >> 8),
-            static_cast<uint8_t>(y & 0xFF),
+            static_cast<uint8_t>(position.y >> 8),
+            static_cast<uint8_t>(position.y & 0xFF),
             static_cast<uint8_t>(endY >> 8),
             static_cast<uint8_t>(endY & 0xFF)
     };
@@ -184,10 +184,10 @@ void Hardware::LCD::ST7789::setWindow(uint16_t x, uint16_t y, uint16_t width, ui
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRasetData, 0));
 }
 
-void Hardware::LCD::ST7789::drawPixel(uint16_t x, uint16_t y, color_t color)
+void Hardware::LCD::ST7789::drawPixel(const Vec2D_t &position, Color565_t color)
 {
     // Set the window
-    setWindow(x, y, 1, 1);
+    setWindow(position, {1, 1});
 
     // Get raw color
     uint16_t rawColor = ((color.g & 0x7) << 13) | (color.b << 8) | (color.r << 3) | (color.g >> 3);
@@ -207,10 +207,10 @@ void Hardware::LCD::ST7789::drawPixel(uint16_t x, uint16_t y, color_t color)
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
 }
 
-void Hardware::LCD::ST7789::drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color_t color)
+void Hardware::LCD::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color)
 {
     // Set the window
-    setWindow(x, y, width, height);
+    setWindow(position, size);
 
     // Get raw color
     uint16_t rawColor = ((color.g & 0x7) << 13) | (color.b << 8) | (color.r << 3) | (color.g >> 3);
@@ -233,12 +233,108 @@ void Hardware::LCD::ST7789::drawRectangle(uint16_t x, uint16_t y, uint16_t width
 
     // Send the pixels
     uint32_t i = 0;
-    for (; i < (width * height) / (BUFFER_SIZE / 2); ++i)
+    for (; i < (size.x * size.y) / (BUFFER_SIZE / 2); ++i)
     {
         APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
     }
 
     // Send the remaining pixels that were not part of a full BUFFER_SIZE block
-    lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, static_cast<size_t>((width * height) % (BUFFER_SIZE / 2) * 2));
+    lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, static_cast<size_t>((size.x * size.y) % (BUFFER_SIZE / 2) * 2));
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
+
+    // Free the buffer
+    free(lcdTxRamwrData);
+}
+
+uint16_t Hardware::LCD::ST7789::drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo,
+                                     const Color565_t &textColor, const Color565_t &backgroundColor)
+{
+    // Set the window
+    const size_t descriptorOffset = c - fontInfo.startChar;
+    const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
+
+    setWindow(position, {descriptor.widthBits, fontInfo.height});
+
+    // Get raw color
+    const uint16_t rawTextColor = (textColor.r << 11) | (textColor.g << 5) | textColor.b;
+    const uint8_t higherTextColor = rawTextColor >> 8;
+    const uint8_t lowerTextColor = rawTextColor & 0xFF;
+
+    const uint16_t rawBackgroundColor = (backgroundColor.r << 11) | (backgroundColor.g << 5) | backgroundColor.b;
+    const uint8_t higherBackgroundColor = rawBackgroundColor >> 8;
+    const uint8_t lowerBackgroundColor = rawBackgroundColor & 0xFF;
+
+    // Prepare the LCD controller to receive data
+    static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
+    nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
+
+    setCommandPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
+    setDataPin();
+
+    // Prepare some values for character parsing
+    const uint16_t pixelCount = descriptor.widthBits * fontInfo.height;
+    uint8_t width = descriptor.widthBits / 8;
+    if (descriptor.widthBits % 8 > 0)
+        ++width;
+
+    size_t actualPixel = 0;
+    const uint8_t bytesPerWidth = (descriptor.widthBits % 8 > 0) ? descriptor.widthBits / 8 + 1 : descriptor.widthBits / 8;
+    const size_t totalBufferSize = pixelCount * 2;
+    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
+
+    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
+    {
+        // Prepare the buffer to send data to the LCD
+        const size_t endPixel = (actualStep == numberOfStep - 1) ? pixelCount : (BUFFER_SIZE / 2) * (actualStep + 1);
+        const size_t bufferSize = (actualStep == numberOfStep - 1) ? (pixelCount * 2) - (BUFFER_SIZE * actualStep) : BUFFER_SIZE;
+        auto *buffer = (uint8_t *)malloc(bufferSize);
+        size_t bufferPos = 0;
+
+        // Read data from the font definition
+        for (; actualPixel < endPixel; ++actualPixel)
+        {
+            const uint8_t bitInBlock = actualPixel % descriptor.widthBits;
+            const size_t actualByte = (bitInBlock / 8) + (bytesPerWidth * (actualPixel / descriptor.widthBits));
+            const uint8_t actualVal = fontInfo.data[descriptor.offset + actualByte] & (1 << (bitInBlock % 8));
+
+            if (actualVal)
+            {
+                buffer[bufferPos++] = higherTextColor;
+                buffer[bufferPos++] = lowerTextColor;
+            }
+            else
+            {
+                buffer[bufferPos++] = higherBackgroundColor;
+                buffer[bufferPos++] = lowerBackgroundColor;
+            }
+        }
+
+        // Send the pixels to the LCD controller
+        nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer, bufferSize);
+        APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
+
+        // Free the buffer
+        free(buffer);
+    }
+
+    // Return the char width
+    return descriptor.widthBits;
+}
+
+void Hardware::LCD::ST7789::drawString(Vec2D_t position, const std::string &text, const FONT_INFO &fontInfo,
+                                       const Color565_t &textColor, const Color565_t &backgroundColor)
+{
+    for (const char c : text)
+    {
+        if (c == ' ')
+        {
+            position.x += fontInfo.spacePixels;
+        }
+        else
+        {
+            uint16_t charWidth = drawChar(position, c, fontInfo, textColor, backgroundColor);
+            position.x += charWidth + fontInfo.spacePixels;
+        }
+    }
 }
