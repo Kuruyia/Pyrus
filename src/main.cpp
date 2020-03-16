@@ -45,8 +45,8 @@ int main()
     nrf_gpio_pin_set(23);
 
     // Instantiate a new Screen
-    Hardware::Screen::ST7789 lcd(240, 240, 3, 4, 2, 25, 18, 26);
-    lcd.drawRectangle({0, 0}, {240, 240}, {0, 0, 0});
+    Hardware::Screen::ST7789 lcd({240, 240}, 3, 4, 2, 25, 18, 26);
+    lcd.clearFramebuffer({0, 0, 0});
     lcd.drawChar({0, 0}, 'A', ubuntu_36ptFontInfo, {31, 0, 0}, {0, 63, 0});
     lcd.drawString({0, 64}, "Hello, world!", ubuntu_36ptFontInfo, {0, 0, 31}, {31, 0, 31});
 

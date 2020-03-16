@@ -15,11 +15,19 @@ namespace Screen
 
 class ST7789 : public BaseScreen {
 public:
-    ST7789(uint8_t width, uint8_t height, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
+    ST7789(const Vec2D_t &screenSize, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
     virtual ~ST7789() = default;
 
     virtual void setWindow(const Vec2D_t &position, const Vec2D_t &size) override;
     virtual void getWindow(Vec2D_t &position, Vec2D_t &size) const override;
+
+    virtual const Vec2D_t &getScreenSize() const override;
+    virtual Vec2D_t getFramebufferSize() const override;
+
+    virtual void setVerticalScrollOffset(uint16_t offset) override;
+    virtual const uint16_t &getVerticalScrollOffset() const override;
+
+    virtual void clearFramebuffer(Color565_t color) override;
 
     virtual void drawPixel(const Vec2D_t &position, Color565_t color) override;
     virtual void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color) override;
@@ -35,11 +43,12 @@ private:
 
     void init();
 
-    const uint8_t m_width;
-    const uint8_t m_height;
+    const Vec2D_t m_screenSize;
 
     Vec2D_t m_windowPosition;
     Vec2D_t m_windowSize;
+
+    uint16_t m_verticalScrollOffset;
 
     nrfx_spim_config_t m_lcdSpiConfig{};
     const uint8_t m_mosi;
@@ -48,7 +57,7 @@ private:
     const uint8_t m_cs;
     const uint8_t m_cd;
     const uint8_t m_reset;
-};
+}; // class ST7789
 
 } // namespace Screen
 

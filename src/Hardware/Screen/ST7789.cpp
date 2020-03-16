@@ -17,15 +17,19 @@
 #define ST7789_CMD_RAMWR   0x2C
 #define ST7789_CMD_COLMOD  0x3A
 #define ST7789_CMD_MADCTL  0x36
+#define ST7789_CMD_VSCSAD  0x37
 
 #define BUFFER_SIZE 254
 
+#define FRAMEBUFFER_WIDTH 240
+#define FRAMEBUFFER_HEIGHT 320
+
 static const nrfx_spim_t lcdSpi = NRFX_SPIM_INSTANCE(0);
 
-Hardware::Screen::ST7789::ST7789(uint8_t width, uint8_t height, const uint8_t mosi, const uint8_t miso, const uint8_t clk,
+Hardware::Screen::ST7789::ST7789(const Vec2D_t &screenSize, const uint8_t mosi, const uint8_t miso, const uint8_t clk,
                                  const uint8_t cs, const uint8_t cd, const uint8_t reset)
-                              : m_width(width)
-                              , m_height(height)
+                              : m_screenSize(screenSize)
+                              , m_verticalScrollOffset(0)
                               , m_mosi(mosi)
                               , m_miso(miso)
                               , m_clk(clk)
@@ -80,8 +84,8 @@ void Hardware::Screen::ST7789::init()
     static uint8_t lcdTxCasetData[] = {
             0,
             0,
-            static_cast<uint8_t>(m_width >> 8),
-            static_cast<uint8_t>(m_width & 0xFF)
+            static_cast<uint8_t>(m_screenSize.x >> 8),
+            static_cast<uint8_t>(m_screenSize.x & 0xFF)
     };
     nrfx_spim_xfer_desc_t lcdXferCasetCmd = NRFX_SPIM_XFER_TX(&lcdTxCasetCmd, 1);
     nrfx_spim_xfer_desc_t lcdXferCasetData = NRFX_SPIM_XFER_TX(lcdTxCasetData, sizeof(lcdTxCasetData));
@@ -90,8 +94,8 @@ void Hardware::Screen::ST7789::init()
     static uint8_t lcdTxRasetData[] = {
             0,
             0,
-            static_cast<uint8_t>(m_height >> 8),
-            static_cast<uint8_t>(m_height & 0xFF)
+            static_cast<uint8_t>(m_screenSize.y >> 8),
+            static_cast<uint8_t>(m_screenSize.y & 0xFF)
     };
     nrfx_spim_xfer_desc_t lcdXferRasetCmd = NRFX_SPIM_XFER_TX(&lcdTxRasetCmd, 1);
     nrfx_spim_xfer_desc_t lcdXferRasetData = NRFX_SPIM_XFER_TX(lcdTxRasetData, sizeof(lcdTxRasetData));
@@ -193,6 +197,22 @@ void Hardware::Screen::ST7789::getWindow(Vec2D_t &position, Vec2D_t &size) const
 {
     position = m_windowPosition;
     size = m_windowSize;
+}
+
+Vec2D_t Hardware::Screen::ST7789::getFramebufferSize() const
+{
+    return {FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT};
+}
+
+const Vec2D_t &Hardware::Screen::ST7789::getScreenSize() const
+{
+    return m_screenSize;
+}
+
+void Hardware::Screen::ST7789::clearFramebuffer(Color565_t color)
+{
+    // Draw a rectangle taking the entire framebuffer
+    drawRectangle({0, 0}, getFramebufferSize(), color);
 }
 
 void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, Color565_t color)
@@ -345,4 +365,29 @@ void Hardware::Screen::ST7789::drawString(Vec2D_t position, const std::string &t
             position.x += charWidth + fontInfo.spacePixels;
         }
     }
+}
+
+void Hardware::Screen::ST7789::setVerticalScrollOffset(uint16_t offset)
+{
+    // Store the offset
+    m_verticalScrollOffset = offset;
+
+    // Set the vertical scroll start address
+    static uint8_t lcdTxVscsadCmd  = ST7789_CMD_VSCSAD;
+    uint8_t lcdTxVscsadData[] = {
+            static_cast<uint8_t>(offset >> 8),
+            static_cast<uint8_t>(offset & 0xFF)
+    };
+    nrfx_spim_xfer_desc_t lcdXferVscsadCmd  = NRFX_SPIM_XFER_TX(&lcdTxVscsadCmd, 1);
+    nrfx_spim_xfer_desc_t lcdXferVscsadData = NRFX_SPIM_XFER_TX(lcdTxVscsadData, sizeof(lcdTxVscsadData));
+
+    setCommandPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadCmd, 0));
+    setDataPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadData, 0));
+}
+
+const uint16_t &Hardware::Screen::ST7789::getVerticalScrollOffset() const
+{
+    return m_verticalScrollOffset;
 }
