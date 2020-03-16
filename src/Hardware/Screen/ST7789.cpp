@@ -209,6 +209,32 @@ const Vec2D_t &Hardware::Screen::ST7789::getScreenSize() const
     return m_screenSize;
 }
 
+void Hardware::Screen::ST7789::setVerticalScrollOffset(uint16_t offset)
+{
+    // Store the offset
+    m_verticalScrollOffset = offset;
+
+    // Set the vertical scroll start address
+    static uint8_t lcdTxVscsadCmd  = ST7789_CMD_VSCSAD;
+    uint8_t lcdTxVscsadData[] = {
+            static_cast<uint8_t>(offset >> 8),
+            static_cast<uint8_t>(offset & 0xFF)
+    };
+    nrfx_spim_xfer_desc_t lcdXferVscsadCmd  = NRFX_SPIM_XFER_TX(&lcdTxVscsadCmd, 1);
+    nrfx_spim_xfer_desc_t lcdXferVscsadData = NRFX_SPIM_XFER_TX(lcdTxVscsadData, sizeof(lcdTxVscsadData));
+
+    setCommandPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadCmd, 0));
+    setDataPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadData, 0));
+}
+
+const uint16_t &Hardware::Screen::ST7789::getVerticalScrollOffset() const
+{
+    return m_verticalScrollOffset;
+}
+
+
 void Hardware::Screen::ST7789::clearFramebuffer(Color565_t color)
 {
     // Draw a rectangle taking the entire framebuffer
@@ -347,47 +373,4 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
 
     // Return the char width
     return descriptor.widthBits;
-}
-
-void Hardware::Screen::ST7789::drawString(Vec2D_t position, const std::string &text, const FONT_INFO &fontInfo,
-                                          const Color565_t &textColor, const Color565_t &backgroundColor)
-{
-    // Loop through all the characters and draw them
-    for (const char c : text)
-    {
-        if (c == ' ')
-        {
-            position.x += fontInfo.spacePixels;
-        }
-        else
-        {
-            uint16_t charWidth = drawChar(position, c, fontInfo, textColor, backgroundColor);
-            position.x += charWidth + fontInfo.spacePixels;
-        }
-    }
-}
-
-void Hardware::Screen::ST7789::setVerticalScrollOffset(uint16_t offset)
-{
-    // Store the offset
-    m_verticalScrollOffset = offset;
-
-    // Set the vertical scroll start address
-    static uint8_t lcdTxVscsadCmd  = ST7789_CMD_VSCSAD;
-    uint8_t lcdTxVscsadData[] = {
-            static_cast<uint8_t>(offset >> 8),
-            static_cast<uint8_t>(offset & 0xFF)
-    };
-    nrfx_spim_xfer_desc_t lcdXferVscsadCmd  = NRFX_SPIM_XFER_TX(&lcdTxVscsadCmd, 1);
-    nrfx_spim_xfer_desc_t lcdXferVscsadData = NRFX_SPIM_XFER_TX(lcdTxVscsadData, sizeof(lcdTxVscsadData));
-
-    setCommandPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadCmd, 0));
-    setDataPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadData, 0));
-}
-
-const uint16_t &Hardware::Screen::ST7789::getVerticalScrollOffset() const
-{
-    return m_verticalScrollOffset;
 }

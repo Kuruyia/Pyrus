@@ -1,8 +1,10 @@
 #ifndef PYRUS_BASESCREEN_H
 #define PYRUS_BASESCREEN_H
 
+#include <nrf_font.h>
+
 #include "Graphics/Color.h"
-#include <Graphics/Vec2D.h>
+#include "Graphics/Vec2D.h"
 
 namespace Hardware
 {
@@ -30,8 +32,6 @@ public:
 
     virtual uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
                       const Color565_t &backgroundColor) = 0;
-    virtual void drawString(Vec2D_t position, const std::string &text, const FONT_INFO &fontInfo,
-                    const Color565_t &textColor, const Color565_t &backgroundColor) = 0;
 }; // class BaseScreen
 
 } // namespace Screen

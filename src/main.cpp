@@ -3,8 +3,9 @@
 #include <libraries/button/app_button.h>
 #include <nrfx_spim.h>
 
-#include "Fonts/Ubuntu36Font.h"
+#include "Fonts/Ubuntu24Font.h"
 #include "Hardware/Screen/ST7789.h"
+#include "Widgets/Text.h"
 
 void buttonHandler(uint8_t pinNo, uint8_t buttonAction)
 {
@@ -47,8 +48,11 @@ int main()
     // Instantiate a new Screen
     Hardware::Screen::ST7789 lcd({240, 240}, 3, 4, 2, 25, 18, 26);
     lcd.clearFramebuffer({0, 0, 0});
-    lcd.drawChar({0, 0}, 'A', ubuntu_36ptFontInfo, {31, 0, 0}, {0, 63, 0});
-    lcd.drawString({0, 64}, "Hello, world!", ubuntu_36ptFontInfo, {0, 0, 31}, {31, 0, 31});
+    lcd.drawChar({0, 0}, 'A', ubuntu_24ptFontInfo, {31, 0, 0}, {0, 63, 0});
+
+    // Test the Text widget
+    Widget::Text txt("Hello, PineTime!", &ubuntu_24ptFontInfo, {0, 128}, {31, 0, 0}, {0, 0, 31});
+    txt.draw(lcd);
 
     while (true)
     {

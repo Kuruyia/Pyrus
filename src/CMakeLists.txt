@@ -24,11 +24,12 @@ add_definitions(-DCONFIG_GPIO_AS_PINRESET)
 
 include_directories(.)
 list(APPEND SOURCE_FILES
-        Fonts/Ubuntu36Font.c
+        Fonts/Ubuntu24Font.c
         Graphics/Color.h
         Graphics/Vec2D.h
         Hardware/Screen/BaseScreen.h
         Hardware/Screen/ST7789.cpp
+        Widgets/Text.cpp
         main.cpp)
 
 nRF5x_addExecutable(Pyrus-fw "${SOURCE_FILES}")
