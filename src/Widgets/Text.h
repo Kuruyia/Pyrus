@@ -44,8 +44,8 @@ private:
 
     Color565_t m_textColor;
     Color565_t m_backgroundColor;
-};
+}; // class Text
 
-}
+} // namespace Widget
 
 #endif //PYRUS_TEXT_H

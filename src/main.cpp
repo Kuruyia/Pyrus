@@ -5,6 +5,8 @@
 
 #include "Fonts/Ubuntu24Font.h"
 #include "Hardware/Screen/ST7789.h"
+
+#include "Widgets/Container.h"
 #include "Widgets/Text.h"
 
 void buttonHandler(uint8_t pinNo, uint8_t buttonAction)
@@ -48,10 +50,12 @@ int main()
     // Instantiate a new Screen
     Hardware::Screen::ST7789 lcd({240, 240}, 3, 4, 2, 25, 18, 26);
     lcd.clearFramebuffer({0, 0, 0});
-    lcd.drawChar({0, 0}, 'A', ubuntu_24ptFontInfo, {31, 0, 0}, {0, 63, 0});
 
-    // Test the Text widget
-    Widget::Text txt("Hello, PineTime!", &ubuntu_24ptFontInfo, {0, 128}, {31, 0, 0}, {0, 0, 31});
+    // Test the Container widget
+    Widget::Container ctr({16, 16}, {208, 64}, {0, 63, 0});
+    ctr.draw(lcd);
+
+    Widget::Text txt("Hi!", &ubuntu_24ptFontInfo, {0, 128}, {31, 0, 0}, {0, 0, 31});
     txt.draw(lcd);
 
     while (true)
