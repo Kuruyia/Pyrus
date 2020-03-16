@@ -52,11 +52,25 @@ int main()
     lcd.clearFramebuffer({0, 0, 0});
 
     // Test the Container widget
-    Widget::Container ctr({16, 16}, {208, 64}, {0, 63, 0});
+    Widget::Container ctr(nullptr, {16, 16}, {208, 64}, {0, 63, 0});
     ctr.draw(lcd);
 
-    Widget::Text txt("Hi!", &ubuntu_24ptFontInfo, {0, 128}, {31, 0, 0}, {0, 0, 31});
+    Widget::Text txt(&ctr, "Hi!", &ubuntu_24ptFontInfo, {0, 0}, {31, 0, 0}, {0, 0, 31});
     txt.draw(lcd);
+
+    nrf_delay_ms(500);
+    ctr.setPosition({16, 128});
+    ctr.draw(lcd);
+
+    nrf_delay_ms(500);
+    txt.setText("Hello!");
+    txt.setPosition({16, 16});
+    txt.draw(lcd);
+
+    nrf_delay_ms(500);
+    ctr.setPosition({32, 96});
+    ctr.setSize({192, 48});
+    ctr.draw(lcd);
 
     while (true)
     {

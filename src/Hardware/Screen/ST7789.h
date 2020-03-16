@@ -14,23 +14,23 @@ namespace Screen
 class ST7789 : public BaseScreen {
 public:
     ST7789(const Vec2D_t &screenSize, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
-    virtual ~ST7789() = default;
+    ~ST7789() override = default;
 
-    virtual void setWindow(const Vec2D_t &position, const Vec2D_t &size) override;
-    virtual void getWindow(Vec2D_t &position, Vec2D_t &size) const override;
+    void setWindow(const Vec2D_t &position, const Vec2D_t &size) override;
+    void getWindow(Vec2D_t &position, Vec2D_t &size) const override;
 
-    virtual const Vec2D_t &getScreenSize() const override;
-    virtual Vec2D_t getFramebufferSize() const override;
+    const Vec2D_t &getScreenSize() const override;
+    Vec2D_t getFramebufferSize() const override;
 
-    virtual void setVerticalScrollOffset(uint16_t offset) override;
-    virtual const uint16_t &getVerticalScrollOffset() const override;
+    void setVerticalScrollOffset(uint16_t offset) override;
+    const uint16_t &getVerticalScrollOffset() const override;
 
-    virtual void clearFramebuffer(Color565_t color) override;
+    void clearFramebuffer(Color565_t color) override;
 
-    virtual void drawPixel(const Vec2D_t &position, Color565_t color) override;
-    virtual void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color) override;
+    void drawPixel(const Vec2D_t &position, Color565_t color) override;
+    void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color) override;
 
-    virtual uint16_t drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
+    uint16_t drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
                       const Color565_t &backgroundColor) override;
 
 private:

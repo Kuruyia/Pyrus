@@ -3,17 +3,18 @@
 
 #include <string>
 
-#include "Hardware/Screen/BaseScreen.h"
+#include "BaseWidget.h"
 
 namespace Widget
 {
 
-class Text {
+class Text : public BaseWidget {
 public:
-    Text(const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position, Color565_t textColor = {31, 63, 31},
-         Color565_t backgroundColor = {0, 0, 0});
+    Text(BaseContainer *parent, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
+         Color565_t textColor = {31, 63, 31}, Color565_t backgroundColor = {0, 0, 0});
+    ~Text() override;
 
-    void draw(Hardware::Screen::BaseScreen &target);
+    void draw(Hardware::Screen::BaseScreen &target) override;
 
     void setText(const std::string &text);
     const std::string &getText() const;
@@ -21,8 +22,13 @@ public:
     void setFont(const FONT_INFO *fontInfo);
     const FONT_INFO *getFont() const;
 
-    void setPosition(Vec2D_t position);
-    const Vec2D_t &getPosition() const;
+    void setPosition(Vec2D_t position) override;
+    const Vec2D_t &getPosition() const override;
+
+    Vec2D_t getAbsolutePosition() const override;
+    const BaseContainer *getParent() const override;
+
+    Vec2D_t getSize() const override;
 
     void setTextColor(Color565_t textColor);
     const Color565_t &getTextColor() const;
@@ -30,7 +36,14 @@ public:
     void setBackgroundColor(Color565_t backgroundColor);
     const Color565_t &getBackgroundColor() const;
 
+    void markDirty() override;
+
 private:
+    Vec2D_t getLastAbsolutePosition() const;
+    Color565_t getParentBackgroundColor() const;
+
+    BaseContainer *m_parent;
+
     bool m_dirty;
     bool m_clearLastPosition;
 

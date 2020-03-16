@@ -1,10 +1,12 @@
 #include "Text.h"
+#include "Container.h"
 
 #define INTERCHAR_SIZE 2
 
-Widget::Text::Text(const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position, Color565_t textColor,
-                   Color565_t backgroundColor)
-: m_dirty(true)
+Widget::Text::Text(BaseContainer *parent, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
+                   Color565_t textColor, Color565_t backgroundColor)
+: m_parent(parent)
+, m_dirty(true)
 , m_clearLastPosition(false)
 , m_text(text)
 , m_fontInfo(fontInfo)
@@ -15,6 +17,15 @@ Widget::Text::Text(const std::string &text, const FONT_INFO *fontInfo, Vec2D_t p
 , m_backgroundColor(backgroundColor)
 {
     m_fontInfo = fontInfo;
+
+    if (parent != nullptr)
+        parent->addChild(this);
+}
+
+Widget::Text::~Text()
+{
+    if (m_parent != nullptr)
+        m_parent->removeChild(this);
 }
 
 void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
@@ -25,12 +36,12 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     // Geometry has changed, we need to clear the last occupied space
     if (m_clearLastPosition)
     {
-        target.drawRectangle(m_lastPosition, m_lastSize, m_backgroundColor);
+        target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor());
         m_clearLastPosition = false;
     }
 
     // Store the position of this drawing
-    Vec2D_t position = m_position;
+    Vec2D_t position = getAbsolutePosition();
     m_lastPosition = m_position;
 
     // Loop through all the characters and draw them
@@ -62,7 +73,7 @@ void Widget::Text::setText(const std::string &text)
 {
     m_text = text;
 
-    m_dirty = true;
+    markDirty();
     m_clearLastPosition = true;
 }
 
@@ -75,7 +86,7 @@ void Widget::Text::setFont(const FONT_INFO *fontInfo)
 {
     m_fontInfo = fontInfo;
 
-    m_dirty = true;
+    markDirty();
     m_clearLastPosition = true;
 }
 
@@ -88,7 +99,7 @@ void Widget::Text::setPosition(Vec2D_t position)
 {
     m_position = position;
 
-    m_dirty = true;
+    markDirty();
     m_clearLastPosition = true;
 }
 
@@ -97,11 +108,51 @@ const Vec2D_t &Widget::Text::getPosition() const
     return m_position;
 }
 
+Vec2D_t Widget::Text::getAbsolutePosition() const
+{
+    if (m_parent == nullptr)
+        return getPosition();
+
+    return m_parent->getAbsolutePosition() + getPosition();
+}
+
+const Widget::BaseContainer *Widget::Text::getParent() const
+{
+    return m_parent;
+}
+
+Vec2D_t Widget::Text::getSize() const
+{
+    // Prepare the size vector
+    Vec2D_t size = {0, m_fontInfo->height};
+
+    // Loop through all the characters and draw them
+    for (const char c : m_text)
+    {
+        if (c != ' ')
+        {
+            const size_t descriptorOffset = c - m_fontInfo->startChar;
+            const FONT_CHAR_INFO descriptor = m_fontInfo->charInfo[descriptorOffset];
+
+            size.x += descriptor.widthBits;
+        }
+        else
+        {
+            size.x += m_fontInfo->spacePixels;
+        }
+
+        size.x += INTERCHAR_SIZE;
+    }
+
+    // Return the size
+    return size;
+}
+
 void Widget::Text::setTextColor(Color565_t textColor)
 {
     m_textColor = textColor;
 
-    m_dirty = true;
+    markDirty();
 }
 
 const Color565_t &Widget::Text::getTextColor() const
@@ -113,10 +164,31 @@ void Widget::Text::setBackgroundColor(Color565_t backgroundColor)
 {
     m_backgroundColor = backgroundColor;
 
-    m_dirty = true;
+    markDirty();
 }
 
 const Color565_t &Widget::Text::getBackgroundColor() const
 {
     return m_backgroundColor;
+}
+
+void Widget::Text::markDirty()
+{
+    m_dirty = true;
+}
+
+Vec2D_t Widget::Text::getLastAbsolutePosition() const
+{
+    if (m_parent == nullptr)
+        return m_lastPosition;
+
+    return m_parent->getAbsolutePosition() + m_lastPosition;
+}
+
+Color565_t Widget::Text::getParentBackgroundColor() const
+{
+    if (m_parent == nullptr)
+        return {0, 0, 0};
+
+    return m_parent->getBackgroundColor();
 }
