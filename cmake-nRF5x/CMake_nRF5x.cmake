@@ -237,6 +237,7 @@ macro(nRF5x_setup)
     include_directories(
             "${NRF5_SDK_PATH}/external/fprintf/"
             "${NRF5_SDK_PATH}/external/utf_converter/"
+            "${NRF5_SDK_PATH}/external/thedotfactory_fonts/"
     )
 
     list(APPEND SDK_SOURCE_FILES

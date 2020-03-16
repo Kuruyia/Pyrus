@@ -27,7 +27,8 @@ list(APPEND SOURCE_FILES
         Fonts/Ubuntu36Font.c
         Graphics/Color.h
         Graphics/Vec2D.h
-        Hardware/LCD/ST7789.cpp
+        Hardware/Screen/BaseScreen.h
+        Hardware/Screen/ST7789.cpp
         main.cpp)
 
 nRF5x_addExecutable(Pyrus-fw "${SOURCE_FILES}")

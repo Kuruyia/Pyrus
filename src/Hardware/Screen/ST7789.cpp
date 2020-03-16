@@ -22,8 +22,8 @@
 
 static const nrfx_spim_t lcdSpi = NRFX_SPIM_INSTANCE(0);
 
-Hardware::LCD::ST7789::ST7789(uint8_t width, uint8_t height, const uint8_t mosi, const uint8_t miso, const uint8_t clk,
-                              const uint8_t cs, const uint8_t cd, const uint8_t reset)
+Hardware::Screen::ST7789::ST7789(uint8_t width, uint8_t height, const uint8_t mosi, const uint8_t miso, const uint8_t clk,
+                                 const uint8_t cs, const uint8_t cd, const uint8_t reset)
                               : m_width(width)
                               , m_height(height)
                               , m_mosi(mosi)
@@ -51,9 +51,9 @@ Hardware::LCD::ST7789::ST7789(uint8_t width, uint8_t height, const uint8_t mosi,
     init();
 }
 
-void Hardware::LCD::ST7789::init()
+void Hardware::Screen::ST7789::init()
 {
-    // Hardware-reset the LCD controller
+    // Hardware-reset the Screen controller
     nrf_gpio_pin_clear(m_reset);
     nrf_delay_ms(15);
 
@@ -136,18 +136,23 @@ void Hardware::LCD::ST7789::init()
     nrf_delay_ms(10);
 }
 
-inline void Hardware::LCD::ST7789::setCommandPin()
+inline void Hardware::Screen::ST7789::setCommandPin()
 {
     nrf_gpio_pin_clear(m_cd);
 }
 
-inline void Hardware::LCD::ST7789::setDataPin()
+inline void Hardware::Screen::ST7789::setDataPin()
 {
     nrf_gpio_pin_set(m_cd);
 }
 
-void Hardware::LCD::ST7789::setWindow(const Vec2D_t &position, const Vec2D_t &size)
+void Hardware::Screen::ST7789::setWindow(const Vec2D_t &position, const Vec2D_t &size)
 {
+    // Store the window parameters
+    m_windowPosition = position;
+    m_windowSize = size;
+
+    // Calculate end coordinates
     const uint16_t endX = position.x + size.x - 1;
     const uint16_t endY = position.y + size.y - 1;
 
@@ -184,7 +189,13 @@ void Hardware::LCD::ST7789::setWindow(const Vec2D_t &position, const Vec2D_t &si
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRasetData, 0));
 }
 
-void Hardware::LCD::ST7789::drawPixel(const Vec2D_t &position, Color565_t color)
+void Hardware::Screen::ST7789::getWindow(Vec2D_t &position, Vec2D_t &size) const
+{
+    position = m_windowPosition;
+    size = m_windowSize;
+}
+
+void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, Color565_t color)
 {
     // Set the window
     setWindow(position, {1, 1});
@@ -207,7 +218,7 @@ void Hardware::LCD::ST7789::drawPixel(const Vec2D_t &position, Color565_t color)
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
 }
 
-void Hardware::LCD::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color)
+void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color)
 {
     // Set the window
     setWindow(position, size);
@@ -246,8 +257,8 @@ void Hardware::LCD::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t
     free(lcdTxRamwrData);
 }
 
-uint16_t Hardware::LCD::ST7789::drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo,
-                                     const Color565_t &textColor, const Color565_t &backgroundColor)
+uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo,
+                                            const Color565_t &textColor, const Color565_t &backgroundColor)
 {
     // Set the window
     const size_t descriptorOffset = c - fontInfo.startChar;
@@ -264,7 +275,7 @@ uint16_t Hardware::LCD::ST7789::drawChar(const Vec2D_t &position, const char c, 
     const uint8_t higherBackgroundColor = rawBackgroundColor >> 8;
     const uint8_t lowerBackgroundColor = rawBackgroundColor & 0xFF;
 
-    // Prepare the LCD controller to receive data
+    // Prepare the Screen controller to receive data
     static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
     nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
 
@@ -274,10 +285,6 @@ uint16_t Hardware::LCD::ST7789::drawChar(const Vec2D_t &position, const char c, 
 
     // Prepare some values for character parsing
     const uint16_t pixelCount = descriptor.widthBits * fontInfo.height;
-    uint8_t width = descriptor.widthBits / 8;
-    if (descriptor.widthBits % 8 > 0)
-        ++width;
-
     size_t actualPixel = 0;
     const uint8_t bytesPerWidth = (descriptor.widthBits % 8 > 0) ? descriptor.widthBits / 8 + 1 : descriptor.widthBits / 8;
     const size_t totalBufferSize = pixelCount * 2;
@@ -285,7 +292,7 @@ uint16_t Hardware::LCD::ST7789::drawChar(const Vec2D_t &position, const char c, 
 
     for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
     {
-        // Prepare the buffer to send data to the LCD
+        // Prepare the buffer to send data to the Screen
         const size_t endPixel = (actualStep == numberOfStep - 1) ? pixelCount : (BUFFER_SIZE / 2) * (actualStep + 1);
         const size_t bufferSize = (actualStep == numberOfStep - 1) ? (pixelCount * 2) - (BUFFER_SIZE * actualStep) : BUFFER_SIZE;
         auto *buffer = (uint8_t *)malloc(bufferSize);
@@ -310,7 +317,7 @@ uint16_t Hardware::LCD::ST7789::drawChar(const Vec2D_t &position, const char c, 
             }
         }
 
-        // Send the pixels to the LCD controller
+        // Send the pixels to the Screen controller
         nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer, bufferSize);
         APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
 
@@ -322,9 +329,10 @@ uint16_t Hardware::LCD::ST7789::drawChar(const Vec2D_t &position, const char c, 
     return descriptor.widthBits;
 }
 
-void Hardware::LCD::ST7789::drawString(Vec2D_t position, const std::string &text, const FONT_INFO &fontInfo,
-                                       const Color565_t &textColor, const Color565_t &backgroundColor)
+void Hardware::Screen::ST7789::drawString(Vec2D_t position, const std::string &text, const FONT_INFO &fontInfo,
+                                          const Color565_t &textColor, const Color565_t &backgroundColor)
 {
+    // Loop through all the characters and draw them
     for (const char c : text)
     {
         if (c == ' ')
