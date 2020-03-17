@@ -1,8 +1,8 @@
 #ifndef PYRUS_BASECONTAINER_H
 #define PYRUS_BASECONTAINER_H
 
+#include <map>
 #include <memory>
-#include <vector>
 
 #include "BaseWidget.h"
 
@@ -15,16 +15,15 @@ public:
     ~BaseContainer() override = default;
 
     virtual void addChild(std::unique_ptr<BaseWidget> child);
-    virtual bool removeChild(const std::string &id);
+    virtual void removeChild(const std::string &id);
 
     virtual std::unique_ptr<BaseWidget> &findChildById(const std::string &id);
-    virtual const std::vector<std::unique_ptr<BaseWidget>> &getChildren();
 
     virtual void setBackgroundColor(Color565_t backgroundColor);
     virtual const Color565_t &getBackgroundColor() const;
 
 protected:
-    std::vector<std::unique_ptr<BaseWidget>> m_children;
+    std::map<std::string, std::unique_ptr<BaseWidget>> m_children;
 
     Color565_t m_backgroundColor;
 }; // class BaseContainer

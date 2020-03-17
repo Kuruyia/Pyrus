@@ -34,8 +34,8 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
     }
 
     // Render the container children
-    for (std::unique_ptr<BaseWidget> &widget: m_children)
-        widget->draw(target);
+    for (auto &widget: m_children)
+        widget.second->draw(target);
 }
 
 Vec2D_t Widget::Container::getAbsolutePosition() const
@@ -74,8 +74,8 @@ void Widget::Container::markDirty()
     BaseContainer::markDirty();
 
     // Mark the children dirty
-    for (std::unique_ptr<BaseWidget> &widget: m_children)
-        widget->markDirty();
+    for (auto &widget: m_children)
+        widget.second->markDirty();
 }
 
 Vec2D_t Widget::Container::getLastAbsolutePosition() const

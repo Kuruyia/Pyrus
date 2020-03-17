@@ -54,20 +54,20 @@ int main()
     lcd.clearFramebuffer({0, 0, 0});
 
     // Test the Container widget
-    Widget::Container ctr("ctr", {0, 0}, {240, 240}, {0, 0, 0});
+    Widget::Container ctr("ctr1", {0, 0}, {240, 240}, {0, 0, 0});
 
     for (uint16_t i = 0; i < 9; ++i)
     {
         ctr.addChild(std::make_unique<Widget::Text>("txt" + std::to_string(i), "Line #" + std::to_string(i),
                                                                  &ubuntu_24ptFontInfo,
-                                                                 Vec2D_t{0, static_cast<uint16_t>(32 * i)}, Color565_t{0, 0, 0},
+                                                                 Vec2D_t{0, static_cast<uint16_t>(31 * i +23)}, Color565_t{0, 0, 0},
                                                                  Color565_t{31, 0, 0}));
     }
 
     ctr.draw(lcd);
 
     nrf_delay_ms(1000);
-    std::unique_ptr<Widget::BaseWidget> &t = ctr.findChildById("txt1");
+    auto &t = ctr.findChildById("txt1");
     dynamic_cast<Widget::Text*>(t.get())->setText("salut");
 
     ctr.draw(lcd);
