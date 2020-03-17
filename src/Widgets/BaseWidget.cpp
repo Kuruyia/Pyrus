@@ -25,6 +25,16 @@ const Vec2D_t &Widget::BaseWidget::getPosition() const
     return m_position;
 }
 
+void Widget::BaseWidget::setLoopVerticalPosition(bool loopVerticalPosition)
+{
+    m_loopVerticalPosition = loopVerticalPosition;
+}
+
+bool Widget::BaseWidget::isLoopingVerticalPosition() const
+{
+    return m_loopVerticalPosition;
+}
+
 void Widget::BaseWidget::setParent(Widget::BaseContainer *parent)
 {
     m_parent = parent;

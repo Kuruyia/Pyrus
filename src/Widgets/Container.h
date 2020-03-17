@@ -22,8 +22,6 @@ public:
     uint16_t getHeight() const override;
     Vec2D_t getSize() const override;
 
-    void markDirty() override;
-
 private:
     Vec2D_t getLastAbsolutePosition() const;
     Color565_t getParentBackgroundColor() const;

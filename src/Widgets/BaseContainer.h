@@ -14,6 +14,8 @@ public:
     BaseContainer(std::string id, Vec2D_t position, Color565_t backgroundColor);
     ~BaseContainer() override = default;
 
+    void setPosition(Vec2D_t position) override;
+
     virtual void addChild(std::unique_ptr<BaseWidget> child);
     virtual void removeChild(const std::string &id);
 
@@ -21,6 +23,8 @@ public:
 
     virtual void setBackgroundColor(Color565_t backgroundColor);
     virtual const Color565_t &getBackgroundColor() const;
+
+    virtual void markDirtyWithChildren();
 
 protected:
     std::map<std::string, std::unique_ptr<BaseWidget>> m_children;

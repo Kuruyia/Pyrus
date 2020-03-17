@@ -22,6 +22,9 @@ public:
 
     virtual Vec2D_t getAbsolutePosition() const = 0;
 
+    virtual void setLoopVerticalPosition(bool loopVerticalPosition);
+    virtual bool isLoopingVerticalPosition() const;
+
     virtual uint16_t getWidth() const = 0;
     virtual uint16_t getHeight() const = 0;
     virtual Vec2D_t getSize() const = 0;
@@ -41,6 +44,7 @@ protected:
     bool m_clearLastPosition;
 
     Vec2D_t m_position;
+    bool m_loopVerticalPosition;
 
 }; // class BaseWidget
 

@@ -9,6 +9,7 @@
 #include "Hardware/Screen/ST7789.h"
 
 #include "Widgets/Container.h"
+#include "Widgets/VerticalScrollContainer.h"
 #include "Widgets/Text.h"
 
 void buttonHandler(uint8_t pinNo, uint8_t buttonAction)
@@ -54,23 +55,39 @@ int main()
     lcd.clearFramebuffer({0, 0, 0});
 
     // Test the Container widget
-    Widget::Container ctr("ctr1", {0, 0}, {240, 240}, {0, 0, 0});
+    Widget::VerticalScrollContainer ctr("vctr", {0, 0}, {240, 240}, {0, 0, 0});
 
-    for (uint16_t i = 0; i < 9; ++i)
+    for (uint16_t i = 0; i < 360; ++i)
     {
-        ctr.addChild(std::make_unique<Widget::Text>("txt" + std::to_string(i), "Line #" + std::to_string(i),
-                                                                 &ubuntu_24ptFontInfo,
-                                                                 Vec2D_t{0, static_cast<uint16_t>(31 * i +23)}, Color565_t{0, 0, 0},
-                                                                 Color565_t{31, 0, 0}));
+        ctr.addChild(std::make_unique<Widget::Container>("ctr" + std::to_string(i), Vec2D_t{0, i}, Vec2D_t{240, 1}, Color565_t{static_cast<uint8_t>(i), static_cast<uint8_t>(i * 2), static_cast<uint8_t>(i)}));
+    }
+
+    for (uint16_t i = 0; i < 19; ++i)
+    {
+        const uint16_t posY = 31 * i + 23;
+        ctr.addChild(std::make_unique<Widget::Text>("txt" + std::to_string(i), "#" + std::to_string(i) + " - " + std::to_string(posY),
+                                                    &ubuntu_24ptFontInfo,
+                                                    Vec2D_t{0, posY}, Color565_t{0, 0, 0},
+                                                    Color565_t{31, 0, 0}));
     }
 
     ctr.draw(lcd);
 
     nrf_delay_ms(1000);
-    auto &t = ctr.findChildById("txt1");
-    dynamic_cast<Widget::Text*>(t.get())->setText("salut");
+    for (size_t i = 0; i < 372; ++i)
+    {
+        ctr.setVerticalScrollOffset(i);
+        ctr.draw(lcd);
+        nrf_delay_ms(10);
+    }
 
-    ctr.draw(lcd);
+    nrf_delay_ms(500);
+    for (size_t i = ctr.getVerticalScrollOffset(); i-- > 0;)
+    {
+        ctr.setVerticalScrollOffset(i);
+        ctr.draw(lcd);
+        nrf_delay_ms(10);
+    }
 
     while (true)
     {

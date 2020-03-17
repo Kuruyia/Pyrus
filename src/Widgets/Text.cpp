@@ -24,13 +24,21 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     // Geometry has changed, we need to clear the last occupied space
     if (m_clearLastPosition)
     {
-        target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor());
+        Vec2D_t lastAbsolutePosition = getAbsolutePosition();
+        if (m_loopVerticalPosition)
+            lastAbsolutePosition.y %= target.getFramebufferSize().y;
+
+        target.drawRectangle(lastAbsolutePosition, m_lastSize, getParentBackgroundColor());
         m_clearLastPosition = false;
     }
 
     // Store the position of this drawing
     Vec2D_t position = getAbsolutePosition();
     m_lastPosition = m_position;
+
+    // Loop the vertical axis if enabled
+    if (m_loopVerticalPosition)
+        position.y %= target.getFramebufferSize().y;
 
     // Draw the background
     target.drawRectangle(position, getSize(), m_backgroundColor);
