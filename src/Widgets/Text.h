@@ -36,6 +36,8 @@ public:
     void setBackgroundColor(Color565_t backgroundColor);
     const Color565_t &getBackgroundColor() const;
 
+    const std::string &getId() const override;
+
     void markDirty() override;
 
 private:
@@ -43,6 +45,7 @@ private:
     Color565_t getParentBackgroundColor() const;
 
     BaseContainer *m_parent;
+    const std::string m_id;
 
     bool m_dirty;
     bool m_clearLastPosition;

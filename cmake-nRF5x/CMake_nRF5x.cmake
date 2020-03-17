@@ -42,7 +42,7 @@ macro(nRF5x_setup)
 
     # language standard/version settings
     set(CMAKE_C_STANDARD 99)
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 14)
 
     # CPU specyfic settings
     if (NRF_TARGET MATCHES "nrf51")

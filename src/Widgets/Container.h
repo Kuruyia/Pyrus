@@ -36,6 +36,7 @@ private:
     Color565_t getParentBackgroundColor() const;
 
     BaseContainer *m_parent;
+    const std::string m_id;
 
     bool m_dirty;
     bool m_clearLastPosition;

@@ -23,25 +23,29 @@ Widget::Container::~Container()
 
 void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
 {
-    // Dirty flag not set, we don't need to redraw the widget
-    if (!m_dirty) return;
-
-    // Geometry has changed, we need to clear the last occupied space
-    if (m_clearLastPosition)
+    // Check if we need to redraw the widget itself
+    if (m_dirty)
     {
-        target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor());
-        m_clearLastPosition = false;
+        // Geometry has changed, we need to clear the last occupied space
+        if (m_clearLastPosition)
+        {
+            target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor());
+            m_clearLastPosition = false;
+        }
+
+        // Render the container
+        target.drawRectangle(m_position, m_size, m_color);
+
+        // Store the geometry of this drawing
+        m_lastPosition = m_position;
+        m_lastSize = m_size;
+
+        // Reset the dirty flag
+        m_dirty = false;
     }
 
-    // Render the container
-    target.drawRectangle(m_position, m_size, m_color);
-
-    // Store the geometry of this drawing
-    m_lastPosition = m_position;
-    m_lastSize = m_size;
-
     // Render the container children
-    for (BaseWidget *widget: m_children)
+    for (std::unique_ptr<BaseWidget> &widget: m_children)
         widget->draw(target);
 }
 
@@ -104,6 +108,27 @@ void Widget::Container::addChild(Widget::BaseWidget *child)
 void Widget::Container::removeChild(Widget::BaseWidget *child)
 {
     m_children.erase(std::remove(m_children.begin(), m_children.end(), child), m_children.end());
+}
+
+std::unique_ptr<Widget::BaseWidget> &Widget::Container::findChildById(const std::string &id)
+{
+    for (auto &widget : m_children)
+    {
+        if (widget->getId() == id)
+            return widget;
+    }
+
+    throw;
+}
+
+const std::vector<std::unique_ptr<Widget::BaseWidget>> &Widget::Container::getChildren()
+{
+    return m_children;
+}
+
+const std::string &Widget::Container::getId() const
+{
+    return m_id;
 }
 
 void Widget::Container::markDirty()

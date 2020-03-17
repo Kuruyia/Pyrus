@@ -3,9 +3,10 @@
 
 #define INTERCHAR_SIZE 2
 
-Widget::Text::Text(BaseContainer *parent, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
+Widget::Text::Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
                    Color565_t textColor, Color565_t backgroundColor)
-: m_parent(parent)
+: m_parent(nullptr)
+, m_id(id)
 , m_dirty(true)
 , m_clearLastPosition(false)
 , m_text(text)
@@ -170,6 +171,11 @@ void Widget::Text::setBackgroundColor(Color565_t backgroundColor)
 const Color565_t &Widget::Text::getBackgroundColor() const
 {
     return m_backgroundColor;
+}
+
+const std::string &Widget::Text::getId() const
+{
+    return m_id;
 }
 
 void Widget::Text::markDirty()

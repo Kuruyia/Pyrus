@@ -22,6 +22,8 @@ public:
 
     virtual const BaseContainer *getParent() const = 0;
 
+    virtual const std::string &getId() const = 0;
+
     virtual void markDirty() = 0;
 }; // class BaseWidget
 
