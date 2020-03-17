@@ -22,13 +22,7 @@ public:
     void setFont(const FONT_INFO *fontInfo);
     const FONT_INFO *getFont() const;
 
-    void setPosition(Vec2D_t position) override;
-    const Vec2D_t &getPosition() const override;
-
     Vec2D_t getAbsolutePosition() const override;
-
-    void setParent(BaseContainer *parent) override;
-    const BaseContainer *getParent() const override;
 
     uint16_t getWidth() const override;
     uint16_t getHeight() const override;
@@ -40,24 +34,12 @@ public:
     void setBackgroundColor(Color565_t backgroundColor);
     const Color565_t &getBackgroundColor() const;
 
-    const std::string &getId() const override;
-
-    void markDirty() override;
-
 private:
     Vec2D_t getLastAbsolutePosition() const;
     Color565_t getParentBackgroundColor() const;
 
-    BaseContainer *m_parent;
-    const std::string m_id;
-
-    bool m_dirty;
-    bool m_clearLastPosition;
-
     std::string m_text;
     const FONT_INFO *m_fontInfo;
-
-    Vec2D_t m_position;
 
     Vec2D_t m_lastPosition;
     Vec2D_t m_lastSize;

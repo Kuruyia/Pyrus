@@ -29,8 +29,8 @@ list(APPEND SOURCE_FILES
         Graphics/Vec2D.h
         Hardware/Screen/BaseScreen.h
         Hardware/Screen/ST7789.cpp
-        Widgets/BaseContainer.h
-        Widgets/BaseWidget.h
+        Widgets/BaseContainer.cpp
+        Widgets/BaseWidget.cpp
         Widgets/Container.cpp
         Widgets/Text.cpp
         main.cpp)

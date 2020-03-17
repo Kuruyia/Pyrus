@@ -5,13 +5,9 @@
 
 Widget::Text::Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
                    Color565_t textColor, Color565_t backgroundColor)
-: m_parent(nullptr)
-, m_id(id)
-, m_dirty(true)
-, m_clearLastPosition(false)
+: BaseWidget(id, position)
 , m_text(text)
 , m_fontInfo(fontInfo)
-, m_position(position)
 , m_lastPosition({0, 0})
 , m_lastSize({0, 0})
 , m_textColor(textColor)
@@ -88,35 +84,12 @@ const FONT_INFO *Widget::Text::getFont() const
     return m_fontInfo;
 }
 
-void Widget::Text::setPosition(Vec2D_t position)
-{
-    m_position = position;
-
-    markDirty();
-    m_clearLastPosition = true;
-}
-
-const Vec2D_t &Widget::Text::getPosition() const
-{
-    return m_position;
-}
-
 Vec2D_t Widget::Text::getAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return getPosition();
 
     return m_parent->getAbsolutePosition() + getPosition();
-}
-
-void Widget::Text::setParent(Widget::BaseContainer *parent)
-{
-    m_parent = parent;
-}
-
-const Widget::BaseContainer *Widget::Text::getParent() const
-{
-    return m_parent;
 }
 
 uint16_t Widget::Text::getWidth() const
@@ -178,16 +151,6 @@ void Widget::Text::setBackgroundColor(Color565_t backgroundColor)
 const Color565_t &Widget::Text::getBackgroundColor() const
 {
     return m_backgroundColor;
-}
-
-const std::string &Widget::Text::getId() const
-{
-    return m_id;
-}
-
-void Widget::Text::markDirty()
-{
-    m_dirty = true;
 }
 
 Vec2D_t Widget::Text::getLastAbsolutePosition() const

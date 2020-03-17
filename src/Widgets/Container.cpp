@@ -1,16 +1,11 @@
 #include <algorithm>
 #include "Container.h"
 
-Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t size, Color565_t color)
-: m_parent(nullptr)
-, m_id(id)
-, m_dirty(true)
-, m_clearLastPosition(false)
-, m_position(position)
+Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t size, Color565_t backgroundColor)
+: BaseContainer(id, position, backgroundColor)
 , m_size(size)
 , m_lastPosition({0, 0})
 , m_lastSize({0, 0})
-, m_color(color)
 {
 
 }
@@ -28,7 +23,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
         }
 
         // Render the container
-        target.drawRectangle(m_position, m_size, m_color);
+        target.drawRectangle(m_position, m_size, m_backgroundColor);
 
         // Store the geometry of this drawing
         m_lastPosition = m_position;
@@ -43,35 +38,12 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
         widget->draw(target);
 }
 
-void Widget::Container::setPosition(Vec2D_t position)
-{
-    m_position = position;
-
-    markDirty();
-    m_clearLastPosition = true;
-}
-
-const Vec2D_t &Widget::Container::getPosition() const
-{
-    return m_position;
-}
-
 Vec2D_t Widget::Container::getAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return getPosition();
 
     return m_parent->getAbsolutePosition() + getPosition();
-}
-
-void Widget::Container::setParent(Widget::BaseContainer *parent)
-{
-    m_parent = parent;
-}
-
-const Widget::BaseContainer *Widget::Container::getParent() const
-{
-    return m_parent;
 }
 
 void Widget::Container::setSize(Vec2D_t size)
@@ -97,62 +69,9 @@ Vec2D_t Widget::Container::getSize() const
     return m_size;
 }
 
-void Widget::Container::setBackgroundColor(Color565_t color)
-{
-    m_color = color;
-
-    markDirty();
-}
-
-const Color565_t &Widget::Container::getBackgroundColor() const
-{
-    return m_color;
-}
-
-void Widget::Container::addChild(std::unique_ptr<BaseWidget> child)
-{
-    child->setParent(this);
-    m_children.push_back(std::move(child));
-}
-
-bool Widget::Container::removeChild(const std::string &id)
-{
-    for (auto iter = m_children.begin(); iter != m_children.end(); ++iter)
-    {
-        if ((*iter)->getId() == id)
-        {
-            m_children.erase(iter);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-std::unique_ptr<Widget::BaseWidget> &Widget::Container::findChildById(const std::string &id)
-{
-    for (auto &widget : m_children)
-    {
-        if (widget->getId() == id)
-            return widget;
-    }
-
-    throw;
-}
-
-const std::vector<std::unique_ptr<Widget::BaseWidget>> &Widget::Container::getChildren()
-{
-    return m_children;
-}
-
-const std::string &Widget::Container::getId() const
-{
-    return m_id;
-}
-
 void Widget::Container::markDirty()
 {
-    m_dirty = true;
+    BaseContainer::markDirty();
 
     // Mark the children dirty
     for (std::unique_ptr<BaseWidget> &widget: m_children)
