@@ -10,9 +10,9 @@ namespace Widget
 
 class Text : public BaseWidget {
 public:
-    Text(BaseContainer *parent, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
+    Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
          Color565_t textColor = {31, 63, 31}, Color565_t backgroundColor = {0, 0, 0});
-    ~Text() override;
+    ~Text() override = default;
 
     void draw(Hardware::Screen::BaseScreen &target) override;
 
@@ -26,8 +26,12 @@ public:
     const Vec2D_t &getPosition() const override;
 
     Vec2D_t getAbsolutePosition() const override;
+
+    void setParent(BaseContainer *parent) override;
     const BaseContainer *getParent() const override;
 
+    uint16_t getWidth() const override;
+    uint16_t getHeight() const override;
     Vec2D_t getSize() const override;
 
     void setTextColor(Color565_t textColor);

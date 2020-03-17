@@ -1,6 +1,8 @@
 #ifndef PYRUS_BASECONTAINER_H
 #define PYRUS_BASECONTAINER_H
 
+#include <memory>
+
 #include "BaseWidget.h"
 
 namespace Widget

@@ -18,15 +18,6 @@ Widget::Text::Text(const std::string &id, const std::string &text, const FONT_IN
 , m_backgroundColor(backgroundColor)
 {
     m_fontInfo = fontInfo;
-
-    if (parent != nullptr)
-        parent->addChild(this);
-}
-
-Widget::Text::~Text()
-{
-    if (m_parent != nullptr)
-        m_parent->removeChild(this);
 }
 
 void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
@@ -45,6 +36,9 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     Vec2D_t position = getAbsolutePosition();
     m_lastPosition = m_position;
 
+    // Draw the background
+    target.drawRectangle(position, getSize(), m_backgroundColor);
+
     // Loop through all the characters and draw them
     for (const char c : m_text)
     {
@@ -55,11 +49,9 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
         }
         else
         {
-            target.drawRectangle(position, {m_fontInfo->spacePixels, m_fontInfo->height}, m_backgroundColor);
             position.x += m_fontInfo->spacePixels;
         }
 
-        target.drawRectangle(position, {INTERCHAR_SIZE, m_fontInfo->height}, m_backgroundColor);
         position.x += INTERCHAR_SIZE;
     }
 
@@ -117,17 +109,22 @@ Vec2D_t Widget::Text::getAbsolutePosition() const
     return m_parent->getAbsolutePosition() + getPosition();
 }
 
+void Widget::Text::setParent(Widget::BaseContainer *parent)
+{
+    m_parent = parent;
+}
+
 const Widget::BaseContainer *Widget::Text::getParent() const
 {
     return m_parent;
 }
 
-Vec2D_t Widget::Text::getSize() const
+uint16_t Widget::Text::getWidth() const
 {
-    // Prepare the size vector
-    Vec2D_t size = {0, m_fontInfo->height};
+    // Prepare the width
+    uint16_t width = 0;
 
-    // Loop through all the characters and draw them
+    // Loop through all the characters and count their width
     for (const char c : m_text)
     {
         if (c != ' ')
@@ -135,18 +132,28 @@ Vec2D_t Widget::Text::getSize() const
             const size_t descriptorOffset = c - m_fontInfo->startChar;
             const FONT_CHAR_INFO descriptor = m_fontInfo->charInfo[descriptorOffset];
 
-            size.x += descriptor.widthBits;
+            width += descriptor.widthBits;
         }
         else
         {
-            size.x += m_fontInfo->spacePixels;
+            width += m_fontInfo->spacePixels;
         }
 
-        size.x += INTERCHAR_SIZE;
+        width += INTERCHAR_SIZE;
     }
 
-    // Return the size
-    return size;
+    // Return the width
+    return width;
+}
+
+uint16_t Widget::Text::getHeight() const
+{
+    return m_fontInfo->height;
+}
+
+Vec2D_t Widget::Text::getSize() const
+{
+    return {getWidth(), getHeight()};
 }
 
 void Widget::Text::setTextColor(Color565_t textColor)

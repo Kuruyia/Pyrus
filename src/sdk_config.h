@@ -11728,7 +11728,7 @@
 
 // </e>
 
-// <e> NFC_T4T_CC_FILE_PARSER_ENABLED - nfc_t4t_cc_file - Capability Container file for Type 4 Tag
+// <e> NFC_T4T_CC_FILE_PARSER_ENABLED - nfc_t4t_cc_file - Capability VerticalScrollContainer file for Type 4 Tag
 //==========================================================
 #ifndef NFC_T4T_CC_FILE_PARSER_ENABLED
 #define NFC_T4T_CC_FILE_PARSER_ENABLED 0

@@ -1,8 +1,9 @@
 #include <algorithm>
 #include "Container.h"
 
-Widget::Container::Container(BaseContainer *parent, Vec2D_t position, Vec2D_t size, Color565_t color)
-: m_parent(parent)
+Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t size, Color565_t color)
+: m_parent(nullptr)
+, m_id(id)
 , m_dirty(true)
 , m_clearLastPosition(false)
 , m_position(position)
@@ -11,14 +12,7 @@ Widget::Container::Container(BaseContainer *parent, Vec2D_t position, Vec2D_t si
 , m_lastSize({0, 0})
 , m_color(color)
 {
-    if (parent != nullptr)
-        parent->addChild(this);
-}
 
-Widget::Container::~Container()
-{
-    if (m_parent != nullptr)
-        m_parent->removeChild(this);
 }
 
 void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
@@ -70,6 +64,11 @@ Vec2D_t Widget::Container::getAbsolutePosition() const
     return m_parent->getAbsolutePosition() + getPosition();
 }
 
+void Widget::Container::setParent(Widget::BaseContainer *parent)
+{
+    m_parent = parent;
+}
+
 const Widget::BaseContainer *Widget::Container::getParent() const
 {
     return m_parent;
@@ -81,6 +80,16 @@ void Widget::Container::setSize(Vec2D_t size)
 
     markDirty();
     m_clearLastPosition = true;
+}
+
+uint16_t Widget::Container::getWidth() const
+{
+    return m_size.x;
+}
+
+uint16_t Widget::Container::getHeight() const
+{
+    return m_size.y;
 }
 
 Vec2D_t Widget::Container::getSize() const
@@ -100,14 +109,24 @@ const Color565_t &Widget::Container::getBackgroundColor() const
     return m_color;
 }
 
-void Widget::Container::addChild(Widget::BaseWidget *child)
+void Widget::Container::addChild(std::unique_ptr<BaseWidget> child)
 {
-    m_children.push_back(child);
+    child->setParent(this);
+    m_children.push_back(std::move(child));
 }
 
-void Widget::Container::removeChild(Widget::BaseWidget *child)
+bool Widget::Container::removeChild(const std::string &id)
 {
-    m_children.erase(std::remove(m_children.begin(), m_children.end(), child), m_children.end());
+    for (auto iter = m_children.begin(); iter != m_children.end(); ++iter)
+    {
+        if ((*iter)->getId() == id)
+        {
+            m_children.erase(iter);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 std::unique_ptr<Widget::BaseWidget> &Widget::Container::findChildById(const std::string &id)
@@ -136,7 +155,7 @@ void Widget::Container::markDirty()
     m_dirty = true;
 
     // Mark the children dirty
-    for (BaseWidget *widget: m_children)
+    for (std::unique_ptr<BaseWidget> &widget: m_children)
         widget->markDirty();
 }
 

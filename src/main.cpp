@@ -1,3 +1,5 @@
+#include <memory>
+
 #include <nrf_delay.h>
 #include <nrf_gpio.h>
 #include <libraries/button/app_button.h>
@@ -52,24 +54,22 @@ int main()
     lcd.clearFramebuffer({0, 0, 0});
 
     // Test the Container widget
-    Widget::Container ctr(nullptr, {16, 16}, {208, 64}, {0, 63, 0});
+    Widget::Container ctr("ctr", {0, 0}, {240, 240}, {0, 0, 0});
+
+    for (uint16_t i = 0; i < 9; ++i)
+    {
+        ctr.addChild(std::make_unique<Widget::Text>("txt" + std::to_string(i), "Line #" + std::to_string(i),
+                                                                 &ubuntu_24ptFontInfo,
+                                                                 Vec2D_t{0, static_cast<uint16_t>(32 * i)}, Color565_t{0, 0, 0},
+                                                                 Color565_t{31, 0, 0}));
+    }
+
     ctr.draw(lcd);
 
-    Widget::Text txt(&ctr, "Hi!", &ubuntu_24ptFontInfo, {0, 0}, {31, 0, 0}, {0, 0, 31});
-    txt.draw(lcd);
+    nrf_delay_ms(1000);
+    std::unique_ptr<Widget::BaseWidget> &t = ctr.findChildById("txt1");
+    dynamic_cast<Widget::Text*>(t.get())->setText("salut");
 
-    nrf_delay_ms(500);
-    ctr.setPosition({16, 128});
-    ctr.draw(lcd);
-
-    nrf_delay_ms(500);
-    txt.setText("Hello!");
-    txt.setPosition({16, 16});
-    txt.draw(lcd);
-
-    nrf_delay_ms(500);
-    ctr.setPosition({32, 96});
-    ctr.setSize({192, 48});
     ctr.draw(lcd);
 
     while (true)
