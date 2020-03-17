@@ -57,9 +57,10 @@ int main()
     // Test the Container widget
     Widget::VerticalScrollContainer ctr("vctr", {0, 0}, {240, 240}, {0, 0, 0});
 
-    for (uint16_t i = 0; i < 360; ++i)
+    for (uint16_t i = 0; i < 19; ++i)
     {
-        ctr.addChild(std::make_unique<Widget::Container>("ctr" + std::to_string(i), Vec2D_t{0, i}, Vec2D_t{240, 1}, Color565_t{static_cast<uint8_t>(i), static_cast<uint8_t>(i * 2), static_cast<uint8_t>(i)}));
+        const uint16_t posY = 31 * i + 23;
+        ctr.addChild(std::make_unique<Widget::Container>("ctr" + std::to_string(i), Vec2D_t{0, posY}, Vec2D_t{240, 31}, Color565_t{static_cast<uint8_t>(i), static_cast<uint8_t>(i * 2), static_cast<uint8_t>(i)}));
     }
 
     for (uint16_t i = 0; i < 19; ++i)

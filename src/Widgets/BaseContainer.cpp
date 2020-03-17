@@ -19,17 +19,37 @@ void Widget::BaseContainer::setPosition(Vec2D_t position)
 void Widget::BaseContainer::addChild(std::unique_ptr<BaseWidget> child)
 {
     child->setParent(this);
-    m_children[child->getId()] = std::move(child);
+    m_children.push_back(std::move(child));
 }
 
-void Widget::BaseContainer::removeChild(const std::string &id)
+bool Widget::BaseContainer::removeChild(const std::string &id)
 {
-    m_children.erase(id);
+    for (auto iter = m_children.begin(); iter != m_children.end(); ++iter)
+    {
+        if ((*iter)->getId() == id)
+        {
+            m_children.erase(iter);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 std::unique_ptr<Widget::BaseWidget> &Widget::BaseContainer::findChildById(const std::string &id)
 {
-    return m_children[id];
+    for (auto &widget : m_children)
+    {
+        if (widget->getId() == id)
+            return widget;
+    }
+
+    throw;
+}
+
+const std::vector<std::unique_ptr<Widget::BaseWidget>> &Widget::BaseContainer::getChildren()
+{
+    return m_children;
 }
 
 void Widget::BaseContainer::setBackgroundColor(Color565_t color)

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Container.h"
 
 Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t size, Color565_t backgroundColor)
@@ -49,7 +50,7 @@ void Widget::Container::setSize(Vec2D_t size)
 {
     m_size = size;
 
-    markDirtyWithChildren();
+    markDirty();
     m_clearLastPosition = true;
 }
 
