@@ -50,5 +50,5 @@ void Widget::BaseContainer::markDirtyWithChildren()
 
     // Mark the children dirty
     for (auto &widget: m_children)
-        widget.second->markDirty();
+        widget->markDirty();
 }

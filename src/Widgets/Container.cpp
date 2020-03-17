@@ -34,7 +34,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
 
     // Render the container children
     for (auto &widget: m_children)
-        widget.second->draw(target);
+        widget->draw(target);
 }
 
 Vec2D_t Widget::Container::getAbsolutePosition() const

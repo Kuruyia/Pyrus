@@ -43,15 +43,15 @@ void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
     const uint16_t scrollEnd = m_verticalScrollOffset + target.getScreenSize().y;
     for (auto &widget: m_children)
     {
-        const Vec2D_t widgetAbsolutePosition = widget.second->getAbsolutePosition();
-        if (widgetAbsolutePosition.y + widget.second->getHeight() >= m_verticalScrollOffset &&
+        const Vec2D_t widgetAbsolutePosition = widget->getAbsolutePosition();
+        if (widgetAbsolutePosition.y + widget->getHeight() >= m_verticalScrollOffset &&
                 widgetAbsolutePosition.y < scrollEnd)
         {
-            widget.second->draw(target);
+            widget->draw(target);
         }
         else
         {
-            widget.second->markDirty();
+            widget->markDirty();
         }
     }
 }
