@@ -24,7 +24,7 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     // Geometry has changed, we need to clear the last occupied space
     if (m_clearLastPosition)
     {
-        Vec2D_t lastAbsolutePosition = getAbsolutePosition();
+        Vec2D_t lastAbsolutePosition = getLastAbsolutePosition();
         if (m_loopVerticalPosition)
             lastAbsolutePosition.y %= target.getFramebufferSize().y;
 

@@ -18,12 +18,21 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
         // Geometry has changed, we need to clear the last occupied space
         if (m_clearLastPosition)
         {
-            target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor());
+            Vec2D_t lastAbsolutePosition = getLastAbsolutePosition();
+            if (m_loopVerticalPosition)
+                lastAbsolutePosition.y %= target.getFramebufferSize().y;
+
+            target.drawRectangle(lastAbsolutePosition, m_lastSize, getParentBackgroundColor());
             m_clearLastPosition = false;
         }
 
+        // Loop the vertical axis if enabled
+        Vec2D_t position = getAbsolutePosition();
+        if (m_loopVerticalPosition)
+            position.y %= target.getFramebufferSize().y;
+
         // Render the container
-        target.drawRectangle(m_position, m_size, m_backgroundColor);
+        target.drawRectangle(position, m_size, m_backgroundColor);
 
         // Store the geometry of this drawing
         m_lastPosition = m_position;
