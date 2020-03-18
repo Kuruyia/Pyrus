@@ -302,58 +302,15 @@ void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2
     for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
     {
         // Calculate the number of pixels to feed to the screen and the next cursor position
-        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y * 2) % BUFFER_SIZE : BUFFER_SIZE;
-        actualPixel += pixelsToFeed / 2;
+        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y) % BUFFER_SIZE : BUFFER_SIZE / 2;
+        actualPixel += pixelsToFeed;
 
-        Vec2D_t nextPosition = {static_cast<uint16_t>(actualPixel % size.x + position.x),
-                                static_cast<uint16_t>(actualPixel / size.x + position.y - verticalLoopCount * FRAMEBUFFER_HEIGHT)};
+        // Draw the buffer
+        const bool mustContinue = drawBuffer(position, size, actualPixel, actualPosition, lcdTxRamwrData,
+                pixelsToFeed,verticalLoopCount, loopVerticalAxis);
 
-        // Check if we are going to overflow on the Y axis
-        if (nextPosition.y >= FRAMEBUFFER_HEIGHT)
-        {
-            // Calculate the number of pixel before the overflow
-            const uint16_t pixelBeforeOverflowCount = (size.x - actualPosition.x + position.x) + ((FRAMEBUFFER_HEIGHT - actualPosition.y - 1) * size.x);
-            const uint16_t bufferBeforeOverflowCount = pixelBeforeOverflowCount * 2;
-
-            // Transfer those pixels to the screen
-            nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, bufferBeforeOverflowCount);
-            APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
-
-            if (loopVerticalAxis)
-            {
-                // Reset the window to the beginning of the framebuffer
-                setWindow({position.x, 0},
-                          {size.x, static_cast<uint16_t>(size.y - actualPosition.y)});
-
-                // Transfer the rest of the pixels
-                setCommandPin();
-                APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
-                setDataPin();
-
-                lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData + bufferBeforeOverflowCount,
-                        pixelsToFeed - bufferBeforeOverflowCount);
-                APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
-
-                // Update the actual position
-                ++verticalLoopCount;
-                nextPosition.y -= FRAMEBUFFER_HEIGHT;
-                actualPosition = nextPosition;
-            }
-            else
-            {
-                // We are asked not to continue
-                break;
-            }
-        }
-        else
-        {
-            // Send the pixels to the Screen controller
-            nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, pixelsToFeed);
-            APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
-
-            // Update the actual position
-            actualPosition = nextPosition;
-        }
+        if (!mustContinue)
+            break;
     }
 
     // Free the buffer
@@ -367,8 +324,9 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
     // Set the window
     const size_t descriptorOffset = c - fontInfo.startChar;
     const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
+    const Vec2D_t glyphSize = {descriptor.widthBits, fontInfo.height};
 
-    setWindow(position, {descriptor.widthBits, fontInfo.height});
+    setWindow(position, glyphSize);
 
     // Get raw color
     const uint16_t rawTextColor = (textColor.r << 11) | (textColor.g << 5) | textColor.b;
@@ -432,55 +390,12 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
             ++actualPixel;
         }
 
-        // Calculate the new position
-        Vec2D_t nextPosition = {static_cast<uint16_t>(actualPixel % descriptor.widthBits + position.x),
-                                      static_cast<uint16_t>(actualPixel / descriptor.widthBits + position.y - verticalLoopCount * FRAMEBUFFER_HEIGHT)};
+        // Draw the buffer
+        const bool mustContinue = drawBuffer(position, glyphSize, actualPixel, actualPosition, buffer,
+                bufferPos / 2, verticalLoopCount, loopVerticalAxis);
 
-        // Check if we are going to overflow on the Y axis
-        if (nextPosition.y >= FRAMEBUFFER_HEIGHT)
-        {
-            // Calculate the number of pixel before the overflow
-            const uint16_t pixelBeforeOverflowCount = (descriptor.widthBits - actualPosition.x + position.x) + ((FRAMEBUFFER_HEIGHT - actualPosition.y - 1) * descriptor.widthBits);
-            const uint16_t bufferBeforeOverflowCount = pixelBeforeOverflowCount * 2;
-
-            // Transfer those pixels to the screen
-            nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer, bufferBeforeOverflowCount);
-            APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
-
-            if (loopVerticalAxis)
-            {
-                // Reset the window to the beginning of the framebuffer
-                setWindow({position.x, 0},
-                          {descriptor.widthBits, static_cast<uint16_t>(fontInfo.height - actualPosition.y)});
-
-                // Transfer the rest of the pixels
-                setCommandPin();
-                APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
-                setDataPin();
-
-                lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer + bufferBeforeOverflowCount, bufferPos - bufferBeforeOverflowCount);
-                APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
-
-                // Update the actual position
-                ++verticalLoopCount;
-                nextPosition.y -= FRAMEBUFFER_HEIGHT;
-                actualPosition = nextPosition;
-            }
-            else
-            {
-                // We are asked not to continue
-                break;
-            }
-        }
-        else
-        {
-            // Send the pixels to the Screen controller
-            nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer, bufferPos);
-            APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
-
-            // Update the actual position
-            actualPosition = nextPosition;
-        }
+        if (!mustContinue)
+            break;
     }
 
     // Free the buffer
@@ -488,4 +403,67 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
 
     // Return the char width
     return descriptor.widthBits;
+}
+
+bool Hardware::Screen::ST7789::drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
+        Vec2D_t &actualPosition, const uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
+        const bool loopVerticalAxis)
+{
+    // Each pixel is 2 bytes in the buffer
+    pixelsToFeed *= 2;
+
+    // Calculate the new position
+    Vec2D_t nextPosition = {static_cast<uint16_t>(actualPixel % size.x + position.x),
+                            static_cast<uint16_t>(actualPixel / size.x + position.y - verticalLoopCount * FRAMEBUFFER_HEIGHT)};
+
+    // Check if we are going to overflow on the Y axis
+    if (nextPosition.y >= FRAMEBUFFER_HEIGHT)
+    {
+        // Calculate the number of pixel before the overflow
+        const uint16_t pixelBeforeOverflowCount = (size.x - actualPosition.x + position.x) + ((FRAMEBUFFER_HEIGHT - actualPosition.y - 1) * size.x);
+        const uint16_t bufferBeforeOverflowCount = pixelBeforeOverflowCount * 2;
+
+        // Transfer those pixels to the screen
+        nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer, bufferBeforeOverflowCount);
+        APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
+
+        if (loopVerticalAxis)
+        {
+            // Reset the window to the beginning of the framebuffer
+            setWindow({position.x, 0},
+                      {size.x, static_cast<uint16_t>(size.y - actualPosition.y)});
+
+            // Transfer the rest of the pixels
+            setCommandPin();
+            static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
+            nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
+            APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
+
+            setDataPin();
+            lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer + bufferBeforeOverflowCount,
+                                                 pixelsToFeed - bufferBeforeOverflowCount);
+            APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
+
+            // Update the actual position
+            ++verticalLoopCount;
+            nextPosition.y -= FRAMEBUFFER_HEIGHT;
+            actualPosition = nextPosition;
+        }
+        else
+        {
+            // We are asked not to continue
+            return false;
+        }
+    }
+    else
+    {
+        // Send the pixels to the Screen controller
+        nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer, pixelsToFeed);
+        APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
+
+        // Update the actual position
+        actualPosition = nextPosition;
+    }
+
+    return true;
 }

@@ -55,10 +55,19 @@ int main()
     lcd.clearFramebuffer({0, 0, 0});
 
     // Test the vertical looping
-    lcd.setVerticalScrollOffset(280);
-    Widget::Text txt("txt", "Vertical loop", &ubuntu_24ptFontInfo, {16, 310});
-    txt.setLoopVerticalPosition(true);
+    lcd.setVerticalScrollOffset(250);
+    Widget::Text txt("txt", "The quick brown", &ubuntu_24ptFontInfo, {16, 280});
+    Widget::Text txt2("txt2", "fox jumps over", &ubuntu_24ptFontInfo, {16, 314});
+    Widget::Text txt3("txt3", "the lazy dog", &ubuntu_24ptFontInfo, {16, 28},
+            {0, 0, 0}, {31, 63, 31});
+
+    txt2.setLoopVerticalPosition(true);
+
     txt.draw(lcd);
+    txt2.draw(lcd);
+    txt3.draw(lcd);
+
+    nrf_delay_ms(4000);
     for (char c = ubuntu_24ptFontInfo.startChar; c <= ubuntu_24ptFontInfo.endChar; ++c)
     {
         nrf_delay_ms(100);

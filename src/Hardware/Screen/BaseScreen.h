@@ -27,6 +27,10 @@ public:
 
     virtual void clearFramebuffer(Color565_t color) = 0;
 
+    virtual bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
+                            Vec2D_t &actualPosition, const uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
+                            bool loopVerticalAxis) = 0;
+
     virtual void drawPixel(const Vec2D_t &position, Color565_t color) = 0;
     virtual void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
                                bool loopVerticalAxis) = 0;

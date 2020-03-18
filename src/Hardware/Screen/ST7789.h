@@ -27,6 +27,10 @@ public:
 
     void clearFramebuffer(Color565_t color) override;
 
+    bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
+                    Vec2D_t &actualPosition, const uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
+                    bool loopVerticalAxis) override;
+
     void drawPixel(const Vec2D_t &position, Color565_t color) override;
     void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
                        bool loopVerticalAxis) override;
