@@ -28,10 +28,11 @@ public:
     virtual void clearFramebuffer(Color565_t color) = 0;
 
     virtual void drawPixel(const Vec2D_t &position, Color565_t color) = 0;
-    virtual void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color) = 0;
+    virtual void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
+                               bool loopVerticalAxis) = 0;
 
     virtual uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
-                      const Color565_t &backgroundColor) = 0;
+                              const Color565_t &backgroundColor, bool loopVerticalAxis) = 0;
 }; // class BaseScreen
 
 } // namespace Screen

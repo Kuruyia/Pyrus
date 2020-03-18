@@ -20,12 +20,12 @@ void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
         // Geometry has changed, we need to clear the last occupied space
         if (m_clearLastPosition)
         {
-            target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor());
+            target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor(), m_loopVerticalPosition);
             m_clearLastPosition = false;
         }
 
         // Render the container
-        target.drawRectangle(m_position, m_size, m_backgroundColor);
+        target.drawRectangle(m_position, m_size, m_backgroundColor, m_loopVerticalPosition);
 
         // Store the geometry of this drawing
         m_lastPosition = m_position;

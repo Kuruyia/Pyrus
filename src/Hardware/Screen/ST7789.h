@@ -28,10 +28,11 @@ public:
     void clearFramebuffer(Color565_t color) override;
 
     void drawPixel(const Vec2D_t &position, Color565_t color) override;
-    void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color) override;
+    void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
+                       bool loopVerticalAxis) override;
 
     uint16_t drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
-                      const Color565_t &backgroundColor) override;
+                      const Color565_t &backgroundColor, bool loopVerticalAxis) override;
 
 private:
     void setCommandPin();

@@ -8,6 +8,7 @@ Widget::BaseWidget::BaseWidget(std::string id, const Vec2D_t position)
 , m_dirty(true)
 , m_clearLastPosition(false)
 , m_position(position)
+, m_loopVerticalPosition(false)
 {
 
 }

@@ -54,40 +54,16 @@ int main()
     Hardware::Screen::ST7789 lcd({240, 240}, 3, 4, 2, 25, 18, 26);
     lcd.clearFramebuffer({0, 0, 0});
 
-    // Test the Container widget
-    Widget::VerticalScrollContainer ctr("vctr", {0, 0}, {240, 240}, {0, 0, 0});
-
-    for (uint16_t i = 0; i < 19; ++i)
+    // Test the vertical looping
+    lcd.setVerticalScrollOffset(280);
+    Widget::Text txt("txt", "Vertical loop", &ubuntu_24ptFontInfo, {16, 310});
+    txt.setLoopVerticalPosition(true);
+    txt.draw(lcd);
+    for (char c = ubuntu_24ptFontInfo.startChar; c <= ubuntu_24ptFontInfo.endChar; ++c)
     {
-        const uint16_t posY = 31 * i + 23;
-        ctr.addChild(std::make_unique<Widget::Container>("ctr" + std::to_string(i), Vec2D_t{0, posY}, Vec2D_t{240, 31}, Color565_t{static_cast<uint8_t>(i), static_cast<uint8_t>(i * 2), static_cast<uint8_t>(i)}));
-    }
-
-    for (uint16_t i = 0; i < 19; ++i)
-    {
-        const uint16_t posY = 31 * i + 23;
-        ctr.addChild(std::make_unique<Widget::Text>("txt" + std::to_string(i), "#" + std::to_string(i) + " - " + std::to_string(posY),
-                                                    &ubuntu_24ptFontInfo,
-                                                    Vec2D_t{0, posY}, Color565_t{0, 0, 0},
-                                                    Color565_t{31, 0, 0}));
-    }
-
-    ctr.draw(lcd);
-
-    nrf_delay_ms(1000);
-    for (size_t i = 0; i < 372; ++i)
-    {
-        ctr.setVerticalScrollOffset(i);
-        ctr.draw(lcd);
-        nrf_delay_ms(10);
-    }
-
-    nrf_delay_ms(500);
-    for (size_t i = ctr.getVerticalScrollOffset(); i-- > 0;)
-    {
-        ctr.setVerticalScrollOffset(i);
-        ctr.draw(lcd);
-        nrf_delay_ms(10);
+        nrf_delay_ms(100);
+        txt.setText(std::string(1, c));
+        txt.draw(lcd);
     }
 
     while (true)
