@@ -25,6 +25,9 @@ public:
     virtual void setVerticalScrollOffset(uint16_t offset) = 0;
     virtual const uint16_t &getVerticalScrollOffset() const = 0;
 
+    virtual void setTopFixedArea(uint16_t area) = 0;
+    virtual const uint16_t &getTopFixedArea() const = 0;
+
     virtual void clearFramebuffer(Color565_t color) = 0;
 
     virtual bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,

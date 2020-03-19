@@ -25,6 +25,9 @@ public:
     void setVerticalScrollOffset(uint16_t offset) override;
     const uint16_t &getVerticalScrollOffset() const override;
 
+    void setTopFixedArea(uint16_t area) override;
+    const uint16_t &getTopFixedArea() const override;
+
     void clearFramebuffer(Color565_t color) override;
 
     bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
@@ -35,7 +38,7 @@ public:
     void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
                        bool loopVerticalAxis) override;
 
-    uint16_t drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
+    uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
                       const Color565_t &backgroundColor, bool loopVerticalAxis) override;
 
 private:
@@ -50,8 +53,9 @@ private:
     Vec2D_t m_windowSize;
 
     uint16_t m_verticalScrollOffset;
+    uint16_t m_topFixedArea;
 
-    nrfx_spim_config_t m_lcdSpiConfig{};
+    nrfx_spim_config_t m_lcdSpiConfig;
     const uint8_t m_mosi;
     const uint8_t m_miso;
     const uint8_t m_clk;

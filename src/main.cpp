@@ -54,25 +54,20 @@ int main()
     Hardware::Screen::ST7789 lcd({240, 240}, 3, 4, 2, 25, 18, 26);
     lcd.clearFramebuffer({0, 0, 0});
 
-    // Test the vertical looping
-    lcd.setVerticalScrollOffset(250);
-    Widget::Text txt("txt", "The quick brown", &ubuntu_24ptFontInfo, {16, 280});
-    Widget::Text txt2("txt2", "fox jumps over", &ubuntu_24ptFontInfo, {16, 314});
-    Widget::Text txt3("txt3", "the lazy dog", &ubuntu_24ptFontInfo, {16, 28},
-            {0, 0, 0}, {31, 63, 31});
+    // Test top-fixed area
+    lcd.setTopFixedArea(32);
 
-    txt2.setLoopVerticalPosition(true);
+    Widget::Text fixedTxt("fixedTxt", "Top fixed area", &ubuntu_24ptFontInfo, {0, 0});
+    Widget::Text scrollTxt("scrollTxt", "Scroll area", &ubuntu_24ptFontInfo, {0, 32});
 
-    txt.draw(lcd);
-    txt2.draw(lcd);
-    txt3.draw(lcd);
+    fixedTxt.draw(lcd);
+    scrollTxt.draw(lcd);
 
-    nrf_delay_ms(4000);
-    for (char c = ubuntu_24ptFontInfo.startChar; c <= ubuntu_24ptFontInfo.endChar; ++c)
+    nrf_delay_ms(1000);
+    for (size_t i = 32; i < 320; ++i)
     {
-        nrf_delay_ms(100);
-        txt.setText(std::string(1, c));
-        txt.draw(lcd);
+        nrf_delay_ms(10);
+        lcd.setVerticalScrollOffset(i);
     }
 
     while (true)

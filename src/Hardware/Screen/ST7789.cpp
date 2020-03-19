@@ -15,6 +15,7 @@
 #define ST7789_CMD_CASET   0x2A
 #define ST7789_CMD_RASET   0x2B
 #define ST7789_CMD_RAMWR   0x2C
+#define ST7789_CMD_VSCRDEF 0x33
 #define ST7789_CMD_COLMOD  0x3A
 #define ST7789_CMD_MADCTL  0x36
 #define ST7789_CMD_VSCSAD  0x37
@@ -29,7 +30,11 @@ static const nrfx_spim_t lcdSpi = NRFX_SPIM_INSTANCE(0);
 Hardware::Screen::ST7789::ST7789(const Vec2D_t &screenSize, const uint8_t mosi, const uint8_t miso, const uint8_t clk,
                                  const uint8_t cs, const uint8_t cd, const uint8_t reset)
                               : m_screenSize(screenSize)
+                              , m_windowPosition({0, 0})
+                              , m_windowSize(screenSize)
                               , m_verticalScrollOffset(0)
+                              , m_topFixedArea(0)
+                              , m_lcdSpiConfig(NRFX_SPIM_DEFAULT_CONFIG)
                               , m_mosi(mosi)
                               , m_miso(miso)
                               , m_clk(clk)
@@ -42,7 +47,6 @@ Hardware::Screen::ST7789::ST7789(const Vec2D_t &screenSize, const uint8_t mosi, 
     nrf_gpio_cfg_output(m_reset);
 
     // Configure the SPI master driver
-    m_lcdSpiConfig = NRFX_SPIM_DEFAULT_CONFIG;
     m_lcdSpiConfig.frequency      = NRF_SPIM_FREQ_8M;
     m_lcdSpiConfig.mosi_pin       = m_mosi;
     m_lcdSpiConfig.miso_pin       = m_miso;
@@ -234,6 +238,37 @@ const uint16_t &Hardware::Screen::ST7789::getVerticalScrollOffset() const
     return m_verticalScrollOffset;
 }
 
+void Hardware::Screen::ST7789::setTopFixedArea(uint16_t area)
+{
+    // Store the area
+    m_topFixedArea = area;
+
+    // Calculate the scrolling area
+    const uint16_t scrollingArea = FRAMEBUFFER_HEIGHT - area;
+
+    // Set the vertical scroll start address
+    static uint8_t lcdTxVscrdefCmd  = ST7789_CMD_VSCRDEF;
+    uint8_t lcdTxVscrdefData[] = {
+            static_cast<uint8_t>(area >> 8),
+            static_cast<uint8_t>(area & 0xFF),
+            static_cast<uint8_t>(scrollingArea >> 8),
+            static_cast<uint8_t>(scrollingArea & 0xFF),
+            0,
+            0
+    };
+    nrfx_spim_xfer_desc_t lcdXferVscrdefCmd  = NRFX_SPIM_XFER_TX(&lcdTxVscrdefCmd, 1);
+    nrfx_spim_xfer_desc_t lcdXferVscrdefData = NRFX_SPIM_XFER_TX(lcdTxVscrdefData, sizeof(lcdTxVscrdefData));
+
+    setCommandPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscrdefCmd, 0));
+    setDataPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscrdefData, 0));
+}
+
+const uint16_t &Hardware::Screen::ST7789::getTopFixedArea() const
+{
+    return m_topFixedArea;
+}
 
 void Hardware::Screen::ST7789::clearFramebuffer(Color565_t color)
 {
