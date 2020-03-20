@@ -4,8 +4,10 @@
 #include <nrf_gpio.h>
 #include <libraries/button/app_button.h>
 #include <nrfx_spim.h>
+#include <ctime>
 
 #include "Fonts/Ubuntu24Font.h"
+#include "Hardware/Clock/ClockNrf52.h"
 #include "Hardware/Screen/ST7789.h"
 
 #include "Widgets/Container.h"
@@ -54,21 +56,11 @@ int main()
     Hardware::Screen::ST7789 lcd({240, 240}, 3, 4, 2, 25, 18, 26);
     lcd.clearFramebuffer({0, 0, 0});
 
-    // Test top-fixed area
-    lcd.setTopFixedArea(32);
+    Widget::Text clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 16});
 
-    Widget::Text fixedTxt("fixedTxt", "Top fixed area", &ubuntu_24ptFontInfo, {0, 0});
-    Widget::Text scrollTxt("scrollTxt", "Scroll area", &ubuntu_24ptFontInfo, {0, 32});
-
-    fixedTxt.draw(lcd);
-    scrollTxt.draw(lcd);
-
-    nrf_delay_ms(1000);
-    for (size_t i = 32; i < 320; ++i)
-    {
-        nrf_delay_ms(10);
-        lcd.setVerticalScrollOffset(i);
-    }
+    // Instantiate a new Clock
+    Hardware::Clock::ClockNrf52 clock;
+    clock.setTime(1584741960);
 
     while (true)
     {
@@ -86,6 +78,15 @@ int main()
         if (app_button_is_pushed(0)) {
             break;
         }
+
+        // Test the clock
+        std::time_t epoch = clock.getTime();
+        struct tm *timeinfo = std::localtime(const_cast<const time_t *>(&epoch));
+
+        char timeBuffer[0x9];
+        snprintf(timeBuffer, 0x9, "%02u:%02u:%02u", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+        clkText.setText(timeBuffer);
+        clkText.draw(lcd);
 
         // Wait 500ms
         nrf_delay_ms(500);
