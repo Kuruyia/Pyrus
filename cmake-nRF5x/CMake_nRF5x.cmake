@@ -79,7 +79,7 @@ macro(nRF5x_setup)
                 "${NRF5_SDK_PATH}/modules/nrfx/mdk/system_nrf52.c"
                 "${NRF5_SDK_PATH}/modules/nrfx/mdk/gcc_startup_nrf52.S"
                 )
-        set(SOFTDEVICE_PATH "${NRF5_SDK_PATH}/components/softdevice/s132/hex/s132_nrf52_6.1.1_softdevice.hex")
+        set(SOFTDEVICE_PATH "${NRF5_SDK_PATH}/components/softdevice/s132/hex/s132_nrf52_7.0.1_softdevice.hex")
     endif ()
 
     set(COMMON_FLAGS "-MP -MD -mthumb -mabi=aapcs -Wall -g3 -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin --short-enums ${CPU_FLAGS}")
@@ -249,28 +249,28 @@ macro(nRF5x_setup)
 
 
     # Common Bluetooth Low Energy files
-#    include_directories(
-#            "${NRF5_SDK_PATH}/components/ble"
-#            "${NRF5_SDK_PATH}/components/ble/common"
-#            "${NRF5_SDK_PATH}/components/ble/ble_advertising"
-#            "${NRF5_SDK_PATH}/components/ble/ble_dtm"
-#            "${NRF5_SDK_PATH}/components/ble/ble_link_ctx_manager"
-#            "${NRF5_SDK_PATH}/components/ble/ble_racp"
-#            "${NRF5_SDK_PATH}/components/ble/nrf_ble_qwr"
-#            "${NRF5_SDK_PATH}/components/ble/peer_manager"
-#    )
+    include_directories(
+            "${NRF5_SDK_PATH}/components/ble"
+            "${NRF5_SDK_PATH}/components/ble/common"
+            "${NRF5_SDK_PATH}/components/ble/ble_advertising"
+            "${NRF5_SDK_PATH}/components/ble/ble_dtm"
+            "${NRF5_SDK_PATH}/components/ble/ble_link_ctx_manager"
+            "${NRF5_SDK_PATH}/components/ble/ble_racp"
+            "${NRF5_SDK_PATH}/components/ble/nrf_ble_qwr"
+            "${NRF5_SDK_PATH}/components/ble/peer_manager"
+    )
 
-#    list(APPEND SDK_SOURCE_FILES
-#            "${NRF5_SDK_PATH}/components/softdevice/common/nrf_sdh_ble.c"
-#            "${NRF5_SDK_PATH}/components/ble/common/ble_advdata.c"
-#            "${NRF5_SDK_PATH}/components/ble/common/ble_conn_params.c"
-#            "${NRF5_SDK_PATH}/components/ble/common/ble_conn_state.c"
-#            "${NRF5_SDK_PATH}/components/ble/common/ble_srv_common.c"
-#            "${NRF5_SDK_PATH}/components/ble/ble_advertising/ble_advertising.c"
-#            "${NRF5_SDK_PATH}/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c"
-#            "${NRF5_SDK_PATH}/components/ble/ble_services/ble_nus/ble_nus.c"
-#            "${NRF5_SDK_PATH}/components/ble/nrf_ble_qwr/nrf_ble_qwr.c"
-#            )
+    list(APPEND SDK_SOURCE_FILES
+            "${NRF5_SDK_PATH}/components/softdevice/common/nrf_sdh_ble.c"
+            "${NRF5_SDK_PATH}/components/ble/common/ble_advdata.c"
+            "${NRF5_SDK_PATH}/components/ble/common/ble_conn_params.c"
+            "${NRF5_SDK_PATH}/components/ble/common/ble_conn_state.c"
+            "${NRF5_SDK_PATH}/components/ble/common/ble_srv_common.c"
+            "${NRF5_SDK_PATH}/components/ble/ble_advertising/ble_advertising.c"
+            "${NRF5_SDK_PATH}/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c"
+            "${NRF5_SDK_PATH}/components/ble/ble_services/ble_nus/ble_nus.c"
+            "${NRF5_SDK_PATH}/components/ble/nrf_ble_qwr/nrf_ble_qwr.c"
+            )
 
     # adds target for erasing and flashing the board with a softdevice
     add_custom_target(FLASH_SOFTDEVICE ALL

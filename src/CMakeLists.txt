@@ -5,7 +5,7 @@ project(Pyrus-fw C CXX ASM)
 # define some variables just for this example to determine file locations
 set(NRF_PROJECT_NAME Pyrus-fw)
 set(NRF_BOARD pca10040)
-#set(NRF_SOFTDEVICE s132)
+set(NRF_SOFTDEVICE s132)
 
 nRF5x_toolchainSetup()
 nRF5x_setup()
@@ -19,6 +19,8 @@ nRF5x_addAppButton()
 #nRF5x_addBLEGATT
 #
 #nRF5x_addBLEService(ble_lbs)
+nRF5x_addBLEAdvertising()
+nRF5x_addBLEPeerManager()
 
 add_definitions(-DCONFIG_GPIO_AS_PINRESET)
 
