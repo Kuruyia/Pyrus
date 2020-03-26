@@ -13,22 +13,6 @@ namespace Hardware
 namespace Clock
 {
 
-// "Convert C++ function pointer to c function pointer": https://stackoverflow.com/a/19809787
-template <typename T>
-struct CallbackRTC;
-
-template <typename Ret, typename... Params>
-struct CallbackRTC<Ret(Params...)> {
-    template <typename... Args>
-    static Ret callback(Args... args) { return func(args...); }
-    static std::function<Ret(Params...)> func;
-};
-
-// Initialize the static member.
-template <typename Ret, typename... Params>
-std::function<Ret(Params...)> CallbackRTC<Ret(Params...)>::func;
-
-
 class ClockNrf52 {
 public:
     ClockNrf52();
@@ -43,6 +27,21 @@ private:
     const nrfx_rtc_t m_rtcInstance;
     std::time_t m_baseEpoch;
 }; // class ClockNrf52
+
+// "Convert C++ function pointer to c function pointer": https://stackoverflow.com/a/19809787
+template <typename T>
+struct CallbackRTC;
+
+template <typename Ret, typename... Params>
+struct CallbackRTC<Ret(Params...)> {
+    template <typename... Args>
+    static Ret callback(Args... args) { return func(args...); }
+    static std::function<Ret(Params...)> func;
+};
+
+// Initialize the static member.
+template <typename Ret, typename... Params>
+std::function<Ret(Params...)> CallbackRTC<Ret(Params...)>::func;
 
 } // namespace Clock
 

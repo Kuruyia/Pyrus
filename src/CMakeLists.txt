@@ -30,6 +30,7 @@ list(APPEND SOURCE_FILES
         Fonts/Ubuntu24Font.c
         Graphics/Color.h
         Graphics/Vec2D.h
+        Hardware/BLE/BleNrf5.cpp
         Hardware/Clock/ClockNrf52.cpp
         Hardware/Screen/BaseScreen.h
         Hardware/Screen/ST7789.cpp
