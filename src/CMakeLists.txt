@@ -16,11 +16,12 @@ nRF5x_addAppTimer()
 #nRF5x_addAppUART()
 nRF5x_addAppButton()
 #nRF5x_addBSP(TRUE FALSE FALSE)
-#nRF5x_addBLEGATT
 #
 #nRF5x_addBLEService(ble_lbs)
 nRF5x_addBLEAdvertising()
 nRF5x_addBLEPeerManager()
+nRF5x_addBLEGATT()
+nRF5x_addBLEService(ble_dis)
 
 add_definitions(-DCONFIG_GPIO_AS_PINRESET)
 
