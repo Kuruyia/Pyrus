@@ -15,12 +15,23 @@ namespace BLE
 
 class BleNrf5 {
 public:
-    BleNrf5();
+    static BleNrf5& getInstance()
+    {
+        static BleNrf5 instance;
+        return instance;
+    }
+
+    BleNrf5(BleNrf5 const&) = delete;
+    void operator=(BleNrf5 const&) = delete;
 
     void deleteBonds();
     void startAdvertising();
 
+    bool isConnected();
+
 private:
+    BleNrf5();
+
     void bleEventHandler(const ble_evt_t *bleEvent);
     static void bleEventHandlerWrapper(const ble_evt_t *bleEvent, void *context);
     void initBleStack();
@@ -43,6 +54,8 @@ private:
 
     uint16_t m_connectionHandle;
     static ble_uuid_t m_advertisementUuids[];
+
+    bool m_connected;
 }; // class BleNrf5
 
 /*

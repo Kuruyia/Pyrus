@@ -5,17 +5,13 @@
 #include <libraries/button/app_button.h>
 #include <nrfx_spim.h>
 #include <ctime>
-#include <softdevice/common/nrf_sdh_ble.h>
 #include <softdevice/common/nrf_sdh.h>
-#include <ble/nrf_ble_gatt/nrf_ble_gatt.h>
-#include <ble/nrf_ble_qwr/nrf_ble_qwr.h>
 #include <ble/ble_advertising/ble_advertising.h>
-#include <ble/common/ble_conn_params.h>
 #include <app_timer.h>
-#include <ble/peer_manager/peer_manager.h>
-#include <ble/peer_manager/peer_manager_handler.h>
-#include <ble/ble_services/ble_dis/ble_dis.h>
 #include <Hardware/BLE/BleNrf5.h>
+#include <libraries/log/nrf_log_ctrl.h>
+#include <libraries/log/nrf_log_default_backends.h>
+#include <libraries/log/nrf_log.h>
 
 #include "Fonts/Ubuntu24Font.h"
 #include "Hardware/Clock/ClockNrf52.h"
@@ -68,6 +64,7 @@ int main()
     lcd.clearFramebuffer({0, 0, 0});
 
     Widget::Text clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 16});
+    Widget::Text bleText("bleText", "BLE Unknown", &ubuntu_24ptFontInfo, {16, 48});
 
     // Instantiate a new Clock
     Hardware::Clock::ClockNrf52 clock;
@@ -76,7 +73,7 @@ int main()
     ret_code_t err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
 
-    Hardware::BLE::BleNrf5 bleManager;
+    Hardware::BLE::BleNrf5 &bleManager = Hardware::BLE::BleNrf5::getInstance();
     bleManager.deleteBonds();
     bleManager.startAdvertising();
 
@@ -105,6 +102,10 @@ int main()
         snprintf(timeBuffer, 0x9, "%02u:%02u:%02u", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
         clkText.setText(timeBuffer);
         clkText.draw(lcd);
+
+        // Show BLE state
+        bleText.setText(bleManager.isConnected() ? "BLE C" : "BLE D");
+        bleText.draw(lcd);
 
         // Wait 500ms
         nrf_delay_ms(500);

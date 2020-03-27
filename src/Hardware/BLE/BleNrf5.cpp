@@ -40,6 +40,7 @@ ble_uuid_t Hardware::BLE::BleNrf5::m_advertisementUuids[] = {
 
 Hardware::BLE::BleNrf5::BleNrf5()
 : m_connectionHandle(BLE_CONN_HANDLE_INVALID)
+, m_connected(false)
 {
     initBleStack();
     initGapParameters();
@@ -72,7 +73,7 @@ void Hardware::BLE::BleNrf5::bleEventHandler(const ble_evt_t *bleEvent)
     switch (bleEvent->header.evt_id)
     {
         case BLE_GAP_EVT_DISCONNECTED:
-            // LED indication will be changed when advertising starts.
+            m_connected = false;
             break;
 
         case BLE_GAP_EVT_CONNECTED:
@@ -80,14 +81,16 @@ void Hardware::BLE::BleNrf5::bleEventHandler(const ble_evt_t *bleEvent)
             m_connectionHandle = bleEvent->evt.gap_evt.conn_handle;
             errorCode = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_connectionHandle);
             APP_ERROR_CHECK(errorCode);
+
+            m_connected = true;
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
         {
             const ble_gap_phys_t phys =
             {
-                    BLE_GAP_PHY_AUTO,
-                    BLE_GAP_PHY_AUTO
+                BLE_GAP_PHY_AUTO,
+                BLE_GAP_PHY_AUTO
             };
             errorCode = sd_ble_gap_phy_update(bleEvent->evt.gap_evt.conn_handle, &phys);
             APP_ERROR_CHECK(errorCode);
@@ -115,8 +118,7 @@ void Hardware::BLE::BleNrf5::bleEventHandler(const ble_evt_t *bleEvent)
 
 void Hardware::BLE::BleNrf5::bleEventHandlerWrapper(const ble_evt_t *bleEvent, void *context)
 {
-    // We passed "this" as the context
-    static_cast<BleNrf5 *>(context)->bleEventHandler(bleEvent);
+    BleNrf5::getInstance().bleEventHandler(bleEvent);
 }
 
 void Hardware::BLE::BleNrf5::initBleStack()
@@ -137,7 +139,7 @@ void Hardware::BLE::BleNrf5::initBleStack()
     APP_ERROR_CHECK(errorCode);
 
     // Register a handler for BLE events.
-    NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, bleEventHandlerWrapper, this);
+    NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, bleEventHandlerWrapper, NULL);
 }
 
 void Hardware::BLE::BleNrf5::initGapParameters()
@@ -311,4 +313,9 @@ void Hardware::BLE::BleNrf5::initPeerManager()
 
     errorCode = pm_register(pmHandlerFunc);
     APP_ERROR_CHECK(errorCode);
+}
+
+bool Hardware::BLE::BleNrf5::isConnected()
+{
+    return m_connected;
 }
