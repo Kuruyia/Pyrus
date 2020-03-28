@@ -1,12 +1,14 @@
+#include <app_timer.h>
+
+#include <ble/ble_services/ble_dis/ble_dis.h>
+#include <ble/nrf_ble_gatt/nrf_ble_gatt.h>
+#include <ble/nrf_ble_gq/nrf_ble_gq.h>
+#include <ble/nrf_ble_qwr/nrf_ble_qwr.h>
 #include <ble/peer_manager/peer_manager.h>
-#include <ble/ble_advertising/ble_advertising.h>
+#include <ble/peer_manager/peer_manager_handler.h>
+
 #include <softdevice/common/nrf_sdh.h>
 #include <softdevice/common/nrf_sdh_ble.h>
-#include <ble/nrf_ble_qwr/nrf_ble_qwr.h>
-#include <ble/ble_services/ble_dis/ble_dis.h>
-#include <ble/peer_manager/peer_manager_handler.h>
-#include <ble/nrf_ble_gatt/nrf_ble_gatt.h>
-#include <app_timer.h>
 #include <softdevice/common/nrf_sdh_soc.h>
 
 #include "BleNrf5.h"
@@ -33,22 +35,37 @@
 NRF_BLE_GATT_DEF(m_gatt);
 NRF_BLE_QWR_DEF(m_qwr);
 BLE_ADVERTISING_DEF(m_advertising);
+BLE_DB_DISCOVERY_DEF(m_bleDbDiscovery);
+NRF_BLE_GQ_DEF(m_bleGattQueue, NRF_SDH_BLE_PERIPHERAL_LINK_COUNT, NRF_BLE_GQ_QUEUE_SIZE);
 
 ble_uuid_t Hardware::BLE::BleNrf5::m_advertisementUuids[] = {
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
 };
 
 Hardware::BLE::BleNrf5::BleNrf5()
-: m_connectionHandle(BLE_CONN_HANDLE_INVALID)
-, m_connected(false)
+: m_initialized(false)
+, m_connectionHandle(BLE_CONN_HANDLE_INVALID)
 {
+
+}
+
+void Hardware::BLE::BleNrf5::init()
+{
+    if (m_initialized) return;
+
     initBleStack();
     initGapParameters();
     initGatt();
     initAdvertising();
+
+    initDbDiscovery();
     initServices();
+    m_currentTimeClient.initService(this);
+
     initConnectionParameters();
     initPeerManager();
+
+    m_initialized = true;
 }
 
 void Hardware::BLE::BleNrf5::deleteBonds()
@@ -69,6 +86,8 @@ void Hardware::BLE::BleNrf5::startAdvertising()
 void Hardware::BLE::BleNrf5::bleEventHandler(const ble_evt_t *bleEvent)
 {
     ret_code_t errorCode = NRF_SUCCESS;
+
+    pm_handler_secure_on_connection(bleEvent);
 
     switch (bleEvent->header.evt_id)
     {
@@ -139,7 +158,7 @@ void Hardware::BLE::BleNrf5::initBleStack()
     APP_ERROR_CHECK(errorCode);
 
     // Register a handler for BLE events.
-    NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, bleEventHandlerWrapper, NULL);
+    NRF_SDH_BLE_OBSERVER(m_bleObserver, APP_BLE_OBSERVER_PRIO, bleEventHandlerWrapper, NULL);
 }
 
 void Hardware::BLE::BleNrf5::initGapParameters()
@@ -175,7 +194,7 @@ void Hardware::BLE::BleNrf5::initGatt()
     APP_ERROR_CHECK(errorCode);
 }
 
-void Hardware::BLE::BleNrf5::onAdvertisementEvent(ble_adv_evt_t bleAdvertisementEvent)
+void Hardware::BLE::BleNrf5::advertisementEventHandler(ble_adv_evt_t bleAdvertisementEvent)
 {
 
 }
@@ -197,12 +216,29 @@ void Hardware::BLE::BleNrf5::initAdvertising()
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
 
-    init.evt_handler = onAdvertisementEvent;
+    init.evt_handler = advertisementEventHandler;
 
     errorCode = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(errorCode);
 
     ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
+}
+
+void Hardware::BLE::BleNrf5::dbDiscoveryEventHandler(ble_db_discovery_evt_t *dbDiscoveryEvent)
+{
+    ble_cts_c_on_db_disc_evt(getInstance().m_currentTimeClient.getCtsClientInstance(), dbDiscoveryEvent);
+}
+
+void Hardware::BLE::BleNrf5::initDbDiscovery()
+{
+    ble_db_discovery_init_t dbInit;
+
+    memset(&dbInit, 0, sizeof(ble_db_discovery_init_t));
+
+    dbInit.evt_handler = dbDiscoveryEventHandler;
+    dbInit.p_gatt_queue = &m_bleGattQueue;
+
+    APP_ERROR_CHECK(ble_db_discovery_init(&dbInit));
 }
 
 void Hardware::BLE::BleNrf5::qwrErrorHandler(uint32_t nrfError)
@@ -278,7 +314,18 @@ void Hardware::BLE::BleNrf5::initConnectionParameters()
 void Hardware::BLE::BleNrf5::peerManagerEventHandler(const pm_evt_t *peerManagerEvent)
 {
     pm_handler_on_pm_evt(peerManagerEvent);
+    pm_handler_disconnect_on_sec_failure(peerManagerEvent);
     pm_handler_flash_clean(peerManagerEvent);
+
+    switch (peerManagerEvent->evt_id)
+    {
+        case PM_EVT_CONN_SEC_SUCCEEDED:
+            APP_ERROR_CHECK(ble_db_discovery_start(&m_bleDbDiscovery, peerManagerEvent->conn_handle));
+            break;
+
+        default:
+            break;
+    }
 }
 
 void Hardware::BLE::BleNrf5::initPeerManager()
@@ -315,7 +362,12 @@ void Hardware::BLE::BleNrf5::initPeerManager()
     APP_ERROR_CHECK(errorCode);
 }
 
-bool Hardware::BLE::BleNrf5::isConnected()
+nrf_ble_gq_t *Hardware::BLE::BleNrf5::getGattQueueInstance()
 {
-    return m_connected;
+    return &m_bleGattQueue;
+}
+
+Hardware::BLE::Clients::BaseCurrentTime &Hardware::BLE::BleNrf5::getCurrentTimeClient()
+{
+    return m_currentTimeClient;
 }

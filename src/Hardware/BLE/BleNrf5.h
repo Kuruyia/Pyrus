@@ -4,8 +4,12 @@
 #include <functional>
 
 #include <ble.h>
+#include <ble/ble_advertising/ble_advertising.h>
 #include <ble/common/ble_conn_params.h>
 #include <ble/peer_manager/peer_manager_types.h>
+
+#include "BaseBle.h"
+#include "Hardware/BLE/Clients/CurrentTime/CurrentTimeNrf5.h"
 
 namespace Hardware
 {
@@ -13,8 +17,10 @@ namespace Hardware
 namespace BLE
 {
 
-class BleNrf5 {
+class BleNrf5 : public BaseBle {
 public:
+    ~BleNrf5() override = default;
+
     static BleNrf5& getInstance()
     {
         static BleNrf5 instance;
@@ -24,10 +30,12 @@ public:
     BleNrf5(BleNrf5 const&) = delete;
     void operator=(BleNrf5 const&) = delete;
 
-    void deleteBonds();
-    void startAdvertising();
+    void init();
 
-    bool isConnected();
+    void deleteBonds() override;
+    void startAdvertising() override;
+
+    Clients::BaseCurrentTime &getCurrentTimeClient() override;
 
 private:
     BleNrf5();
@@ -39,9 +47,11 @@ private:
     void initGapParameters();
     void initGatt();
 
-    static void onAdvertisementEvent(ble_adv_evt_t bleAdvertisementEvent);
+    static void advertisementEventHandler(ble_adv_evt_t bleAdvertisementEvent);
     void initAdvertising();
 
+    static void dbDiscoveryEventHandler(ble_db_discovery_evt_t *dbDiscoveryEvent);
+    void initDbDiscovery();
     static void qwrErrorHandler(uint32_t nrfError);
     void initServices();
 
@@ -52,10 +62,16 @@ private:
     void peerManagerEventHandler(const pm_evt_t *peerManagerEvent);
     void initPeerManager();
 
+    bool m_initialized;
+
     uint16_t m_connectionHandle;
     static ble_uuid_t m_advertisementUuids[];
 
-    bool m_connected;
+    friend class Clients::CurrentTimeNrf5;
+
+    Clients::CurrentTimeNrf5 m_currentTimeClient;
+
+    nrf_ble_gq_t *getGattQueueInstance();
 }; // class BleNrf5
 
 /*
