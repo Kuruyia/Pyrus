@@ -43,6 +43,7 @@ void Hardware::Clock::ClockNrf52::rtcHandler(nrfx_rtc_int_type_t intType)
 void Hardware::Clock::ClockNrf52::setTime(std::time_t time)
 {
     m_baseEpoch = time;
+    nrfx_rtc_counter_clear(&m_rtcInstance);
 }
 
 std::time_t Hardware::Clock::ClockNrf52::getTime()
