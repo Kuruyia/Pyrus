@@ -257,10 +257,12 @@ macro(nRF5x_setup)
             "${NRF5_SDK_PATH}/components/ble"
             "${NRF5_SDK_PATH}/components/ble/common"
             "${NRF5_SDK_PATH}/components/ble/ble_advertising"
+            "${NRF5_SDK_PATH}/components/ble/ble_db_discovery"
             "${NRF5_SDK_PATH}/components/ble/ble_dtm"
             "${NRF5_SDK_PATH}/components/ble/ble_link_ctx_manager"
             "${NRF5_SDK_PATH}/components/ble/ble_racp"
             "${NRF5_SDK_PATH}/components/ble/nrf_ble_qwr"
+            "${NRF5_SDK_PATH}/components/ble/nrf_ble_gq"
             "${NRF5_SDK_PATH}/components/ble/peer_manager"
     )
 
@@ -271,9 +273,11 @@ macro(nRF5x_setup)
             "${NRF5_SDK_PATH}/components/ble/common/ble_conn_state.c"
             "${NRF5_SDK_PATH}/components/ble/common/ble_srv_common.c"
             "${NRF5_SDK_PATH}/components/ble/ble_advertising/ble_advertising.c"
+            "${NRF5_SDK_PATH}/components/ble/ble_db_discovery/ble_db_discovery.c"
             "${NRF5_SDK_PATH}/components/ble/ble_link_ctx_manager/ble_link_ctx_manager.c"
             "${NRF5_SDK_PATH}/components/ble/ble_services/ble_nus/ble_nus.c"
             "${NRF5_SDK_PATH}/components/ble/nrf_ble_qwr/nrf_ble_qwr.c"
+            "${NRF5_SDK_PATH}/components/ble/nrf_ble_gq/nrf_ble_gq.c"
             )
 
     # adds target for erasing and flashing the board with a softdevice

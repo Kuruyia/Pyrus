@@ -22,6 +22,7 @@ nRF5x_addBLEAdvertising()
 nRF5x_addBLEPeerManager()
 nRF5x_addBLEGATT()
 nRF5x_addBLEService(ble_dis)
+nRF5x_addBLEService(ble_cts_c)
 
 add_definitions(-DCONFIG_GPIO_AS_PINRESET)
 
@@ -30,6 +31,9 @@ list(APPEND SOURCE_FILES
         Fonts/Ubuntu24Font.c
         Graphics/Color.h
         Graphics/Vec2D.h
+        Hardware/BLE/Clients/CurrentTime/BaseCurrentTime.cpp
+        Hardware/BLE/Clients/CurrentTime/CurrentTimeNrf5.cpp
+        Hardware/BLE/BaseBle.cpp
         Hardware/BLE/BleNrf5.cpp
         Hardware/Clock/ClockNrf52.cpp
         Hardware/Screen/BaseScreen.h

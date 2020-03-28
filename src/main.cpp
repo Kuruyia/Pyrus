@@ -65,6 +65,7 @@ int main()
 
     Widget::Text clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 16});
     Widget::Text bleText("bleText", "BLE Unknown", &ubuntu_24ptFontInfo, {16, 48});
+    Widget::Text ctsText("ctsText", "CTS Unknown", &ubuntu_24ptFontInfo, {16, 80});
 
     // Instantiate a new Clock
     Hardware::Clock::ClockNrf52 clock;
@@ -74,6 +75,32 @@ int main()
     APP_ERROR_CHECK(err_code);
 
     Hardware::BLE::BleNrf5 &bleManager = Hardware::BLE::BleNrf5::getInstance();
+
+    bleManager.getCurrentTimeClient().setCurrentTimeEventHandler([&] (const Hardware::BLE::Clients::BaseCurrentTime::CurrentTimeEventData &eventData){
+        switch (eventData.eventType)
+        {
+            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_AVAILABLE:
+                bleManager.getCurrentTimeClient().requestCurrentTime();
+                ctsText.setText("CTS A");
+                break;
+
+            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_UNAVAILABLE:
+                ctsText.setText("CTS U");
+                break;
+
+            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_TIME_ACQUIRED:
+            {
+                struct tm currentTime = eventData.currentTimeData.time;
+                clock.setTime(mktime(&currentTime));
+            }
+                break;
+
+            default:
+                break;
+        }
+    });
+
+    bleManager.init();
     bleManager.deleteBonds();
     bleManager.startAdvertising();
 
@@ -106,6 +133,8 @@ int main()
         // Show BLE state
         bleText.setText(bleManager.isConnected() ? "BLE C" : "BLE D");
         bleText.draw(lcd);
+
+        ctsText.draw(lcd);
 
         // Wait 500ms
         nrf_delay_ms(500);
