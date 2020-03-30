@@ -1,11 +1,12 @@
 #ifndef PYRUS_CLOCKNRF52_H
 #define PYRUS_CLOCKNRF52_H
 
-#include <ctime>
 #include <functional>
 
 #include <legacy/nrf_drv_rtc.h>
 #include <drivers/include/nrfx_clock.h>
+
+#include "BaseClock.h"
 
 namespace Hardware
 {
@@ -13,12 +14,12 @@ namespace Hardware
 namespace Clock
 {
 
-class ClockNrf52 {
+class ClockNrf52 : public BaseClock {
 public:
     ClockNrf52();
 
-    void setTime(std::time_t time);
-    std::time_t getTime();
+    void setTime(std::time_t time) override;
+    std::time_t getTime() const override;
 
 private:
     static void clockHandler(nrfx_clock_evt_type_t eventType);

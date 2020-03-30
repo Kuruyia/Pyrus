@@ -46,7 +46,7 @@ void Hardware::Clock::ClockNrf52::setTime(std::time_t time)
     nrfx_rtc_counter_clear(&m_rtcInstance);
 }
 
-std::time_t Hardware::Clock::ClockNrf52::getTime()
+std::time_t Hardware::Clock::ClockNrf52::getTime() const
 {
     return m_baseEpoch + (nrfx_rtc_counter_get(&m_rtcInstance) / CLOCK_FREQ);
 }

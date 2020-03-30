@@ -35,6 +35,7 @@ list(APPEND SOURCE_FILES
         Hardware/BLE/Clients/CurrentTime/CurrentTimeNrf5.cpp
         Hardware/BLE/BaseBle.cpp
         Hardware/BLE/BleNrf5.cpp
+        Hardware/Clock/BaseClock.h
         Hardware/Clock/ClockNrf52.cpp
         Hardware/Screen/BaseScreen.h
         Hardware/Screen/ST7789.cpp
