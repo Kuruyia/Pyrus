@@ -2,6 +2,11 @@
 Pyrus is yet another PineTime firmware whose goal is to run bare metal, without any kind of RTOS.  
 This project is based on JF002's [nrf52-baseproject](https://github.com/JF002/nrf52-baseproject), which is a base to get CMake to work with the nRF52 MCU and SDK.
 
+## What's working
+- ST7789 LCD Controller, with support for hardware-assisted vertical scrolling
+- nRF52's Real Time Counter, to keep track of the time
+- nRF52's BLE, advertising and bonding works. Synchronizes the time with the phone if a CTS is running.
+
 ## Building
 You should follow the [instructions of the nrf52-baseproject](https://github.com/JF002/nrf52-baseproject/blob/master/README.md#nrf52-baseproject) to get a build environment ready to compile Pyrus.  
 This project is currently being compiled using [gcc-arm-none-eabi-8-2019-q3-update](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) (GCC 9 is known **not** to work), and the [nRF5 SDK 16.0.0](https://www.nordicsemi.com/Software-and-tools/Software/nRF5-SDK/Download#infotabs).
@@ -12,6 +17,15 @@ git clone https://github.com/Arc13/Pyrus.git
 cd Pyrus
 mkdir build && cd build
 cmake -DARM_NONE_EABI_TOOLCHAIN_PATH=[...] -DNRF5_SDK_PATH=[...] -DNRFJPROG=[...] ..
+```
+
+If you haven't already, you need to flash the SoftDevice **only once**:
+```sh
+cmake --build . --target FLASH_SOFTDEVICE
+```
+
+To compile the firmware, you can run this command:
+```sh
 cmake --build . --target Pyrus-fw
 ```
 
