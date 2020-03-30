@@ -17,9 +17,7 @@
 #define MANUFACTURER_NAME               "Pine64"
 #define DEVICE_MODEL                    "PineTime"
 #define FIRMWARE_REVISION               "Pyrus Beta"
-#define APP_ADV_INTERVAL                300
 
-#define APP_ADV_DURATION                18000
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(100, UNIT_1_25_MS)
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(200, UNIT_1_25_MS)
 #define SLAVE_LATENCY                   0
@@ -213,8 +211,12 @@ void Hardware::BLE::BleNrf5::initAdvertising()
     init.advdata.uuids_complete.p_uuids  = m_advertisementUuids;
 
     init.config.ble_adv_fast_enabled  = true;
-    init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
-    init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
+    init.config.ble_adv_fast_interval = 32;     // 20ms
+    init.config.ble_adv_fast_timeout  = 3000;   // 30s
+
+    init.config.ble_adv_slow_enabled  = true;
+    init.config.ble_adv_slow_interval = 244;    // 152.5ms
+    init.config.ble_adv_slow_timeout  = 27000;  // 4m30
 
     init.evt_handler = advertisementEventHandler;
 
