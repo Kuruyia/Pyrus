@@ -47,6 +47,8 @@ private:
 
     void init();
 
+    void sendCommand(uint8_t command, const uint8_t *data, size_t dataSize);
+
     const Vec2D_t m_screenSize;
 
     Vec2D_t m_windowPosition;

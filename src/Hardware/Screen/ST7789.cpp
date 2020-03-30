@@ -144,6 +144,18 @@ void Hardware::Screen::ST7789::init()
     nrf_delay_ms(10);
 }
 
+void Hardware::Screen::ST7789::sendCommand(const uint8_t command, const uint8_t *data, const size_t dataSize)
+{
+    nrfx_spim_xfer_desc_t xferCmd  = NRFX_SPIM_XFER_TX(&command, 1);
+    nrfx_spim_xfer_desc_t xferData = NRFX_SPIM_XFER_TX(data, dataSize);
+
+    setCommandPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &xferCmd, 0));
+    setDataPin();
+    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &xferData, 0));
+}
+
+
 inline void Hardware::Screen::ST7789::setCommandPin()
 {
     nrf_gpio_pin_clear(m_cd);
@@ -165,36 +177,24 @@ void Hardware::Screen::ST7789::setWindow(const Vec2D_t &position, const Vec2D_t 
     const uint16_t endY = position.y + size.y - 1;
 
     // Set the column address
-    static uint8_t lcdTxCasetCmd  = ST7789_CMD_CASET;
     uint8_t lcdTxCasetData[] = {
             static_cast<uint8_t>(position.x >> 8),
             static_cast<uint8_t>(position.x & 0xFF),
             static_cast<uint8_t>(endX >> 8),
             static_cast<uint8_t>(endX & 0xFF)
     };
-    nrfx_spim_xfer_desc_t lcdXferCasetCmd  = NRFX_SPIM_XFER_TX(&lcdTxCasetCmd, 1);
-    nrfx_spim_xfer_desc_t lcdXferCasetData = NRFX_SPIM_XFER_TX(lcdTxCasetData, sizeof(lcdTxCasetData));
 
-    setCommandPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferCasetCmd, 0));
-    setDataPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferCasetData, 0));
+    sendCommand(ST7789_CMD_CASET, lcdTxCasetData, sizeof(lcdTxCasetData));
 
     // Set the row address
-    static uint8_t lcdTxRasetCmd  = ST7789_CMD_RASET;
     uint8_t lcdTxRasetData[] = {
             static_cast<uint8_t>(position.y >> 8),
             static_cast<uint8_t>(position.y & 0xFF),
             static_cast<uint8_t>(endY >> 8),
             static_cast<uint8_t>(endY & 0xFF)
     };
-    nrfx_spim_xfer_desc_t lcdXferRasetCmd  = NRFX_SPIM_XFER_TX(&lcdTxRasetCmd, 1);
-    nrfx_spim_xfer_desc_t lcdXferRasetData = NRFX_SPIM_XFER_TX(lcdTxRasetData, sizeof(lcdTxRasetData));
 
-    setCommandPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRasetCmd, 0));
-    setDataPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRasetData, 0));
+    sendCommand(ST7789_CMD_RASET, lcdTxRasetData, sizeof(lcdTxRasetData));
 }
 
 void Hardware::Screen::ST7789::getWindow(Vec2D_t &position, Vec2D_t &size) const
@@ -219,18 +219,12 @@ void Hardware::Screen::ST7789::setVerticalScrollOffset(uint16_t offset)
     m_verticalScrollOffset = offset;
 
     // Set the vertical scroll start address
-    static uint8_t lcdTxVscsadCmd  = ST7789_CMD_VSCSAD;
     uint8_t lcdTxVscsadData[] = {
             static_cast<uint8_t>(offset >> 8),
             static_cast<uint8_t>(offset & 0xFF)
     };
-    nrfx_spim_xfer_desc_t lcdXferVscsadCmd  = NRFX_SPIM_XFER_TX(&lcdTxVscsadCmd, 1);
-    nrfx_spim_xfer_desc_t lcdXferVscsadData = NRFX_SPIM_XFER_TX(lcdTxVscsadData, sizeof(lcdTxVscsadData));
 
-    setCommandPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadCmd, 0));
-    setDataPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscsadData, 0));
+    sendCommand(ST7789_CMD_VSCSAD, lcdTxVscsadData, sizeof(lcdTxVscsadData));
 }
 
 const uint16_t &Hardware::Screen::ST7789::getVerticalScrollOffset() const
@@ -247,7 +241,6 @@ void Hardware::Screen::ST7789::setTopFixedArea(uint16_t area)
     const uint16_t scrollingArea = FRAMEBUFFER_HEIGHT - area;
 
     // Set the vertical scroll start address
-    static uint8_t lcdTxVscrdefCmd  = ST7789_CMD_VSCRDEF;
     uint8_t lcdTxVscrdefData[] = {
             static_cast<uint8_t>(area >> 8),
             static_cast<uint8_t>(area & 0xFF),
@@ -256,13 +249,8 @@ void Hardware::Screen::ST7789::setTopFixedArea(uint16_t area)
             0,
             0
     };
-    nrfx_spim_xfer_desc_t lcdXferVscrdefCmd  = NRFX_SPIM_XFER_TX(&lcdTxVscrdefCmd, 1);
-    nrfx_spim_xfer_desc_t lcdXferVscrdefData = NRFX_SPIM_XFER_TX(lcdTxVscrdefData, sizeof(lcdTxVscrdefData));
 
-    setCommandPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscrdefCmd, 0));
-    setDataPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferVscrdefData, 0));
+    sendCommand(ST7789_CMD_VSCRDEF, lcdTxVscrdefData, sizeof(lcdTxVscrdefData));
 }
 
 const uint16_t &Hardware::Screen::ST7789::getTopFixedArea() const
@@ -285,18 +273,12 @@ void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, Color565_t col
     uint16_t rawColor = ((color.g & 0x7) << 13) | (color.b << 8) | (color.r << 3) | (color.g >> 3);
 
     // Send the color to draw
-    static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
     uint8_t lcdTxRamwrData[] = {
             static_cast<uint8_t>(rawColor >> 8),
             static_cast<uint8_t>(rawColor & 0xFF)
     };
-    nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
-    nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(lcdTxRamwrData, sizeof(lcdTxRamwrData));
 
-    setCommandPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
-    setDataPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
+    sendCommand(ST7789_CMD_RAMWR, lcdTxRamwrData, sizeof(lcdTxRamwrData));
 }
 
 void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
