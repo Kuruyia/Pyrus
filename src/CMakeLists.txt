@@ -46,6 +46,7 @@ list(APPEND SOURCE_FILES
         Widgets/Container.cpp
         Widgets/Text.cpp
         Widgets/VerticalScrollContainer.cpp
+        Application.cpp
         main.cpp)
 
 nRF5x_addExecutable(Pyrus-fw "${SOURCE_FILES}")
