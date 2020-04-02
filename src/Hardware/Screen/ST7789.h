@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "nrfx_spim.h"
+
 #include "BaseScreen.h"
 
 namespace Hardware

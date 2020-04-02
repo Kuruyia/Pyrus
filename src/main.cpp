@@ -1,24 +1,17 @@
+#include <ctime>
 #include <memory>
 
 #include <nrf_delay.h>
 #include <nrf_gpio.h>
 #include <libraries/button/app_button.h>
 #include <nrfx_spim.h>
-#include <ctime>
-#include <softdevice/common/nrf_sdh.h>
-#include <ble/ble_advertising/ble_advertising.h>
 #include <app_timer.h>
 #include <Hardware/BLE/BleNrf5.h>
-#include <libraries/log/nrf_log_ctrl.h>
-#include <libraries/log/nrf_log_default_backends.h>
-#include <libraries/log/nrf_log.h>
+
+#include "Platform/PineTime.h"
 
 #include "Fonts/Ubuntu24Font.h"
-#include "Hardware/Clock/ClockNrf52.h"
-#include "Hardware/Screen/ST7789.h"
-
 #include "Widgets/Container.h"
-#include "Widgets/VerticalScrollContainer.h"
 #include "Widgets/Text.h"
 
 void buttonHandler(uint8_t pinNo, uint8_t buttonAction)
@@ -59,50 +52,36 @@ int main()
     nrf_gpio_pin_set(22);
     nrf_gpio_pin_set(23);
 
-    // Instantiate a new Screen
-    Hardware::Screen::ST7789 lcd({240, 240}, 3, 4, 2, 25, 18, 26);
-    lcd.clearFramebuffer({0, 0, 0});
+    // Start the platform
+    Platform::PineTime platform;
 
     Widget::Text clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 16});
     Widget::Text bleText("bleText", "BLE Unknown", &ubuntu_24ptFontInfo, {16, 48});
     Widget::Text ctsText("ctsText", "CTS Unknown", &ubuntu_24ptFontInfo, {16, 80});
 
-    // Instantiate a new Clock
-    Hardware::Clock::ClockNrf52 clock;
-
-    // Initialize BLE stuff
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
-
-    Hardware::BLE::BleNrf5 &bleManager = Hardware::BLE::BleNrf5::getInstance();
-
-    bleManager.getCurrentTimeClient().setCurrentTimeEventHandler([&] (const Hardware::BLE::Clients::BaseCurrentTime::CurrentTimeEventData &eventData){
-        switch (eventData.eventType)
-        {
-            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_AVAILABLE:
-                bleManager.getCurrentTimeClient().requestCurrentTime();
-                ctsText.setText("CTS A");
-                break;
-
-            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_UNAVAILABLE:
-                ctsText.setText("CTS U");
-                break;
-
-            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_TIME_ACQUIRED:
-            {
-                struct tm currentTime = eventData.currentTimeData.time;
-                clock.setTime(mktime(&currentTime));
-            }
-                break;
-
-            default:
-                break;
-        }
-    });
-
-    bleManager.init();
-    bleManager.deleteBonds();
-    bleManager.startAdvertising();
+//    bleManager.getCurrentTimeClient().setCurrentTimeEventHandler([&] (const Hardware::BLE::Clients::BaseCurrentTime::CurrentTimeEventData &eventData){
+//        switch (eventData.eventType)
+//        {
+//            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_AVAILABLE:
+//                bleManager.getCurrentTimeClient().requestCurrentTime();
+//                ctsText.setText("CTS A");
+//                break;
+//
+//            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_UNAVAILABLE:
+//                ctsText.setText("CTS U");
+//                break;
+//
+//            case Hardware::BLE::Clients::BaseCurrentTime::CTS_EVENT_TIME_ACQUIRED:
+//            {
+//                struct tm currentTime = eventData.currentTimeData.time;
+//                clock.setTime(mktime(&currentTime));
+//            }
+//                break;
+//
+//            default:
+//                break;
+//        }
+//    });
 
     while (true)
     {
@@ -122,19 +101,19 @@ int main()
         }
 
         // Test the clock
-        std::time_t epoch = clock.getTime();
+        std::time_t epoch = platform.getClockManager().getTime();
         struct tm *timeinfo = std::localtime(const_cast<const time_t *>(&epoch));
 
         char timeBuffer[0x9];
         snprintf(timeBuffer, 0x9, "%02u:%02u:%02u", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
         clkText.setText(timeBuffer);
-        clkText.draw(lcd);
+        clkText.draw(platform.getScreenManager());
 
         // Show BLE state
-        bleText.setText(bleManager.isConnected() ? "BLE C" : "BLE D");
-        bleText.draw(lcd);
+        bleText.setText(platform.getBleManager().isConnected() ? "BLE C" : "BLE D");
+        bleText.draw(platform.getScreenManager());
 
-        ctsText.draw(lcd);
+        ctsText.draw(platform.getScreenManager());
 
         // Wait 500ms
         nrf_delay_ms(500);

@@ -39,6 +39,8 @@ list(APPEND SOURCE_FILES
         Hardware/Clock/ClockNrf52.cpp
         Hardware/Screen/BaseScreen.h
         Hardware/Screen/ST7789.cpp
+        Platform/BasePlatform.h
+        Platform/PineTime.cpp
         Widgets/BaseContainer.cpp
         Widgets/BaseWidget.cpp
         Widgets/Container.cpp
