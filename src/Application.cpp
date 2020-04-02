@@ -2,6 +2,9 @@
 #include <libraries/button/app_button.h>
 #include <libraries/delay/nrf_delay.h>
 
+#include "Applets/DebugApt.h"
+#include "Applets/TestApt.h"
+
 #include "Fonts/Ubuntu24Font.h"
 
 #include "Application.h"
@@ -66,7 +69,7 @@ Application::Application()
     );
 
     // Add default applet to the applet manager
-    m_appletManager.pushApplet(std::make_unique<Applet::DebugApt>());
+    m_appletManager.pushApplet(std::make_unique<Applet::TestApt>());
 }
 
 void Application::run()

@@ -2,7 +2,6 @@
 #define PYRUS_APPLICATION_H
 
 #include "Applets/AppletManager.h"
-#include "Applets/DebugApt.h"
 
 #include "Platform/PineTime.h"
 #include "Widgets/Text.h"

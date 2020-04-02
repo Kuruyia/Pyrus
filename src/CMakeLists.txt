@@ -31,6 +31,7 @@ list(APPEND SOURCE_FILES
         Applets/AppletManager.cpp
         Applets/BaseApplet.cpp
         Applets/DebugApt.cpp
+        Applets/TestApt.cpp
         Fonts/Ubuntu24Font.c
         Graphics/Color.h
         Graphics/Vec2D.h
