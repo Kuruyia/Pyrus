@@ -1,6 +1,7 @@
 #ifndef PYRUS_BASESCREEN_H
 #define PYRUS_BASESCREEN_H
 
+#include <cstddef>
 #include <nrf_font.h>
 
 #include "Graphics/Color.h"

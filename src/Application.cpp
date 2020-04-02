@@ -8,8 +8,6 @@
 
 Application::Application()
 : m_running(true)
-, m_clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 16})
-, m_bleText("bleText", "BLE Unknown", &ubuntu_24ptFontInfo, {16, 48})
 {
     // Set backlight pins as output
     nrf_gpio_cfg_output(14);
@@ -82,23 +80,11 @@ void Application::run()
             nrf_gpio_pin_set(23);
         }
 
-        // Exit the loop if the button is pressed
-        if (app_button_is_pushed(0)) {
-            break;
-        }
+        // Update applets
+        m_debugApplet.update(m_platform);
 
-        // Test the clock
-        std::time_t epoch = m_platform.getClockManager().getTime();
-        struct tm *timeinfo = std::localtime(const_cast<const time_t *>(&epoch));
-
-        char timeBuffer[0x9];
-        snprintf(timeBuffer, 0x9, "%02u:%02u:%02u", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-        m_clkText.setText(timeBuffer);
-        m_clkText.draw(m_platform.getScreenManager());
-
-        // Show BLE state
-        m_bleText.setText(m_platform.getBleManager().isConnected() ? "BLE C" : "BLE D");
-        m_bleText.draw(m_platform.getScreenManager());
+        // Draw applets
+        m_debugApplet.draw(m_platform.getScreenManager());
 
         // Wait 500ms
         nrf_delay_ms(500);

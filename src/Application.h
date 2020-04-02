@@ -1,6 +1,7 @@
 #ifndef PYRUS_APPLICATION_H
 #define PYRUS_APPLICATION_H
 
+#include "Applets/DebugApt.h"
 #include "Platform/PineTime.h"
 #include "Widgets/Text.h"
 
@@ -15,8 +16,7 @@ private:
 
     Platform::PineTime m_platform;
 
-    Widget::Text m_clkText;
-    Widget::Text m_bleText;
+    Applet::DebugApt m_debugApplet;
 };
 
 #endif //PYRUS_APPLICATION_H
