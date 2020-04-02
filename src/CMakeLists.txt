@@ -28,6 +28,7 @@ add_definitions(-DCONFIG_GPIO_AS_PINRESET)
 
 include_directories(.)
 list(APPEND SOURCE_FILES
+        Applets/AppletManager.cpp
         Applets/BaseApplet.cpp
         Applets/DebugApt.cpp
         Fonts/Ubuntu24Font.c

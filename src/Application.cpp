@@ -64,6 +64,9 @@ Application::Application()
             }
         }
     );
+
+    // Add default applet to the applet manager
+    m_appletManager.pushApplet(std::make_unique<Applet::DebugApt>());
 }
 
 void Application::run()
@@ -81,10 +84,10 @@ void Application::run()
         }
 
         // Update applets
-        m_debugApplet.update(m_platform);
+        m_appletManager.update(m_platform);
 
         // Draw applets
-        m_debugApplet.draw(m_platform.getScreenManager());
+        m_appletManager.draw(m_platform.getScreenManager());
 
         // Wait 500ms
         nrf_delay_ms(500);

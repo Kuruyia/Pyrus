@@ -1,7 +1,9 @@
 #ifndef PYRUS_APPLICATION_H
 #define PYRUS_APPLICATION_H
 
+#include "Applets/AppletManager.h"
 #include "Applets/DebugApt.h"
+
 #include "Platform/PineTime.h"
 #include "Widgets/Text.h"
 
@@ -16,7 +18,7 @@ private:
 
     Platform::PineTime m_platform;
 
-    Applet::DebugApt m_debugApplet;
+    Applet::AppletManager m_appletManager;
 };
 
 #endif //PYRUS_APPLICATION_H
