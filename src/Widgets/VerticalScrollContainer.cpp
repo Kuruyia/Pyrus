@@ -18,10 +18,9 @@ void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
     if (m_dirty)
     {
         // Geometry has changed, we need to clear the last occupied space
-        if (m_clearLastPosition)
+        if (isDirty(DirtyState::Global) || isDirty(DirtyState::Position) || isDirty(DirtyState::Size))
         {
             target.drawRectangle(getLastAbsolutePosition(), m_lastSize, getParentBackgroundColor(), m_loopVerticalPosition);
-            m_clearLastPosition = false;
         }
 
         // Render the container
@@ -32,7 +31,7 @@ void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
         m_lastSize = m_size;
 
         // Reset the dirty flag
-        m_dirty = false;
+        clearDirty();
     }
 
     // Send the vertical offset to the target
@@ -51,7 +50,7 @@ void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
         }
         else
         {
-            widget->markDirty();
+            widget->setDirty(DirtyState::Global, true);
         }
     }
 }
@@ -74,8 +73,7 @@ void Widget::VerticalScrollContainer::setSize(Vec2D_t size)
 {
     m_size = size;
 
-    markDirtyWithChildren();
-    m_clearLastPosition = true;
+    setDirtyWithChildren(DirtyState::Size, true);
 }
 
 uint16_t Widget::VerticalScrollContainer::getWidth() const

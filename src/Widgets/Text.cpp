@@ -19,17 +19,16 @@ Widget::Text::Text(const std::string &id, const std::string &text, const FONT_IN
 void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
 {
     // Dirty flag not set, we don't need to redraw the widget
-    if (!m_dirty) return;
+    if (m_dirty == 0) return;
 
     // Geometry has changed, we need to clear the last occupied space
-    if (m_clearLastPosition)
+    if (isDirty(DirtyState::Global) || isDirty(DirtyState::Position) || isDirty(DirtyState::Size))
     {
         Vec2D_t lastAbsolutePosition = getLastAbsolutePosition();
         if (m_loopVerticalPosition)
             lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
         target.drawRectangle(lastAbsolutePosition, m_lastSize, getParentBackgroundColor(), m_loopVerticalPosition);
-        m_clearLastPosition = false;
     }
 
     // Store the position of this drawing
@@ -63,15 +62,14 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     m_lastSize = {static_cast<uint16_t>(position.x - m_position.x), m_fontInfo->height};
 
     // Reset the dirty flag
-    m_dirty = false;
+    clearDirty();
 }
 
 void Widget::Text::setText(const std::string &text)
 {
     m_text = text;
 
-    markDirty();
-    m_clearLastPosition = true;
+    setDirty(DirtyState::Size, true);
 }
 
 const std::string &Widget::Text::getText() const
@@ -83,8 +81,7 @@ void Widget::Text::setFont(const FONT_INFO *fontInfo)
 {
     m_fontInfo = fontInfo;
 
-    markDirty();
-    m_clearLastPosition = true;
+    setDirty(DirtyState::Size, true);
 }
 
 const FONT_INFO *Widget::Text::getFont() const
@@ -141,7 +138,7 @@ void Widget::Text::setTextColor(Color565_t textColor)
 {
     m_textColor = textColor;
 
-    markDirty();
+    setDirty(DirtyState::Color, true);
 }
 
 const Color565_t &Widget::Text::getTextColor() const
@@ -153,7 +150,7 @@ void Widget::Text::setBackgroundColor(Color565_t backgroundColor)
 {
     m_backgroundColor = backgroundColor;
 
-    markDirty();
+    setDirty(DirtyState::Color, true);
 }
 
 const Color565_t &Widget::Text::getBackgroundColor() const

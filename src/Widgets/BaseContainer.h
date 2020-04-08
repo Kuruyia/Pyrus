@@ -25,7 +25,7 @@ public:
     virtual void setBackgroundColor(Color565_t backgroundColor);
     virtual const Color565_t &getBackgroundColor() const;
 
-    virtual void markDirtyWithChildren();
+    virtual void setDirtyWithChildren(DirtyState state, bool dirty);
 
 protected:
     std::vector<std::unique_ptr<BaseWidget>> m_children;

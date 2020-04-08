@@ -12,6 +12,13 @@ class BaseContainer;
 
 class BaseWidget {
 public:
+    enum DirtyState {
+        Global = 0,
+        Position,
+        Size,
+        Color,
+    };
+
     BaseWidget(std::string id, Vec2D_t position);
     virtual ~BaseWidget() = default;
 
@@ -34,14 +41,15 @@ public:
 
     virtual const std::string &getId() const;
 
-    virtual void markDirty();
+    virtual void setDirty(DirtyState state, bool dirty);
+    virtual void clearDirty();
+    virtual bool isDirty(DirtyState state);
 
 protected:
     BaseContainer *m_parent;
     const std::string m_id;
 
-    bool m_dirty;
-    bool m_clearLastPosition;
+    uint16_t m_dirty;
 
     Vec2D_t m_position;
     bool m_loopVerticalPosition;

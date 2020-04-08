@@ -16,14 +16,14 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
     if (m_dirty)
     {
         // Geometry has changed, we need to clear the last occupied space
-        if (m_clearLastPosition)
+        if (isDirty(DirtyState::Position) || isDirty(DirtyState::Size))
         {
             Vec2D_t lastAbsolutePosition = getLastAbsolutePosition();
             if (m_loopVerticalPosition)
                 lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
             target.drawRectangle(lastAbsolutePosition, m_lastSize, getParentBackgroundColor(), m_loopVerticalPosition);
-            m_clearLastPosition = false;
+            setDirty(DirtyState::Position, false);
         }
 
         // Loop the vertical axis if enabled
@@ -39,7 +39,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
         m_lastSize = m_size;
 
         // Reset the dirty flag
-        m_dirty = false;
+        clearDirty();
     }
 
     // Render the container children
@@ -59,8 +59,7 @@ void Widget::Container::setSize(Vec2D_t size)
 {
     m_size = size;
 
-    markDirty();
-    m_clearLastPosition = true;
+    setDirty(DirtyState::Size, true);
 }
 
 uint16_t Widget::Container::getWidth() const

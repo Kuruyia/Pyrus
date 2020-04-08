@@ -4,6 +4,8 @@
 #include "Applets/AppletManager.h"
 
 #include "Platform/PineTime.h"
+
+#include "Widgets/StatusBar.h"
 #include "Widgets/Text.h"
 
 class Application {

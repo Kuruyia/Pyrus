@@ -13,7 +13,7 @@ void Widget::BaseContainer::setPosition(Vec2D_t position)
 {
     BaseWidget::setPosition(position);
 
-    markDirtyWithChildren();
+    setDirtyWithChildren(DirtyState::Position, true);
 }
 
 void Widget::BaseContainer::addChild(std::unique_ptr<BaseWidget> child)
@@ -56,7 +56,7 @@ void Widget::BaseContainer::setBackgroundColor(Color565_t color)
 {
     m_backgroundColor = color;
 
-    markDirtyWithChildren();
+    setDirtyWithChildren(DirtyState::Color, true);
 }
 
 const Color565_t &Widget::BaseContainer::getBackgroundColor() const
@@ -64,11 +64,11 @@ const Color565_t &Widget::BaseContainer::getBackgroundColor() const
     return m_backgroundColor;
 }
 
-void Widget::BaseContainer::markDirtyWithChildren()
+void Widget::BaseContainer::setDirtyWithChildren(DirtyState state, bool dirty)
 {
-    BaseWidget::markDirty();
+    BaseWidget::setDirty(state, dirty);
 
     // Mark the children dirty
     for (auto &widget: m_children)
-        widget->markDirty();
+        widget->setDirty(state, dirty);
 }
