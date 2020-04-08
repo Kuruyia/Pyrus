@@ -474,7 +474,7 @@ bool Hardware::Screen::ST7789::drawBuffer(const Vec2D_t &position, const Vec2D_t
     }
     else
     {
-        // Send the pixels to the Screen controller
+        // Send the pixels to the screen controller
         nrfx_spim_xfer_desc_t lcdXferRamwrData = NRFX_SPIM_XFER_TX(buffer, pixelsToFeed);
         APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrData, 0));
 

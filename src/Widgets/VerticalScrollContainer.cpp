@@ -15,7 +15,7 @@ Widget::VerticalScrollContainer::VerticalScrollContainer(const std::string &id, 
 void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
 {
     // Check if we need to redraw the widget itself
-    if (m_dirty)
+    if (m_dirty > 0)
     {
         // Geometry has changed, we need to clear the last occupied space
         if (isDirty(DirtyState::Global) || isDirty(DirtyState::Position) || isDirty(DirtyState::Size))

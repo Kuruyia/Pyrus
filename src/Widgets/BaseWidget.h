@@ -1,7 +1,9 @@
 #ifndef PYRUS_BASEWIDGET_H
 #define PYRUS_BASEWIDGET_H
 
+#include <functional>
 #include <string>
+#include <vector>
 
 #include "Hardware/Screen/BaseScreen.h"
 

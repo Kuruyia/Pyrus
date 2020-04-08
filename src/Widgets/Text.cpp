@@ -8,10 +8,12 @@ Widget::Text::Text(const std::string &id, const std::string &text, const FONT_IN
 : BaseWidget(id, position)
 , m_text(text)
 , m_fontInfo(fontInfo)
-, m_lastPosition({0, 0})
+, m_horizontalAlignment(HorizontalAlignment::Left)
+, m_lastDrawPosition({0, 0})
 , m_lastSize({0, 0})
 , m_textColor(textColor)
 , m_backgroundColor(backgroundColor)
+, m_width(0)
 {
     m_fontInfo = fontInfo;
 }
@@ -31,9 +33,15 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
         target.drawRectangle(lastAbsolutePosition, m_lastSize, getParentBackgroundColor(), m_loopVerticalPosition);
     }
 
+    // Recompute width if it's dirty
+    if (isDirty(DirtyState::Global) || isDirty(DirtyState::Size))
+    {
+        m_width = computeWidth();
+    }
+
     // Store the position of this drawing
-    Vec2D_t position = getAbsolutePosition();
-    m_lastPosition = m_position;
+    Vec2D_t position = getDrawPosition();
+    m_lastDrawPosition = position;
 
     // Loop the vertical axis if enabled
     if (m_loopVerticalPosition)
@@ -59,7 +67,8 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     }
 
     // Store the size of this drawing
-    m_lastSize = {static_cast<uint16_t>(position.x - m_position.x), m_fontInfo->height};
+    // Note that m_lastDrawPosition is used here because it holds the initial values of position
+    m_lastSize = {static_cast<uint16_t>(position.x - m_lastDrawPosition.x), m_fontInfo->height};
 
     // Reset the dirty flag
     clearDirty();
@@ -97,31 +106,24 @@ Vec2D_t Widget::Text::getAbsolutePosition() const
     return m_parent->getAbsolutePosition() + getPosition();
 }
 
+Vec2D_t Widget::Text::getDrawPosition() const
+{
+    Vec2D_t position = getAbsolutePosition();
+
+    switch (m_horizontalAlignment)
+    {
+        case HorizontalAlignment::Centered:
+            return {static_cast<uint16_t>(position.x - getWidth() / 2), position.y};
+        case HorizontalAlignment::Right:
+            return {static_cast<uint16_t>(position.x - getWidth()), position.y};
+        default:
+            return position;
+    }
+}
+
 uint16_t Widget::Text::getWidth() const
 {
-    // Prepare the width
-    uint16_t width = 0;
-
-    // Loop through all the characters and count their width
-    for (const char c : m_text)
-    {
-        if (c != ' ')
-        {
-            const size_t descriptorOffset = c - m_fontInfo->startChar;
-            const FONT_CHAR_INFO descriptor = m_fontInfo->charInfo[descriptorOffset];
-
-            width += descriptor.widthBits;
-        }
-        else
-        {
-            width += m_fontInfo->spacePixels;
-        }
-
-        width += INTERCHAR_SIZE;
-    }
-
-    // Return the width
-    return width;
+    return m_width;
 }
 
 uint16_t Widget::Text::getHeight() const
@@ -161,9 +163,9 @@ const Color565_t &Widget::Text::getBackgroundColor() const
 Vec2D_t Widget::Text::getLastAbsolutePosition() const
 {
     if (m_parent == nullptr)
-        return m_lastPosition;
+        return m_lastDrawPosition;
 
-    return m_parent->getAbsolutePosition() + m_lastPosition;
+    return m_parent->getAbsolutePosition() + m_lastDrawPosition;
 }
 
 Color565_t Widget::Text::getParentBackgroundColor() const
@@ -172,4 +174,43 @@ Color565_t Widget::Text::getParentBackgroundColor() const
         return {0, 0, 0};
 
     return m_parent->getBackgroundColor();
+}
+
+uint16_t Widget::Text::computeWidth() const
+{
+    // Prepare the width
+    uint16_t width = 0;
+
+    // Loop through all the characters and count their width
+    for (const char c : m_text)
+    {
+        if (c != ' ')
+        {
+            const size_t descriptorOffset = c - m_fontInfo->startChar;
+            const FONT_CHAR_INFO descriptor = m_fontInfo->charInfo[descriptorOffset];
+
+            width += descriptor.widthBits;
+        }
+        else
+        {
+            width += m_fontInfo->spacePixels;
+        }
+
+        width += INTERCHAR_SIZE;
+    }
+
+    // Return the width
+    return width;
+}
+
+void Widget::Text::setHorizontalAlignment(Widget::Text::HorizontalAlignment horizontalAlignment)
+{
+    m_horizontalAlignment = horizontalAlignment;
+
+    setDirty(DirtyState::Position, true);
+}
+
+Widget::Text::HorizontalAlignment Widget::Text::getHorizontalAlignment() const
+{
+    return m_horizontalAlignment;
 }

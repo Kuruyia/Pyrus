@@ -8,9 +8,9 @@
 Applet::TestApt::TestApt()
 : BaseApplet(APPLET_NAME)
 , m_counter(0)
-, m_counterText("ctrText", "0", &ubuntu_24ptFontInfo, {0, 64})
+, m_counterText("ctrText", "0", &ubuntu_24ptFontInfo, {120, 64})
 {
-
+    m_counterText.setHorizontalAlignment(Widget::Text::HorizontalAlignment::Centered);
 }
 
 void Applet::TestApt::processEvent()
