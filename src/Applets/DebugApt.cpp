@@ -37,7 +37,7 @@ void Applet::DebugApt::draw(Hardware::Screen::BaseScreen &target)
     m_bleText.draw(target);
 }
 
-bool Applet::DebugApt::showStatusBar() const
+bool Applet::DebugApt::allowsStatusBar() const
 {
     return false;
 }

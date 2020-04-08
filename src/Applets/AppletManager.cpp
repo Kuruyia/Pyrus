@@ -48,3 +48,8 @@ void Applet::AppletManager::popApplet()
 {
     m_applets.pop();
 }
+
+Applet::BaseApplet &Applet::AppletManager::getCurrentApplet()
+{
+    return *(m_applets.top().get());
+}

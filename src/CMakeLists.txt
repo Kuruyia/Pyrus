@@ -48,6 +48,7 @@ list(APPEND SOURCE_FILES
         Widgets/BaseContainer.cpp
         Widgets/BaseWidget.cpp
         Widgets/Container.cpp
+        Widgets/StatusBar.cpp
         Widgets/Text.cpp
         Widgets/VerticalScrollContainer.cpp
         Application.cpp

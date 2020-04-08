@@ -15,7 +15,7 @@ public:
     void update(Platform::BasePlatform &platform) override;
     void draw(Hardware::Screen::BaseScreen &target) override;
 
-    bool showStatusBar() const override;
+    bool allowsStatusBar() const override;
 
 private:
     Widget::Text m_clkText;

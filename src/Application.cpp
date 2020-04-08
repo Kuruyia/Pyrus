@@ -11,6 +11,7 @@
 
 Application::Application()
 : m_running(true)
+, m_statusBar("appletManStatus", {0, 0}, {m_platform.getScreenManager().getScreenSize().x, 0}, &ubuntu_24ptFontInfo)
 {
     // Set backlight pins as output
     nrf_gpio_cfg_output(14);
@@ -88,6 +89,10 @@ void Application::run()
 
         // Update applets
         m_appletManager.update(m_platform);
+
+        // Draw the status bar if allowed
+        if (m_appletManager.getCurrentApplet().allowsStatusBar())
+            m_statusBar.draw(m_platform.getScreenManager());
 
         // Draw applets
         m_appletManager.draw(m_platform.getScreenManager());

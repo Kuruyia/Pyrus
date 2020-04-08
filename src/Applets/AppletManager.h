@@ -18,6 +18,8 @@ public:
     void pushApplet(std::unique_ptr<BaseApplet> applet);
     void popApplet();
 
+    BaseApplet &getCurrentApplet();
+
 private:
     std::stack<std::unique_ptr<BaseApplet>> m_applets;
 }; // class AppletManager

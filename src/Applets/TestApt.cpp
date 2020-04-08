@@ -33,7 +33,7 @@ void Applet::TestApt::draw(Hardware::Screen::BaseScreen &target)
     m_counterText.draw(target);
 }
 
-bool Applet::TestApt::showStatusBar() const
+bool Applet::TestApt::allowsStatusBar() const
 {
     return true;
 }

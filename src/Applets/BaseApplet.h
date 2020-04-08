@@ -18,7 +18,7 @@ public:
     virtual void draw(Hardware::Screen::BaseScreen &target) = 0;
 
     virtual const std::string &getName() const;
-    virtual bool showStatusBar() const = 0;
+    virtual bool allowsStatusBar() const = 0;
 
     bool hasAppletSwitch();
     std::unique_ptr<BaseApplet> acquireAppletSwitch();

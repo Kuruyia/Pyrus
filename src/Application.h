@@ -17,6 +17,7 @@ private:
 
     Platform::PineTime m_platform;
 
+    Widget::StatusBar m_statusBar;
     Applet::AppletManager m_appletManager;
 };
 
