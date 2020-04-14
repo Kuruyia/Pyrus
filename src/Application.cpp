@@ -11,7 +11,8 @@
 
 Application::Application()
 : m_running(true)
-, m_statusBar("appletManStatus", {0, 0}, {m_platform.getScreenManager().getScreenSize().x, 0}, &ubuntu_24ptFontInfo)
+, m_statusBar("appletManStatus", {0, 0}, m_platform.getScreenManager().getScreenSize().x,
+        &ubuntu_24ptFontInfo, "--:--", "Pyrus")
 {
     // Set backlight pins as output
     nrf_gpio_cfg_output(14);

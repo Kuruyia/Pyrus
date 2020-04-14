@@ -9,6 +9,8 @@ Applet::TestApt::TestApt()
 : BaseApplet(APPLET_NAME)
 , m_counter(0)
 , m_counterText("ctrText", "0", &ubuntu_24ptFontInfo, {120, 64})
+, m_statusBarTest("testStatus", {0, 128}, 240,
+                  &ubuntu_24ptFontInfo, "P", "S")
 {
     m_counterText.setHorizontalAlignment(Widget::Text::HorizontalAlignment::Centered);
 }
@@ -20,8 +22,9 @@ void Applet::TestApt::processEvent()
 
 void Applet::TestApt::update(Platform::BasePlatform &platform)
 {
-    m_counterText.setText(std::to_string(1024 >> m_counter++));
-    if (m_counter > 10)
+    const unsigned delay = 15;
+    m_counterText.setText(std::to_string((1 << delay) >> m_counter++));
+    if (m_counter > delay)
     {
         requestAppletSwitch(std::make_unique<DebugApt>());
         close();
@@ -31,6 +34,7 @@ void Applet::TestApt::update(Platform::BasePlatform &platform)
 void Applet::TestApt::draw(Hardware::Screen::BaseScreen &target)
 {
     m_counterText.draw(target);
+    m_statusBarTest.draw(target);
 }
 
 bool Applet::TestApt::allowsStatusBar() const

@@ -5,8 +5,8 @@
 
 Applet::DebugApt::DebugApt()
 : BaseApplet(APPLET_NAME)
-, m_clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 16})
-, m_bleText("bleText", "BLE Unknown", &ubuntu_24ptFontInfo, {16, 48})
+, m_clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 48})
+, m_bleText("bleText", "BLE Unknown", &ubuntu_24ptFontInfo, {16, 80})
 {
 
 }

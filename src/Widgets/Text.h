@@ -46,7 +46,6 @@ public:
 
 private:
     Vec2D_t getLastAbsolutePosition() const;
-    Color565_t getParentBackgroundColor() const;
 
     uint16_t computeWidth() const;
 

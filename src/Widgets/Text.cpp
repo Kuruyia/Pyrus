@@ -168,14 +168,6 @@ Vec2D_t Widget::Text::getLastAbsolutePosition() const
     return m_parent->getAbsolutePosition() + m_lastDrawPosition;
 }
 
-Color565_t Widget::Text::getParentBackgroundColor() const
-{
-    if (m_parent == nullptr)
-        return {0, 0, 0};
-
-    return m_parent->getBackgroundColor();
-}
-
 uint16_t Widget::Text::computeWidth() const
 {
     // Prepare the width

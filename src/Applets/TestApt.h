@@ -1,6 +1,7 @@
 #ifndef PYRUS_TESTAPT_H
 #define PYRUS_TESTAPT_H
 
+#include <Widgets/StatusBar.h>
 #include "../Widgets/Text.h"
 
 #include "BaseApplet.h"
@@ -18,8 +19,9 @@ public:
     bool allowsStatusBar() const override;
 
 private:
-    uint32_t m_counter;
+    uint16_t m_counter;
     Widget::Text m_counterText;
+    Widget::StatusBar m_statusBarTest;
 };
 
 }

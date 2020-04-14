@@ -1,5 +1,6 @@
 #include <utility>
 
+#include "BaseContainer.h"
 #include "BaseWidget.h"
 
 Widget::BaseWidget::BaseWidget(std::string id, const Vec2D_t position)
@@ -65,4 +66,12 @@ void Widget::BaseWidget::clearDirty()
 bool Widget::BaseWidget::isDirty(Widget::BaseWidget::DirtyState state)
 {
     return m_dirty & (1 << state);
+}
+
+Color565_t Widget::BaseWidget::getParentBackgroundColor() const
+{
+    if (m_parent == nullptr)
+        return {0, 0, 0};
+
+    return m_parent->getBackgroundColor();
 }

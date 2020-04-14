@@ -48,6 +48,8 @@ public:
     virtual bool isDirty(DirtyState state);
 
 protected:
+    virtual Color565_t getParentBackgroundColor() const;
+
     BaseContainer *m_parent;
     const std::string m_id;
 
