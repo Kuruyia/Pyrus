@@ -9,19 +9,28 @@ void Applet::AppletManager::update(Platform::BasePlatform &platform)
 {
     if (m_applets.empty()) return;
 
-    // Check if the current applet wants to switch
     if (m_applets.top()->hasAppletSwitch())
     {
+        // The current applet wants to switch
         std::unique_ptr<BaseApplet> switchApplet = m_applets.top()->acquireAppletSwitch();
-        if (m_applets.top()->isClosed())
+        if (m_applets.top()->isTerminated())
             m_applets.pop();
 
         m_applets.push(std::move(switchApplet));
-    }
 
-    // Check if the current applet wants to close
-    if (m_applets.top()->isClosed())
-        m_applets.pop();
+        if (m_appletChangedHandler)
+            m_appletChangedHandler();
+    }
+    else
+    {
+        // Check if the current applet wants to terminate
+        if (m_applets.top()->isTerminated())
+        {
+            m_applets.pop();
+            if (m_appletChangedHandler)
+                m_appletChangedHandler();
+        }
+    }
 
     // We potentially popped the last item, so check again
     if (m_applets.empty()) return;
@@ -52,4 +61,9 @@ void Applet::AppletManager::popApplet()
 Applet::BaseApplet &Applet::AppletManager::getCurrentApplet()
 {
     return *(m_applets.top().get());
+}
+
+void Applet::AppletManager::setAppletChangedHandler(const std::function<void()> &appletChangedHandler)
+{
+    m_appletChangedHandler = appletChangedHandler;
 }

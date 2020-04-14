@@ -23,17 +23,17 @@ public:
     bool hasAppletSwitch();
     std::unique_ptr<BaseApplet> acquireAppletSwitch();
 
-    bool isClosed();
+    bool isTerminated();
 
 protected:
     void requestAppletSwitch(std::unique_ptr<BaseApplet> applet);
-    void close();
+    void terminate();
 
 private:
     const std::string m_appletName;
 
     std::unique_ptr<BaseApplet> m_switchApplet;
-    bool m_closed;
+    bool m_terminated;
 }; // class BaseApplet
 
 } // namespace BaseApplet

@@ -19,6 +19,7 @@ public:
         Position,
         Size,
         Color,
+        Child,
     };
 
     BaseWidget(std::string id, Vec2D_t position);

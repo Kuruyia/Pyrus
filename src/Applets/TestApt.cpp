@@ -27,7 +27,7 @@ void Applet::TestApt::update(Platform::BasePlatform &platform)
     if (m_counter > delay)
     {
         requestAppletSwitch(std::make_unique<DebugApt>());
-        close();
+        terminate();
     }
 }
 

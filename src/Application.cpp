@@ -72,6 +72,12 @@ Application::Application()
 
     // Add default applet to the applet manager
     m_appletManager.pushApplet(std::make_unique<Applet::TestApt>());
+
+    // Set the applet changed handler
+    m_appletManager.setAppletChangedHandler([&]() {
+        m_statusBar.setSecondaryText(m_appletManager.getCurrentApplet().getName());
+        m_platform.getScreenManager().clearFramebuffer({0, 0, 0});
+    });
 }
 
 void Application::run()

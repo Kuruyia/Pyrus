@@ -94,11 +94,13 @@ Vec2D_t Widget::StatusBar::getSize() const
 void Widget::StatusBar::setMainText(const std::string &mainText)
 {
     m_mainText.setText(mainText);
+    setDirty(DirtyState::Child, true);
 }
 
 void Widget::StatusBar::setSecondaryText(const std::string &secondaryText)
 {
     m_secondaryText.setText(secondaryText);
+    setDirty(DirtyState::Child, true);
 }
 
 Vec2D_t Widget::StatusBar::getLastAbsolutePosition() const

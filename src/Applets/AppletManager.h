@@ -20,8 +20,12 @@ public:
 
     BaseApplet &getCurrentApplet();
 
+    void setAppletChangedHandler(const std::function<void()> &appletChangedHandler);
+
 private:
     std::stack<std::unique_ptr<BaseApplet>> m_applets;
+
+    std::function<void()> m_appletChangedHandler;
 }; // class AppletManager
 
 } // namespace Applet

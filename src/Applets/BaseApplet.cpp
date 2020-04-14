@@ -2,7 +2,7 @@
 
 Applet::BaseApplet::BaseApplet(const std::string &appletName)
 : m_appletName(appletName)
-, m_closed(false)
+, m_terminated(false)
 {
 
 }
@@ -28,12 +28,12 @@ void Applet::BaseApplet::requestAppletSwitch(std::unique_ptr<BaseApplet> applet)
     m_switchApplet = std::move(applet);
 }
 
-void Applet::BaseApplet::close()
+void Applet::BaseApplet::terminate()
 {
-    m_closed = true;
+    m_terminated = true;
 }
 
-bool Applet::BaseApplet::isClosed()
+bool Applet::BaseApplet::isTerminated()
 {
-    return m_closed;
+    return m_terminated;
 }

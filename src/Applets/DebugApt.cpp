@@ -39,5 +39,5 @@ void Applet::DebugApt::draw(Hardware::Screen::BaseScreen &target)
 
 bool Applet::DebugApt::allowsStatusBar() const
 {
-    return false;
+    return true;
 }
