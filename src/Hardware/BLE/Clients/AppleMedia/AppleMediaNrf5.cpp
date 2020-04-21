@@ -76,7 +76,7 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onDbDiscoveryEvent(ble_db_discovery
     ble_gatt_db_char_t *dbCharacteristics = dbDiscoveryEvent->params.discovered_db.charateristics;
 
     // Check whether the AMS Service was discovered.
-    if (   (dbDiscoveryEvent->evt_type == BLE_DB_DISCOVERY_COMPLETE)
+    if ((dbDiscoveryEvent->evt_type == BLE_DB_DISCOVERY_COMPLETE)
            && (dbDiscoveryEvent->params.discovered_db.srv_uuid.uuid == AMS_UUID_SERVICE)
            && (dbDiscoveryEvent->params.discovered_db.srv_uuid.type == m_amsClientService.service.uuid.type))
     {
@@ -106,13 +106,17 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onDbDiscoveryEvent(ble_db_discovery
         // Store the connection handle.
         m_connectionHandle = dbDiscoveryEvent->conn_handle;
 
-        // TODO: Send DISCOVERY_COMPLETE event
+        if (m_eventCallback)
+            m_eventCallback(AppleMediaEventType::DiscoveryComplete, std::vector<uint8_t>());
+
         m_serviceFound = true;
     }
     else if ((dbDiscoveryEvent->evt_type == BLE_DB_DISCOVERY_SRV_NOT_FOUND) ||
              (dbDiscoveryEvent->evt_type == BLE_DB_DISCOVERY_ERROR))
     {
-        // TODO: Send DISCOVERY_FAILED event
+        if (m_eventCallback)
+            m_eventCallback(AppleMediaEventType::DiscoveryFailed, std::vector<uint8_t>());
+
         m_serviceFound = false;
     }
     else
@@ -166,25 +170,33 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onWriteResponse(const ble_evt_t *bl
 
 void Hardware::BLE::Clients::AppleMediaNrf5::onEntityUpdateErrorResponse(const ble_evt_t *bleEvent)
 {
-    // TODO: Send WRITE_ERR event
+    if (m_eventCallback)
+        m_eventCallback(AppleMediaEventType::EntityUpdateWriteError, std::vector<uint8_t>());
 }
 
 void Hardware::BLE::Clients::AppleMediaNrf5::onGattcNotification(const ble_evt_t *bleEvent)
 {
-    ble_gattc_evt_hvx_t const *p_notif = &bleEvent->evt.gattc_evt.params.hvx;
+    const ble_gattc_evt_hvx_t *notification = &bleEvent->evt.gattc_evt.params.hvx;
 
     if (bleEvent->evt.gattc_evt.conn_handle != m_connectionHandle)
     {
         return;
     }
 
-    // TODO: Handle the notification
+    if (notification->handle == m_amsClientService.entityUpdateChar.handle_value)
+    {
+        if (m_eventCallback)
+            m_eventCallback(AppleMediaEventType::EntityUpdateNotification, std::vector<uint8_t>(notification->data, notification->data + notification->len));
+    }
 }
 
 void Hardware::BLE::Clients::AppleMediaNrf5::onDisconnected(const ble_evt_t *bleEvent)
 {
     if (m_connectionHandle == bleEvent->evt.gap_evt.conn_handle)
     {
+        if (m_serviceFound && m_eventCallback)
+            m_eventCallback(AppleMediaEventType::Disconnected, std::vector<uint8_t>());
+
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         m_serviceFound = false;
     }
@@ -218,9 +230,15 @@ void Hardware::BLE::Clients::AppleMediaNrf5::gattErrorHandler(uint32_t nrf_error
 
 }
 
-void Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationsEnabled(bool enabled)
+void Hardware::BLE::Clients::AppleMediaNrf5::setEventCallback(
+        const std::function<void(AppleMediaEventType, const std::vector<uint8_t> &)> &callback)
 {
-    cccdConfigure(m_amsClientService.entityUpdateCccd.handle, enabled);
+    m_eventCallback = callback;
+}
+
+uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationsEnabled(bool enabled)
+{
+    return cccdConfigure(m_amsClientService.entityUpdateCccd.handle, enabled);
 }
 
 uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationType(
@@ -239,14 +257,30 @@ uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationType
 
     memset(&writeRequest, 0, sizeof(nrf_ble_gq_req_t));
 
+    std::vector<uint8_t> message{static_cast<unsigned char>(entityId)};
+    std::copy(attributeIds.begin(), attributeIds.end(), std::back_inserter(message));
+
     writeRequest.type                        = NRF_BLE_GQ_REQ_GATTC_WRITE;
     writeRequest.error_handler.cb            = gattErrorHandler;
     writeRequest.error_handler.p_ctx         = nullptr;
     writeRequest.params.gattc_write.handle   = m_amsClientService.entityUpdateChar.handle_value;
-    writeRequest.params.gattc_write.len      = attributeIds.size();
-    writeRequest.params.gattc_write.p_value  = &attributeIds[0];
+    writeRequest.params.gattc_write.len      = message.size();
+    writeRequest.params.gattc_write.p_value  = &message[0];
     writeRequest.params.gattc_write.offset   = 0;
-    writeRequest.params.gattc_write.write_op = BLE_GATT_OP_WRITE_CMD;
+    writeRequest.params.gattc_write.write_op = BLE_GATT_OP_WRITE_REQ;
 
     return nrf_ble_gq_item_add(m_gattQueue, &writeRequest, m_connectionHandle);
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::parseEventDataToEntityUpdate(const std::vector<uint8_t> &data,
+                                                                          Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaEntityUpdateEvent &entityUpdateEvent)
+{
+    if (data.size() < 3) return;
+
+    entityUpdateEvent.entityId = (AppleMediaEntityID) data[0];
+    entityUpdateEvent.attributeId = data[1];
+    entityUpdateEvent.entityUpdateFlags = data[2];
+
+    if (data.size() > 3)
+        entityUpdateEvent.value = std::string(data.begin() + 3, data.end());
 }

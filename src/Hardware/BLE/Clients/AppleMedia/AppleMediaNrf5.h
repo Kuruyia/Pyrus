@@ -1,6 +1,7 @@
 #ifndef PYRUS_APPLEMEDIANRF5_H
 #define PYRUS_APPLEMEDIANRF5_H
 
+#include <functional>
 #include <vector>
 
 #include <ble/ble_db_discovery/ble_db_discovery.h>
@@ -55,19 +56,43 @@ public:
         Duration
     };
 
+    enum AppleMediaEventType
+    {
+        DiscoveryComplete,
+        DiscoveryFailed,
+        Disconnected,
+        EntityUpdateWriteError,
+        EntityUpdateNotification
+    };
+
+    struct AppleMediaEntityUpdateEvent
+    {
+        AppleMediaEntityID entityId;
+        uint8_t attributeId;
+        uint8_t entityUpdateFlags;
+        std::string value;
+    };
+
     AppleMediaNrf5();
 
     bool isAvailable();
 
-    void setEntityUpdateNotificationsEnabled(bool enabled);
+    void setEventCallback(const std::function<void(AppleMediaEventType, const std::vector<uint8_t> &)> &callback);
+
+    uint32_t setEntityUpdateNotificationsEnabled(bool enabled);
     uint32_t setEntityUpdateNotificationType(AppleMediaEntityID entityId, uint8_t attributeId);
     uint32_t setEntityUpdateNotificationType(AppleMediaEntityID entityId, const std::vector<uint8_t> &attributeIds);
 
+    static void parseEventDataToEntityUpdate(const std::vector<uint8_t> &data, AppleMediaEntityUpdateEvent &entityUpdateEvent);
+
 private:
     bool m_serviceFound;
+
     BleAmsClientService m_amsClientService;
     uint16_t m_connectionHandle;
     nrf_ble_gq_t *m_gattQueue;
+
+    std::function<void(AppleMediaEventType, const std::vector<uint8_t> &)> m_eventCallback;
 
     friend class BLE::BleNrf5;
 

@@ -20,7 +20,6 @@ public:
 private:
     Widget::Text m_clkText;
     Widget::Text m_bleText;
-    Widget::Text m_amsText;
 }; // class DebugApt
 
 } // namespace Applet
