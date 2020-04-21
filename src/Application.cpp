@@ -71,7 +71,7 @@ Application::Application()
     );
 
     // Add default applet to the applet manager
-    m_appletManager.pushApplet(std::make_unique<Applet::TestApt>());
+    m_appletManager.pushApplet(std::make_unique<Applet::DebugApt>());
 
     // Set the applet changed handler
     m_appletManager.setAppletChangedHandler([&]() {

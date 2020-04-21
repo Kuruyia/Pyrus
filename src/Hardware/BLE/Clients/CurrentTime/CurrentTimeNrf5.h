@@ -17,7 +17,6 @@ namespace Clients {
 
 class CurrentTimeNrf5 : public BaseCurrentTime {
 public:
-    CurrentTimeNrf5() = default;
     ~CurrentTimeNrf5() override = default;
 
     bool isAvailable() override;

@@ -30,12 +30,13 @@ public:
     BleNrf5(BleNrf5 const&) = delete;
     void operator=(BleNrf5 const&) = delete;
 
-    void init();
+    void init() override;
 
     void deleteBonds() override;
     void startAdvertising() override;
 
     Clients::BaseCurrentTime &getCurrentTimeClient() override;
+    Clients::AppleMediaNrf5 &getAppleMediaClient() override;
 
 private:
     BleNrf5();
@@ -50,7 +51,7 @@ private:
     static void advertisementEventHandler(ble_adv_evt_t bleAdvertisementEvent);
     void initAdvertising();
 
-    static void dbDiscoveryEventHandler(ble_db_discovery_evt_t *dbDiscoveryEvent);
+    void dbDiscoveryEventHandler(ble_db_discovery_evt_t *dbDiscoveryEvent);
     void initDbDiscovery();
     static void qwrErrorHandler(uint32_t nrfError);
     void initServices();
@@ -68,8 +69,10 @@ private:
     static ble_uuid_t m_advertisementUuids[];
 
     friend class Clients::CurrentTimeNrf5;
+    friend class Clients::AppleMediaNrf5;
 
     Clients::CurrentTimeNrf5 m_currentTimeClient;
+    Clients::AppleMediaNrf5 m_appleMediaClient;
 
     nrf_ble_gq_t *getGattQueueInstance();
 }; // class BleNrf5
@@ -105,6 +108,20 @@ struct CallbackPeerManager<Ret(Params...)> {
 // Initialize the static member.
 template <typename Ret, typename... Params>
 std::function<Ret(Params...)> CallbackPeerManager<Ret(Params...)>::func;
+
+template <typename T>
+struct CallbackDbEvent;
+
+template <typename Ret, typename... Params>
+struct CallbackDbEvent<Ret(Params...)> {
+    template <typename... Args>
+    static Ret callback(Args... args) { return func(args...); }
+    static std::function<Ret(Params...)> func;
+    };
+
+// Initialize the static member.
+    template <typename Ret, typename... Params>
+    std::function<Ret(Params...)> CallbackDbEvent<Ret(Params...)>::func;
 
 } // namespace BLE
 

@@ -7,6 +7,7 @@ Applet::DebugApt::DebugApt()
 : BaseApplet(APPLET_NAME)
 , m_clkText("clkText", "--:--", &ubuntu_24ptFontInfo, {16, 48})
 , m_bleText("bleText", "BLE Unknown", &ubuntu_24ptFontInfo, {16, 80})
+, m_amsText("amsText", "AMS Unknown", &ubuntu_24ptFontInfo, {16, 112})
 {
 
 }
@@ -28,6 +29,9 @@ void Applet::DebugApt::update(Platform::BasePlatform &platform)
 
     // Show BLE state
     m_bleText.setText(platform.getBleManager().isConnected() ? "BLE C" : "BLE D");
+
+    // Show AMS state
+    m_amsText.setText(platform.getBleManager().getAppleMediaClient().isAvailable() ? "AMS A" : "AMS U");
 }
 
 void Applet::DebugApt::draw(Hardware::Screen::BaseScreen &target)
@@ -35,6 +39,7 @@ void Applet::DebugApt::draw(Hardware::Screen::BaseScreen &target)
     // Draw widgets
     m_clkText.draw(target);
     m_bleText.draw(target);
+    m_amsText.draw(target);
 }
 
 bool Applet::DebugApt::allowsStatusBar() const
