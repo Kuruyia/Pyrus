@@ -46,15 +46,15 @@ const ble_uuid128_t bleAmsEaBaseUuid128 =
 
 Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaNrf5()
 : m_serviceFound(false)
+, m_amsClientService()
+, m_connectionHandle(BLE_CONN_HANDLE_INVALID)
 {
-
+    // Make sure that the instance of service is clear. GATT handles inside the service and characteristics are set to @ref BLE_GATT_HANDLE_INVALID.
+    memset(&m_amsClientService, 0, sizeof(BleAmsClientService));
 }
 
 uint32_t Hardware::BLE::Clients::AppleMediaNrf5::initService(BleNrf5 *bluetoothManager)
 {
-    // Make sure that the instance of service is clear. GATT handles inside the service and characteristics are set to @ref BLE_GATT_HANDLE_INVALID.
-    memset(&m_amsClientService, 0, sizeof(BleAmsClientService));
-
     // Assign UUID types.
     VERIFY_SUCCESS(sd_ble_uuid_vs_add(&bleAmsBaseUuid128, &m_amsClientService.service.uuid.type));
     VERIFY_SUCCESS(sd_ble_uuid_vs_add(&bleAmsRcBaseUuid128, &m_amsClientService.remoteCommandChar.uuid.type));
@@ -77,7 +77,7 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onDbDiscoveryEvent(ble_db_discovery
            && (dbDiscoveryEvent->params.discovered_db.srv_uuid.type == m_amsClientService.service.uuid.type))
     {
         // Find the handles of the AMS characteristic.
-        for (uint32_t i = 0; i < dbDiscoveryEvent->params.discovered_db.char_count; i++)
+        for (uint32_t i = 0; i < dbDiscoveryEvent->params.discovered_db.char_count; ++i)
         {
             switch (dbCharacteristics[i].characteristic.uuid.uuid)
             {
@@ -99,6 +99,9 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onDbDiscoveryEvent(ble_db_discovery
             }
         }
 
+        // Store the connection handle.
+        m_connectionHandle = dbDiscoveryEvent->conn_handle;
+
         // TODO: Send DISCOVERY_COMPLETE event
         m_serviceFound = true;
     }
@@ -117,4 +120,68 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onDbDiscoveryEvent(ble_db_discovery
 bool Hardware::BLE::Clients::AppleMediaNrf5::isAvailable()
 {
     return m_serviceFound;
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::onBleEvent(const ble_evt_t *bleEvent)
+{
+    uint16_t evt = bleEvent->header.evt_id;
+
+    switch (evt)
+    {
+        case BLE_GATTC_EVT_WRITE_RSP:
+            onWriteResponse(bleEvent);
+            break;
+
+        case BLE_GATTC_EVT_HVX:
+            onGattcNotification(bleEvent);
+            break;
+
+        case BLE_GAP_EVT_DISCONNECTED:
+            onDisconnected(bleEvent);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::onWriteResponse(const ble_evt_t *bleEvent)
+{
+    // Check if the event is on the link for this instance.
+    if (m_connectionHandle != bleEvent->evt.gattc_evt.conn_handle)
+    {
+        return;
+    }
+
+    if ((bleEvent->evt.gattc_evt.error_handle != BLE_GATT_HANDLE_INVALID)
+        && (bleEvent->evt.gattc_evt.error_handle == m_amsClientService.entityUpdateChar.handle_value))
+    {
+        onEntityUpdateErrorResponse(bleEvent);
+    }
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::onEntityUpdateErrorResponse(const ble_evt_t *bleEvent)
+{
+    // TODO: Send WRITE_ERR event
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::onGattcNotification(const ble_evt_t *bleEvent)
+{
+    ble_gattc_evt_hvx_t const *p_notif = &bleEvent->evt.gattc_evt.params.hvx;
+
+    if (bleEvent->evt.gattc_evt.conn_handle != m_connectionHandle)
+    {
+        return;
+    }
+
+    // TODO: Handle the notification
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::onDisconnected(const ble_evt_t *bleEvent)
+{
+    if (m_connectionHandle == bleEvent->evt.gap_evt.conn_handle)
+    {
+        m_connectionHandle = BLE_CONN_HANDLE_INVALID;
+        m_serviceFound = false;
+    }
 }

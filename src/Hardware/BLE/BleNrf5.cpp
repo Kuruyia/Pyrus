@@ -88,6 +88,8 @@ void Hardware::BLE::BleNrf5::bleEventHandler(const ble_evt_t *bleEvent)
 
     pm_handler_secure_on_connection(bleEvent);
 
+    m_appleMediaClient.onBleEvent(bleEvent);
+
     switch (bleEvent->header.evt_id)
     {
         case BLE_GAP_EVT_DISCONNECTED:
