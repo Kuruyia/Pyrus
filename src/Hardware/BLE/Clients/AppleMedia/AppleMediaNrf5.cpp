@@ -1,6 +1,6 @@
-#include "../../BleNrf5.h"
-
 #include "AppleMediaNrf5.h"
+
+#include "../../BleNrf5.h"
 
 #define AMS_UUID_SERVICE          0x502B
 #define AMS_UUID_REMOTE_COMMAND   0x81D8
@@ -48,6 +48,7 @@ Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaNrf5()
 : m_serviceFound(false)
 , m_amsClientService()
 , m_connectionHandle(BLE_CONN_HANDLE_INVALID)
+, m_gattQueue(nullptr)
 {
     // Make sure that the instance of service is clear. GATT handles inside the service and characteristics are set to @ref BLE_GATT_HANDLE_INVALID.
     memset(&m_amsClientService, 0, sizeof(BleAmsClientService));
@@ -55,6 +56,9 @@ Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaNrf5()
 
 uint32_t Hardware::BLE::Clients::AppleMediaNrf5::initService(BleNrf5 *bluetoothManager)
 {
+    // Store the GATT queue pointer.
+    m_gattQueue = bluetoothManager->getGattQueueInstance();
+
     // Assign UUID types.
     VERIFY_SUCCESS(sd_ble_uuid_vs_add(&bleAmsBaseUuid128, &m_amsClientService.service.uuid.type));
     VERIFY_SUCCESS(sd_ble_uuid_vs_add(&bleAmsRcBaseUuid128, &m_amsClientService.remoteCommandChar.uuid.type));
@@ -184,4 +188,65 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onDisconnected(const ble_evt_t *ble
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         m_serviceFound = false;
     }
+}
+
+uint32_t Hardware::BLE::Clients::AppleMediaNrf5::cccdConfigure(const uint16_t cccdHandle, bool enableNotifications)
+{
+    nrf_ble_gq_req_t amsClientRequest;
+    uint8_t  cccd[BLE_CCCD_VALUE_LEN];
+    uint16_t cccdValue = enableNotifications ? BLE_GATT_HVX_NOTIFICATION : 0;
+
+    cccd[0] = LSB_16(cccdValue);
+    cccd[1] = MSB_16(cccdValue);
+
+    memset(&amsClientRequest, 0, sizeof(nrf_ble_gq_req_t));
+
+    amsClientRequest.type                        = NRF_BLE_GQ_REQ_GATTC_WRITE;
+    amsClientRequest.error_handler.cb            = gattErrorHandler;
+    amsClientRequest.error_handler.p_ctx         = nullptr;
+    amsClientRequest.params.gattc_write.handle   = cccdHandle;
+    amsClientRequest.params.gattc_write.len      = BLE_CCCD_VALUE_LEN;
+    amsClientRequest.params.gattc_write.offset   = 0;
+    amsClientRequest.params.gattc_write.write_op = BLE_GATT_OP_WRITE_REQ;
+    amsClientRequest.params.gattc_write.p_value  = cccd;
+
+    return nrf_ble_gq_item_add(m_gattQueue, &amsClientRequest, m_connectionHandle);
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::gattErrorHandler(uint32_t nrf_error, void *p_context, uint16_t conn_handle)
+{
+
+}
+
+void Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationsEnabled(bool enabled)
+{
+    cccdConfigure(m_amsClientService.entityUpdateCccd.handle, enabled);
+}
+
+uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationType(
+        Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaEntityID entityId, uint8_t attributeId)
+{
+    return setEntityUpdateNotificationType(entityId, std::vector<uint8_t>{attributeId});
+}
+
+uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationType(
+        Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaEntityID entityId, const std::vector<uint8_t> &attributeIds)
+{
+    if (m_connectionHandle == BLE_CONN_HANDLE_INVALID)
+        return NRF_ERROR_INVALID_STATE;
+
+    nrf_ble_gq_req_t writeRequest;
+
+    memset(&writeRequest, 0, sizeof(nrf_ble_gq_req_t));
+
+    writeRequest.type                        = NRF_BLE_GQ_REQ_GATTC_WRITE;
+    writeRequest.error_handler.cb            = gattErrorHandler;
+    writeRequest.error_handler.p_ctx         = nullptr;
+    writeRequest.params.gattc_write.handle   = m_amsClientService.entityUpdateChar.handle_value;
+    writeRequest.params.gattc_write.len      = attributeIds.size();
+    writeRequest.params.gattc_write.p_value  = &attributeIds[0];
+    writeRequest.params.gattc_write.offset   = 0;
+    writeRequest.params.gattc_write.write_op = BLE_GATT_OP_WRITE_CMD;
+
+    return nrf_ble_gq_item_add(m_gattQueue, &writeRequest, m_connectionHandle);
 }
