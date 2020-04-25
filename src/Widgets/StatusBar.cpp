@@ -4,21 +4,26 @@
 
 Widget::StatusBar::StatusBar(const std::string &id, const Vec2D_t position, const uint16_t width,
         const FONT_INFO *fontInfo, const std::string &primaryText, const std::string &secondaryText)
-: BaseWidget(id, position)
+: BaseContainer(id, position, {0, 0, 0})
 , m_size({width, 0})
 , m_lastPosition(position)
 , m_lastSize({width, 0})
-, m_mainText("statusPrimary", primaryText, fontInfo, {static_cast<uint16_t>(position.x + 4), position.y},
-        {31, 63, 31})
-, m_secondaryText("statusSecondary", secondaryText, fontInfo,
-        {static_cast<uint16_t>(position.x + width - 4), position.y}, {25, 51, 25})
+, m_mainText(nullptr)
+, m_secondaryText(nullptr)
 {
-    m_size.y = (m_mainText.getHeight() > m_secondaryText.getHeight()) ? m_mainText.getHeight() : m_secondaryText.getHeight();
+    m_mainText = dynamic_cast<Text *>(&addChild(std::make_unique<Widget::Text>("statusPrimary", primaryText,
+                                                                               fontInfo, Vec2D_t{4, 0},
+                                                                               Color565_t{31, 63, 31})));
+    m_secondaryText = dynamic_cast<Text *>(&addChild(std::make_unique<Widget::Text>("statusSecondary", secondaryText, fontInfo,
+                                                                                    Vec2D_t{static_cast<uint16_t>(width - 4), 0},
+                                                                                    Color565_t{25, 51, 25})));
+
+    m_size.y = (m_mainText->getHeight() > m_secondaryText->getHeight()) ? m_mainText->getHeight() : m_secondaryText->getHeight();
     m_size.y += 3;
 
     m_lastSize.y = m_size.y;
 
-    m_secondaryText.setHorizontalAlignment(Widget::Text::HorizontalAlignment::Right);
+    m_secondaryText->setHorizontalAlignment(Widget::Text::HorizontalAlignment::Right);
 }
 
 void Widget::StatusBar::draw(Hardware::Screen::BaseScreen &target)
@@ -37,24 +42,25 @@ void Widget::StatusBar::draw(Hardware::Screen::BaseScreen &target)
     }
 
     // Draw children widgets
-    m_mainText.draw(target);
-    m_secondaryText.draw(target);
+    m_mainText->draw(target);
+    m_secondaryText->draw(target);
 
     target.drawRectangle({m_position.x, static_cast<uint16_t>(m_position.y + m_size.y - 1)},
             {m_size.x, 1}, {31, 63, 0}, true);
 
     // Reset the dirty flag
     clearDirty();
+
+    // Draw children
+    for (auto &widget: m_children)
+        widget->draw(target);
 }
 
 void Widget::StatusBar::setPosition(Vec2D_t position)
 {
     m_lastPosition = m_position;
 
-    m_mainText.setPosition({static_cast<uint16_t>(position.x + 4), position.y});
-    m_secondaryText.setPosition({static_cast<uint16_t>(position.x + m_size.x - 4), position.y});
-
-    BaseWidget::setPosition(position);
+    BaseContainer::setPosition(position);
 }
 
 Vec2D_t Widget::StatusBar::getAbsolutePosition() const
@@ -71,9 +77,9 @@ void Widget::StatusBar::setWidth(uint16_t width)
     m_size.x = width;
 
     setDirty(DirtyState::Size, true);
-    m_mainText.setDirty(DirtyState::Global, true);
+    m_mainText->setDirty(DirtyState::Global, true);
 
-    m_secondaryText.setPosition({static_cast<uint16_t>(m_position.x + width - 4), m_position.y});
+    m_secondaryText->setPosition({static_cast<uint16_t>(width - 4), 0});
 }
 
 uint16_t Widget::StatusBar::getWidth() const
@@ -91,16 +97,14 @@ Vec2D_t Widget::StatusBar::getSize() const
     return m_size;
 }
 
-void Widget::StatusBar::setMainText(const std::string &mainText)
+Widget::Text &Widget::StatusBar::getMainText()
 {
-    m_mainText.setText(mainText);
-    setDirty(DirtyState::Child, true);
+    return *m_mainText;
 }
 
-void Widget::StatusBar::setSecondaryText(const std::string &secondaryText)
+Widget::Text &Widget::StatusBar::getSecondaryText()
 {
-    m_secondaryText.setText(secondaryText);
-    setDirty(DirtyState::Child, true);
+    return *m_secondaryText;
 }
 
 Vec2D_t Widget::StatusBar::getLastAbsolutePosition() const
