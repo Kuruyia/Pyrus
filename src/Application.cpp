@@ -72,12 +72,12 @@ Application::Application()
     );
 
     // Add default applet to the applet manager
-    m_appletManager.pushApplet(std::make_unique<Applet::TestAMS>(m_platform.getBleManager().getAppleMediaClient()));
-    m_statusBar.setSecondaryText(m_appletManager.getCurrentApplet().getName());
+    m_appletManager.pushApplet(std::make_unique<Applet::DebugApt>());
+    m_statusBar.getSecondaryText().setText(m_appletManager.getCurrentApplet().getName());
 
     // Set the applet changed handler
     m_appletManager.setAppletChangedHandler([&]() {
-        m_statusBar.setSecondaryText(m_appletManager.getCurrentApplet().getName());
+        m_statusBar.getSecondaryText().setText(m_appletManager.getCurrentApplet().getName());
         m_platform.getScreenManager().clearFramebuffer({0, 0, 0});
     });
 }
@@ -99,9 +99,20 @@ void Application::run()
         // Update applets
         m_appletManager.update(m_platform);
 
-        // Draw the status bar if allowed
+        // Update and draw status bar if allowed
         if (m_appletManager.getCurrentApplet().allowsStatusBar())
+        {
+            // Update the clock
+            std::time_t epoch = m_platform.getClockManager().getTime();
+            struct tm *timeinfo = std::localtime(const_cast<const time_t *>(&epoch));
+            char timeBuffer[0x6];
+
+            snprintf(timeBuffer, 0x6, "%02u:%02u", timeinfo->tm_hour, timeinfo->tm_min);
+            m_statusBar.getMainText().setText(timeBuffer);
+
+            // Draw the status bar
             m_statusBar.draw(m_platform.getScreenManager());
+        }
 
         // Draw applets
         m_appletManager.draw(m_platform.getScreenManager());
