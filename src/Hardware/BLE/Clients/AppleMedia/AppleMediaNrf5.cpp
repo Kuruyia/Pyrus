@@ -161,8 +161,8 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onWriteResponse(const ble_evt_t *bl
         return;
     }
 
-    if ((bleEvent->evt.gattc_evt.error_handle != BLE_GATT_HANDLE_INVALID)
-        && (bleEvent->evt.gattc_evt.error_handle == m_amsClientService.entityUpdateChar.handle_value))
+    if (bleEvent->evt.gattc_evt.error_handle != BLE_GATT_HANDLE_INVALID
+        && bleEvent->evt.gattc_evt.error_handle == m_amsClientService.entityUpdateChar.handle_value)
     {
         onEntityUpdateErrorResponse(bleEvent);
     }
@@ -283,4 +283,26 @@ void Hardware::BLE::Clients::AppleMediaNrf5::parseEventDataToEntityUpdate(const 
 
     if (data.size() > 3)
         entityUpdateEvent.value = std::string(data.begin() + 3, data.end());
+}
+
+uint32_t Hardware::BLE::Clients::AppleMediaNrf5::sendRemoteCommand(
+        Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaRemoteCommandID remoteCommandId)
+{
+    if (m_connectionHandle == BLE_CONN_HANDLE_INVALID)
+        return NRF_ERROR_INVALID_STATE;
+
+    nrf_ble_gq_req_t writeRequest;
+
+    memset(&writeRequest, 0, sizeof(nrf_ble_gq_req_t));
+
+    writeRequest.type                        = NRF_BLE_GQ_REQ_GATTC_WRITE;
+    writeRequest.error_handler.cb            = gattErrorHandler;
+    writeRequest.error_handler.p_ctx         = nullptr;
+    writeRequest.params.gattc_write.handle   = m_amsClientService.remoteCommandChar.handle_value;
+    writeRequest.params.gattc_write.len      = 1;
+    writeRequest.params.gattc_write.p_value  = reinterpret_cast<const uint8_t *>(&remoteCommandId);
+    writeRequest.params.gattc_write.offset   = 0;
+    writeRequest.params.gattc_write.write_op = BLE_GATT_OP_WRITE_REQ;
+
+    return nrf_ble_gq_item_add(m_gattQueue, &writeRequest, m_connectionHandle);
 }

@@ -26,6 +26,24 @@ public:
         ble_gattc_desc_t    entityUpdateCccd;
     };
 
+    enum AppleMediaRemoteCommandID
+    {
+        Play,
+        Pause,
+        TogglePlayPause,
+        NextTrack,
+        PreviousTrack,
+        VolumeUp,
+        VolumeDown,
+        AdvanceRepeatMode,
+        AdvanceShuffleMode,
+        SkipForward,
+        SkipBackward,
+        LikeTrack,
+        DislikeTrack,
+        BookmarkTrack
+    };
+
     enum AppleMediaEntityID
     {
         Player = 0,
@@ -56,6 +74,11 @@ public:
         Duration
     };
 
+    enum AppleMediaEntityUpdateFlags
+    {
+        FlagTruncated = (1 << 0)
+    };
+
     enum AppleMediaEventType
     {
         DiscoveryComplete,
@@ -84,6 +107,8 @@ public:
     uint32_t setEntityUpdateNotificationType(AppleMediaEntityID entityId, const std::vector<uint8_t> &attributeIds);
 
     static void parseEventDataToEntityUpdate(const std::vector<uint8_t> &data, AppleMediaEntityUpdateEvent &entityUpdateEvent);
+
+    uint32_t sendRemoteCommand(AppleMediaRemoteCommandID remoteCommandId);
 
 private:
     bool m_serviceFound;

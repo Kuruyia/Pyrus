@@ -9,6 +9,7 @@ namespace Applet {
 class TestAMS: public BaseApplet {
 public:
     explicit TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia);
+    ~TestAMS();
 
     void processEvent() override;
     void update(Platform::BasePlatform &platform) override;

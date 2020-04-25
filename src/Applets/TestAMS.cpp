@@ -1,3 +1,4 @@
+#include <libraries/delay/nrf_delay.h>
 #include "TestAMS.h"
 
 #include "../Fonts/Ubuntu24Font.h"
@@ -35,6 +36,10 @@ Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
                 appleMedia.setEntityUpdateNotificationType(AppleMediaNrf5::AppleMediaEntityID::Player,
                         {AppleMediaNrf5::AppleMediaPlayerAttributeID ::PlaybackInfo,
                          AppleMediaNrf5::AppleMediaPlayerAttributeID ::Volume});
+
+                nrf_delay_ms(500);
+                appleMedia.sendRemoteCommand(AppleMediaNrf5::AppleMediaRemoteCommandID::TogglePlayPause);
+
                 break;
 
             case AppleMediaNrf5::AppleMediaEventType::Disconnected:
@@ -87,6 +92,11 @@ Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
                 break;
         }
     });
+}
+
+Applet::TestAMS::~TestAMS()
+{
+    m_appleMedia.setEventCallback(nullptr);
 }
 
 void Applet::TestAMS::processEvent()
