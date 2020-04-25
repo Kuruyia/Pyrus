@@ -103,12 +103,15 @@ void Application::run()
         if (m_appletManager.getCurrentApplet().allowsStatusBar())
         {
             // Update the clock
-            std::time_t epoch = m_platform.getClockManager().getTime();
-            struct tm *timeinfo = std::localtime(const_cast<const time_t *>(&epoch));
-            char timeBuffer[0x6];
+            std::time_t actualEpoch = m_platform.getClockManager().getTime();
+            uint8_t actualMinute = (actualEpoch / 60) % 60;
+            uint8_t actualHour = (actualEpoch / 3600) % 24;
 
-            snprintf(timeBuffer, 0x6, "%02u:%02u", timeinfo->tm_hour, timeinfo->tm_min);
-            m_statusBar.getMainText().setText(timeBuffer);
+            char timeBuffer[6];
+            snprintf(timeBuffer, 6, "%02u:%02u", actualHour, actualMinute);
+
+            if (strncmp(m_statusBar.getMainText().getText().c_str(), timeBuffer, 6) != 0)
+                m_statusBar.getMainText().setText(timeBuffer);
 
             // Draw the status bar
             m_statusBar.draw(m_platform.getScreenManager());
