@@ -5,7 +5,9 @@ This project is based on JF002's [nrf52-baseproject](https://github.com/JF002/nr
 ## What's working
 - ST7789 LCD Controller, with support for hardware-assisted vertical scrolling
 - nRF52's Real Time Counter, to keep track of the time
-- nRF52's BLE, advertising and bonding works. Synchronizes the time with the phone if a CTS is running.
+- nRF52's BLE, advertising and bonding works:
+    - **AMS Client** to control the current media on iOS devices
+    - **CTS Client** to synchronize the watch clock with the smartphone
 
 ## Building
 You should follow the [instructions of the nrf52-baseproject](https://github.com/JF002/nrf52-baseproject/blob/master/README.md#nrf52-baseproject) to get a build environment ready to compile Pyrus.  
