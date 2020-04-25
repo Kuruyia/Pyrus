@@ -59,6 +59,7 @@ void Hardware::BLE::BleNrf5::init()
     initDbDiscovery();
     initServices();
     m_currentTimeClient.initService(this);
+    m_appleMediaClient.initService(this);
 
     initConnectionParameters();
     initPeerManager();
@@ -86,6 +87,8 @@ void Hardware::BLE::BleNrf5::bleEventHandler(const ble_evt_t *bleEvent)
     ret_code_t errorCode = NRF_SUCCESS;
 
     pm_handler_secure_on_connection(bleEvent);
+
+    m_appleMediaClient.onBleEvent(bleEvent);
 
     switch (bleEvent->header.evt_id)
     {
@@ -229,6 +232,7 @@ void Hardware::BLE::BleNrf5::initAdvertising()
 void Hardware::BLE::BleNrf5::dbDiscoveryEventHandler(ble_db_discovery_evt_t *dbDiscoveryEvent)
 {
     ble_cts_c_on_db_disc_evt(getInstance().m_currentTimeClient.getCtsClientInstance(), dbDiscoveryEvent);
+    m_appleMediaClient.onDbDiscoveryEvent(dbDiscoveryEvent);
 }
 
 void Hardware::BLE::BleNrf5::initDbDiscovery()
@@ -237,7 +241,10 @@ void Hardware::BLE::BleNrf5::initDbDiscovery()
 
     memset(&dbInit, 0, sizeof(ble_db_discovery_init_t));
 
-    dbInit.evt_handler = dbDiscoveryEventHandler;
+    CallbackDbEvent<void(ble_db_discovery_evt_t *)>::func = std::bind(&BleNrf5::dbDiscoveryEventHandler, this, std::placeholders::_1);
+    auto dbHandlerFunc = static_cast<ble_db_discovery_evt_handler_t >(CallbackDbEvent<void(ble_db_discovery_evt_t *)>::callback);
+
+    dbInit.evt_handler = dbHandlerFunc;
     dbInit.p_gatt_queue = &m_bleGattQueue;
 
     APP_ERROR_CHECK(ble_db_discovery_init(&dbInit));
@@ -372,4 +379,9 @@ nrf_ble_gq_t *Hardware::BLE::BleNrf5::getGattQueueInstance()
 Hardware::BLE::Clients::BaseCurrentTime &Hardware::BLE::BleNrf5::getCurrentTimeClient()
 {
     return m_currentTimeClient;
+}
+
+Hardware::BLE::Clients::BaseAppleMedia &Hardware::BLE::BleNrf5::getAppleMediaClient()
+{
+    return m_appleMediaClient;
 }

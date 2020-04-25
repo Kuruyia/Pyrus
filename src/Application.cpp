@@ -2,6 +2,7 @@
 #include <libraries/button/app_button.h>
 #include <libraries/delay/nrf_delay.h>
 
+#include "Applets/TestAMS.h"
 #include "Applets/DebugApt.h"
 #include "Applets/TestApt.h"
 
@@ -71,7 +72,8 @@ Application::Application()
     );
 
     // Add default applet to the applet manager
-    m_appletManager.pushApplet(std::make_unique<Applet::TestApt>());
+    m_appletManager.pushApplet(std::make_unique<Applet::TestAMS>(m_platform.getBleManager().getAppleMediaClient()));
+    m_statusBar.setSecondaryText(m_appletManager.getCurrentApplet().getName());
 
     // Set the applet changed handler
     m_appletManager.setAppletChangedHandler([&]() {

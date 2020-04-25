@@ -31,10 +31,13 @@ list(APPEND SOURCE_FILES
         Applets/AppletManager.cpp
         Applets/BaseApplet.cpp
         Applets/DebugApt.cpp
+        Applets/TestAMS.cpp
         Applets/TestApt.cpp
         Fonts/Ubuntu24Font.c
         Graphics/Color.h
         Graphics/Vec2D.h
+        Hardware/BLE/Clients/AppleMedia/AppleMediaNrf5.cpp
+        Hardware/BLE/Clients/AppleMedia/BaseAppleMedia.cpp
         Hardware/BLE/Clients/CurrentTime/BaseCurrentTime.cpp
         Hardware/BLE/Clients/CurrentTime/CurrentTimeNrf5.cpp
         Hardware/BLE/BaseBle.cpp
