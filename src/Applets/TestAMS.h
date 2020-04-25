@@ -23,6 +23,7 @@ private:
 
     Hardware::BLE::Clients::AppleMediaNrf5 &m_appleMedia;
 
+    bool m_playPauseSupported;
     std::string m_songTitle;
     std::string m_songArtist;
     std::string m_songAlbum;

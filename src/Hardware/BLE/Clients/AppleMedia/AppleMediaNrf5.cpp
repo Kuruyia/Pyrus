@@ -188,6 +188,11 @@ void Hardware::BLE::Clients::AppleMediaNrf5::onGattcNotification(const ble_evt_t
         if (m_eventCallback)
             m_eventCallback(AppleMediaEventType::EntityUpdateNotification, std::vector<uint8_t>(notification->data, notification->data + notification->len));
     }
+    else if (notification->handle == m_amsClientService.remoteCommandChar.handle_value)
+    {
+        if (m_eventCallback)
+            m_eventCallback(AppleMediaEventType::RemoteCommandSupportedCmds, std::vector<uint8_t>(notification->data, notification->data + notification->len));
+    }
 }
 
 void Hardware::BLE::Clients::AppleMediaNrf5::onDisconnected(const ble_evt_t *bleEvent)
@@ -283,6 +288,11 @@ void Hardware::BLE::Clients::AppleMediaNrf5::parseEventDataToEntityUpdate(const 
 
     if (data.size() > 3)
         entityUpdateEvent.value = std::string(data.begin() + 3, data.end());
+}
+
+uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setRemoteCommandNotificationsEnabled(bool enabled)
+{
+    return cccdConfigure(m_amsClientService.remoteCommandCccd.handle, enabled);
 }
 
 uint32_t Hardware::BLE::Clients::AppleMediaNrf5::sendRemoteCommand(

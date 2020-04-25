@@ -1,4 +1,5 @@
 #include <libraries/delay/nrf_delay.h>
+#include <algorithm>
 #include "TestAMS.h"
 
 #include "../Fonts/Ubuntu24Font.h"
@@ -8,6 +9,7 @@
 Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
 : BaseApplet(APPLET_NAME)
 , m_appleMedia(appleMedia)
+, m_playPauseSupported(false)
 , m_songTitle()
 , m_songArtist()
 , m_songAlbum()
@@ -26,6 +28,7 @@ Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
             case AppleMediaNrf5::AppleMediaEventType::DiscoveryComplete:
                 m_amsText.setText("AMS Avail");
                 appleMedia.setEntityUpdateNotificationsEnabled(true);
+                appleMedia.setRemoteCommandNotificationsEnabled(true);
 
                 appleMedia.setEntityUpdateNotificationType(AppleMediaNrf5::AppleMediaEntityID::Track,
                         {AppleMediaNrf5::AppleMediaTrackAttributeID::Title,
@@ -36,9 +39,6 @@ Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
                 appleMedia.setEntityUpdateNotificationType(AppleMediaNrf5::AppleMediaEntityID::Player,
                         {AppleMediaNrf5::AppleMediaPlayerAttributeID ::PlaybackInfo,
                          AppleMediaNrf5::AppleMediaPlayerAttributeID ::Volume});
-
-                nrf_delay_ms(500);
-                appleMedia.sendRemoteCommand(AppleMediaNrf5::AppleMediaRemoteCommandID::TogglePlayPause);
 
                 break;
 
@@ -88,6 +88,12 @@ Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
                 break;
             }
 
+            case AppleMediaNrf5::AppleMediaEventType::RemoteCommandSupportedCmds:
+                m_playPauseSupported = (std::find(eventData.begin(), eventData.end(), static_cast<uint8_t>(AppleMediaNrf5::AppleMediaRemoteCommandID::TogglePlayPause)) != eventData.end());
+
+                updateMetaText();
+                break;
+
             default:
                 break;
         }
@@ -131,4 +137,8 @@ void Applet::TestAMS::updateInfoTexts()
 void Applet::TestAMS::updateMetaText()
 {
     m_metaText.setText("Vol " + std::to_string((unsigned)(m_deviceVolume * 100)));
+    if (m_playPauseSupported)
+        m_metaText.setTextColor({0, 63, 0});
+    else
+        m_metaText.setTextColor({31, 0, 0});
 }

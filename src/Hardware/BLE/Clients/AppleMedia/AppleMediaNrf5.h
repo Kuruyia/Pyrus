@@ -85,7 +85,8 @@ public:
         DiscoveryFailed,
         Disconnected,
         EntityUpdateWriteError,
-        EntityUpdateNotification
+        EntityUpdateNotification,
+        RemoteCommandSupportedCmds
     };
 
     struct AppleMediaEntityUpdateEvent
@@ -108,6 +109,7 @@ public:
 
     static void parseEventDataToEntityUpdate(const std::vector<uint8_t> &data, AppleMediaEntityUpdateEvent &entityUpdateEvent);
 
+    uint32_t setRemoteCommandNotificationsEnabled(bool enabled);
     uint32_t sendRemoteCommand(AppleMediaRemoteCommandID remoteCommandId);
 
 private:
