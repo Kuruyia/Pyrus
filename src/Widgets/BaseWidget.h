@@ -1,6 +1,7 @@
 #ifndef PYRUS_BASEWIDGET_H
 #define PYRUS_BASEWIDGET_H
 
+#include <bitset>
 #include <functional>
 #include <string>
 #include <vector>
@@ -54,7 +55,7 @@ protected:
     BaseContainer *m_parent;
     const std::string m_id;
 
-    uint16_t m_dirty;
+    std::bitset<16> m_dirty;
 
     Vec2D_t m_position;
     bool m_loopVerticalPosition;

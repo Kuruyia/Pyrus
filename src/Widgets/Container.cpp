@@ -13,7 +13,7 @@ Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t si
 void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
 {
     // Check if we need to redraw the widget itself
-    if (m_dirty > 0)
+    if (m_dirty.any())
     {
         // Geometry has changed, we need to clear the last occupied space
         if (isDirty(DirtyState::Position) || isDirty(DirtyState::Size))

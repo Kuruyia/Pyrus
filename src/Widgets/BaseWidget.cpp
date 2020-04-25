@@ -52,10 +52,7 @@ const std::string &Widget::BaseWidget::getId() const
 
 void Widget::BaseWidget::setDirty(DirtyState state, bool dirty)
 {
-    if (dirty)
-        m_dirty |= 1 << state;
-    else
-        m_dirty &= ~(1 << state);
+    m_dirty.set(state, dirty);
 
     if (m_parent != nullptr)
         m_parent->setDirty(DirtyState::Child, true);
@@ -63,12 +60,12 @@ void Widget::BaseWidget::setDirty(DirtyState state, bool dirty)
 
 void Widget::BaseWidget::clearDirty()
 {
-    m_dirty = 0;
+    m_dirty.reset();
 }
 
 bool Widget::BaseWidget::isDirty(Widget::BaseWidget::DirtyState state)
 {
-    return m_dirty & (1 << state);
+    return m_dirty.test(state);
 }
 
 Color565_t Widget::BaseWidget::getParentBackgroundColor() const
