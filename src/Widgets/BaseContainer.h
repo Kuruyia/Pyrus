@@ -16,8 +16,8 @@ public:
 
     void setPosition(Vec2D_t position) override;
 
-    virtual void addChild(std::unique_ptr<BaseWidget> child);
-    virtual bool removeChild(const std::string &id);
+    BaseWidget &addChild(std::unique_ptr<BaseWidget> child);
+    bool removeChild(const std::string &id);
 
     virtual std::unique_ptr<BaseWidget> &findChildById(const std::string &id);
     virtual const std::vector<std::unique_ptr<BaseWidget>> &getChildren();
@@ -29,6 +29,7 @@ public:
 
 protected:
     std::vector<std::unique_ptr<BaseWidget>> m_children;
+    std::function<void(BaseWidget &)> m_newChildHandler;
 
     Color565_t m_backgroundColor;
 }; // class BaseContainer

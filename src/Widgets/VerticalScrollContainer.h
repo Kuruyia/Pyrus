@@ -16,8 +16,6 @@ public:
 
     Vec2D_t getAbsolutePosition() const override;
 
-    void addChild(std::unique_ptr<BaseWidget> child) override;
-
     void setSize(Vec2D_t size);
 
     uint16_t getWidth() const override;

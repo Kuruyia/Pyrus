@@ -9,7 +9,10 @@ Widget::VerticalScrollContainer::VerticalScrollContainer(const std::string &id, 
 , m_verticalScrollOffsetChanged(false)
 , m_verticalScrollOffset(0)
 {
-
+    // Set the new child handler
+    m_newChildHandler = [](BaseWidget &widget) {
+        widget.setLoopVerticalPosition(true);
+    };
 }
 
 void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
@@ -61,12 +64,6 @@ Vec2D_t Widget::VerticalScrollContainer::getAbsolutePosition() const
         return getPosition();
 
     return m_parent->getAbsolutePosition() + getPosition();
-}
-
-void Widget::VerticalScrollContainer::addChild(std::unique_ptr<BaseWidget> child)
-{
-    child->setLoopVerticalPosition(true);
-    BaseContainer::addChild(std::move(child));
 }
 
 void Widget::VerticalScrollContainer::setSize(Vec2D_t size)

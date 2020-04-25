@@ -16,10 +16,14 @@ void Widget::BaseContainer::setPosition(Vec2D_t position)
     setDirtyWithChildren(DirtyState::Position, true);
 }
 
-void Widget::BaseContainer::addChild(std::unique_ptr<BaseWidget> child)
+Widget::BaseWidget &Widget::BaseContainer::addChild(std::unique_ptr<BaseWidget> child)
 {
     child->setParent(this);
+    if (m_newChildHandler)
+        m_newChildHandler(*(child.get()));
+
     m_children.push_back(std::move(child));
+    return *(m_children.back().get());
 }
 
 bool Widget::BaseContainer::removeChild(const std::string &id)

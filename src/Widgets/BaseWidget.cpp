@@ -56,6 +56,9 @@ void Widget::BaseWidget::setDirty(DirtyState state, bool dirty)
         m_dirty |= 1 << state;
     else
         m_dirty &= ~(1 << state);
+
+    if (m_parent != nullptr)
+        m_parent->setDirty(DirtyState::Child, true);
 }
 
 void Widget::BaseWidget::clearDirty()
