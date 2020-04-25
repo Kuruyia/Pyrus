@@ -381,7 +381,7 @@ Hardware::BLE::Clients::BaseCurrentTime &Hardware::BLE::BleNrf5::getCurrentTimeC
     return m_currentTimeClient;
 }
 
-Hardware::BLE::Clients::AppleMediaNrf5 &Hardware::BLE::BleNrf5::getAppleMediaClient()
+Hardware::BLE::Clients::BaseAppleMedia &Hardware::BLE::BleNrf5::getAppleMediaClient()
 {
     return m_appleMediaClient;
 }

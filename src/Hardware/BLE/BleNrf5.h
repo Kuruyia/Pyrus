@@ -8,8 +8,10 @@
 #include <ble/common/ble_conn_params.h>
 #include <ble/peer_manager/peer_manager_types.h>
 
+#include "Clients/CurrentTime/CurrentTimeNrf5.h"
+#include "Clients/AppleMedia/AppleMediaNrf5.h"
+
 #include "BaseBle.h"
-#include "Hardware/BLE/Clients/CurrentTime/CurrentTimeNrf5.h"
 
 namespace Hardware
 {
@@ -36,7 +38,7 @@ public:
     void startAdvertising() override;
 
     Clients::BaseCurrentTime &getCurrentTimeClient() override;
-    Clients::AppleMediaNrf5 &getAppleMediaClient() override;
+    Clients::BaseAppleMedia &getAppleMediaClient() override;
 
 private:
     BleNrf5();

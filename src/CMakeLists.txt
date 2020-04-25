@@ -37,6 +37,7 @@ list(APPEND SOURCE_FILES
         Graphics/Color.h
         Graphics/Vec2D.h
         Hardware/BLE/Clients/AppleMedia/AppleMediaNrf5.cpp
+        Hardware/BLE/Clients/AppleMedia/BaseAppleMedia.cpp
         Hardware/BLE/Clients/CurrentTime/BaseCurrentTime.cpp
         Hardware/BLE/Clients/CurrentTime/CurrentTimeNrf5.cpp
         Hardware/BLE/BaseBle.cpp

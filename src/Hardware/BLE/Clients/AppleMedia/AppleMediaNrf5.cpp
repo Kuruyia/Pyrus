@@ -1,6 +1,5 @@
-#include "AppleMediaNrf5.h"
-
 #include "../../BleNrf5.h"
+#include "AppleMediaNrf5.h"
 
 #define AMS_UUID_SERVICE          0x502B
 #define AMS_UUID_REMOTE_COMMAND   0x81D8
@@ -235,12 +234,6 @@ void Hardware::BLE::Clients::AppleMediaNrf5::gattErrorHandler(uint32_t nrf_error
 
 }
 
-void Hardware::BLE::Clients::AppleMediaNrf5::setEventCallback(
-        const std::function<void(AppleMediaEventType, const std::vector<uint8_t> &)> &callback)
-{
-    m_eventCallback = callback;
-}
-
 uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationsEnabled(bool enabled)
 {
     return cccdConfigure(m_amsClientService.entityUpdateCccd.handle, enabled);
@@ -275,19 +268,6 @@ uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setEntityUpdateNotificationType
     writeRequest.params.gattc_write.write_op = BLE_GATT_OP_WRITE_REQ;
 
     return nrf_ble_gq_item_add(m_gattQueue, &writeRequest, m_connectionHandle);
-}
-
-void Hardware::BLE::Clients::AppleMediaNrf5::parseEventDataToEntityUpdate(const std::vector<uint8_t> &data,
-                                                                          Hardware::BLE::Clients::AppleMediaNrf5::AppleMediaEntityUpdateEvent &entityUpdateEvent)
-{
-    if (data.size() < 3) return;
-
-    entityUpdateEvent.entityId = (AppleMediaEntityID) data[0];
-    entityUpdateEvent.attributeId = data[1];
-    entityUpdateEvent.entityUpdateFlags = data[2];
-
-    if (data.size() > 3)
-        entityUpdateEvent.value = std::string(data.begin() + 3, data.end());
 }
 
 uint32_t Hardware::BLE::Clients::AppleMediaNrf5::setRemoteCommandNotificationsEnabled(bool enabled)

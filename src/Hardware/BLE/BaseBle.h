@@ -2,7 +2,7 @@
 #define PYRUS_BASEBLE_H
 
 #include <Hardware/BLE/Clients/CurrentTime/BaseCurrentTime.h>
-#include <Hardware/BLE/Clients/AppleMedia/AppleMediaNrf5.h>
+#include <Hardware/BLE/Clients/AppleMedia/BaseAppleMedia.h>
 
 namespace Hardware {
 
@@ -21,7 +21,7 @@ public:
     virtual bool isConnected() const;
 
     virtual Clients::BaseCurrentTime &getCurrentTimeClient() = 0;
-    virtual Clients::AppleMediaNrf5 &getAppleMediaClient() = 0;
+    virtual Clients::BaseAppleMedia &getAppleMediaClient() = 0;
 
 protected:
     bool m_connected;

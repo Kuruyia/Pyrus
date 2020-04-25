@@ -1,10 +1,9 @@
 #ifndef PYRUS_APPLEMEDIANRF5_H
 #define PYRUS_APPLEMEDIANRF5_H
 
-#include <functional>
-#include <vector>
-
 #include <ble/ble_db_discovery/ble_db_discovery.h>
+
+#include "BaseAppleMedia.h"
 
 namespace Hardware {
 
@@ -14,7 +13,7 @@ class BleNrf5;
 
 namespace Clients {
 
-class AppleMediaNrf5 {
+class AppleMediaNrf5: public BaseAppleMedia {
 public:
     struct BleAmsClientService
     {
@@ -26,91 +25,16 @@ public:
         ble_gattc_desc_t    entityUpdateCccd;
     };
 
-    enum AppleMediaRemoteCommandID
-    {
-        Play,
-        Pause,
-        TogglePlayPause,
-        NextTrack,
-        PreviousTrack,
-        VolumeUp,
-        VolumeDown,
-        AdvanceRepeatMode,
-        AdvanceShuffleMode,
-        SkipForward,
-        SkipBackward,
-        LikeTrack,
-        DislikeTrack,
-        BookmarkTrack
-    };
-
-    enum AppleMediaEntityID
-    {
-        Player = 0,
-        Queue,
-        Track
-    };
-
-    enum AppleMediaPlayerAttributeID
-    {
-        Name = 0,
-        PlaybackInfo,
-        Volume
-    };
-
-    enum AppleMediaQueueAttributeID
-    {
-        Index = 0,
-        Count,
-        ShuffleMode,
-        RepeatMode
-    };
-
-    enum AppleMediaTrackAttributeID
-    {
-        Artist = 0,
-        Album,
-        Title,
-        Duration
-    };
-
-    enum AppleMediaEntityUpdateFlags
-    {
-        FlagTruncated = (1 << 0)
-    };
-
-    enum AppleMediaEventType
-    {
-        DiscoveryComplete,
-        DiscoveryFailed,
-        Disconnected,
-        EntityUpdateWriteError,
-        EntityUpdateNotification,
-        RemoteCommandSupportedCmds
-    };
-
-    struct AppleMediaEntityUpdateEvent
-    {
-        AppleMediaEntityID entityId;
-        uint8_t attributeId;
-        uint8_t entityUpdateFlags;
-        std::string value;
-    };
-
     AppleMediaNrf5();
 
-    bool isAvailable();
+    bool isAvailable() override;
 
-    void setEventCallback(const std::function<void(AppleMediaEventType, const std::vector<uint8_t> &)> &callback);
+    uint32_t setEntityUpdateNotificationsEnabled(bool enabled) override;
+    uint32_t setEntityUpdateNotificationType(AppleMediaEntityID entityId, uint8_t attributeId) override;
+    uint32_t setEntityUpdateNotificationType(AppleMediaEntityID entityId, const std::vector<uint8_t> &attributeIds) override;
 
-    uint32_t setEntityUpdateNotificationsEnabled(bool enabled);
-    uint32_t setEntityUpdateNotificationType(AppleMediaEntityID entityId, uint8_t attributeId);
-    uint32_t setEntityUpdateNotificationType(AppleMediaEntityID entityId, const std::vector<uint8_t> &attributeIds);
-
-    static void parseEventDataToEntityUpdate(const std::vector<uint8_t> &data, AppleMediaEntityUpdateEvent &entityUpdateEvent);
-
-    uint32_t setRemoteCommandNotificationsEnabled(bool enabled);
-    uint32_t sendRemoteCommand(AppleMediaRemoteCommandID remoteCommandId);
+    uint32_t setRemoteCommandNotificationsEnabled(bool enabled) override;
+    uint32_t sendRemoteCommand(AppleMediaRemoteCommandID remoteCommandId) override;
 
 private:
     bool m_serviceFound;
@@ -118,8 +42,6 @@ private:
     BleAmsClientService m_amsClientService;
     uint16_t m_connectionHandle;
     nrf_ble_gq_t *m_gattQueue;
-
-    std::function<void(AppleMediaEventType, const std::vector<uint8_t> &)> m_eventCallback;
 
     friend class BLE::BleNrf5;
 
@@ -136,12 +58,12 @@ private:
     static void gattErrorHandler(uint32_t nrf_error, void *p_context, uint16_t conn_handle);
 
     uint32_t cccdConfigure(uint16_t cccdHandle, bool enableNotifications);
-};
+}; // class AppleMediaNrf5
 
-}
+} // namespace Clients
 
-}
+} // namespace BLE
 
-}
+} // namespace Hardware
 
 #endif //PYRUS_APPLEMEDIANRF5_H

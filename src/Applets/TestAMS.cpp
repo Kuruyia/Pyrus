@@ -6,7 +6,7 @@
 
 #define APPLET_NAME "TestAMS"
 
-Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
+Applet::TestAMS::TestAMS(Hardware::BLE::Clients::BaseAppleMedia &appleMedia)
 : BaseApplet(APPLET_NAME)
 , m_appleMedia(appleMedia)
 , m_playPauseSupported(false)
@@ -49,7 +49,7 @@ Applet::TestAMS::TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia)
             case AppleMediaNrf5::AppleMediaEventType::EntityUpdateNotification:
             {
                 AppleMediaNrf5::AppleMediaEntityUpdateEvent entityUpdateEvent;
-                AppleMediaNrf5::parseEventDataToEntityUpdate(eventData, entityUpdateEvent);
+                AppleMediaNrf5::parseEntityUpdateEventData(eventData, entityUpdateEvent);
 
                 if (entityUpdateEvent.entityId == AppleMediaNrf5::AppleMediaEntityID::Track)
                 {

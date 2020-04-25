@@ -8,7 +8,7 @@ namespace Applet {
 
 class TestAMS: public BaseApplet {
 public:
-    explicit TestAMS(Hardware::BLE::Clients::AppleMediaNrf5 &appleMedia);
+    explicit TestAMS(Hardware::BLE::Clients::BaseAppleMedia &appleMedia);
     ~TestAMS();
 
     void processEvent() override;
@@ -21,7 +21,7 @@ private:
     void updateInfoTexts();
     void updateMetaText();
 
-    Hardware::BLE::Clients::AppleMediaNrf5 &m_appleMedia;
+    Hardware::BLE::Clients::BaseAppleMedia &m_appleMedia;
 
     bool m_playPauseSupported;
     std::string m_songTitle;
