@@ -121,6 +121,18 @@ void Graphics::GfxUtils::drawFastLine(Hardware::Screen::BaseScreen &target, Grap
     free(buffer);
 }
 
+void Graphics::GfxUtils::drawHorizontalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
+                                            uint16_t width, const Graphics::Color &color, bool loopVerticalAxis)
+{
+    drawFilledRectangle(target, position, {static_cast<int16_t>(width), 1}, color, loopVerticalAxis);
+}
+
+void Graphics::GfxUtils::drawVerticalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
+                                          uint16_t height, const Graphics::Color &color, bool loopVerticalAxis)
+{
+    drawFilledRectangle(target, position, {1, static_cast<int16_t>(height)}, color, loopVerticalAxis);
+}
+
 void Graphics::GfxUtils::drawFilledRectangle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
                                              const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis)
 {

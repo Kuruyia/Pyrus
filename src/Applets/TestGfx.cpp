@@ -25,6 +25,8 @@ void Applet::TestGfx::draw(Hardware::Screen::BaseScreen &target)
     Graphics::GfxUtils::drawFastLine(target, {64, 48}, {80, 64}, {0, 0, 255});
     Graphics::GfxUtils::drawFastLine(target, {112, 48}, {96, 64}, {0, 0, 255});
     Graphics::GfxUtils::drawLine(target, {0, 40}, {239, 239}, {255, 255, 0});
+    Graphics::GfxUtils::drawHorizontalLine(target, {64, 70}, 32, {255, 0, 0});
+    Graphics::GfxUtils::drawVerticalLine(target, {96, 70}, 32, {255, 0, 0});
 
     Graphics::GfxUtils::drawFilledRectangle(target, {16, 48}, {16, 16},
                                             Graphics::Color(255, 0, 0));

@@ -19,6 +19,12 @@ public:
             const Graphics::Color &lineColor, const Graphics::Color &backgroundColor = {0, 0, 0},
             bool loopVerticalAxis = true);
 
+    static void drawHorizontalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, uint16_t width,
+            const Graphics::Color &color, bool loopVerticalAxis = true);
+
+    static void drawVerticalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, uint16_t height,
+            const Graphics::Color &color, bool loopVerticalAxis = true);
+
     static void drawFilledRectangle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
             const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis = true);
 
