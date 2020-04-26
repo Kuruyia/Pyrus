@@ -17,8 +17,8 @@ Applet::TestAMS::TestAMS(Hardware::BLE::Clients::BaseAppleMedia &appleMedia)
 , m_deviceVolume()
 , m_amsText("amsText", "AMS Unknown", &ubuntu_24ptFontInfo, {16, 40})
 , m_titleText("evtText", "---", &ubuntu_24ptFontInfo, {16, 90})
-, m_subtitleText("subText", "---", &ubuntu_24ptFontInfo, {16, 122}, {27, 57, 27})
-, m_metaText("metaText", "---", &ubuntu_24ptFontInfo, {16, 160}, {27, 57, 27})
+, m_subtitleText("subText", "---", &ubuntu_24ptFontInfo, {16, 122}, {200, 200, 200})
+, m_metaText("metaText", "---", &ubuntu_24ptFontInfo, {16, 160}, {200, 200, 200})
 {
     using namespace Hardware::BLE::Clients;
 
@@ -138,7 +138,7 @@ void Applet::TestAMS::updateMetaText()
 {
     m_metaText.setText("Vol " + std::to_string((unsigned)(m_deviceVolume * 100)));
     if (m_playPauseSupported)
-        m_metaText.setTextColor({0, 63, 0});
+        m_metaText.setTextColor({0, 255, 0});
     else
-        m_metaText.setTextColor({31, 0, 0});
+        m_metaText.setTextColor({255, 0, 0});
 }
