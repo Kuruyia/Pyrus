@@ -14,6 +14,8 @@ void Graphics::GfxUtils::drawLine(Hardware::Screen::BaseScreen &target, Graphics
     if (secondPoint.x < firstPoint.x)
         std::swap(firstPoint, secondPoint);
 
+    const Graphics::Vec2D fbSize = target.getFramebufferSize();
+
     // Bresenham's algorithm parameters
     const int16_t dx = secondPoint.x - firstPoint.x;
     const int16_t dy = secondPoint.y - firstPoint.y;
@@ -21,17 +23,26 @@ void Graphics::GfxUtils::drawLine(Hardware::Screen::BaseScreen &target, Graphics
     Graphics::Vec2D cursorPosition = firstPoint;
 
     // Bresenham's algorithm
-    for (; cursorPosition.x <= secondPoint.x; ++cursorPosition.x)
+    while (cursorPosition.x <= secondPoint.x)
     {
         target.drawPixel(cursorPosition, color);
 
         if (D > 0)
         {
             ++cursorPosition.y;
+            if (cursorPosition.y >= fbSize.y)
+            {
+                if (loopVerticalAxis)
+                    cursorPosition.y %= fbSize.y;
+                else
+                    return;
+            }
+
             D = D - 2 * dx;
         }
 
         D = D + 2 * dy;
+        ++cursorPosition.x;
     }
 }
 

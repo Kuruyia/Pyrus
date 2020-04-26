@@ -13,28 +13,28 @@ public:
     virtual ~GfxUtils() = 0;
 
     static void drawLine(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint,
-            const Graphics::Color &color, bool loopVerticalAxis = true);
+            const Graphics::Color &color, bool loopVerticalAxis = false);
 
     static void drawFastLine(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint,
             const Graphics::Color &lineColor, const Graphics::Color &backgroundColor = {0, 0, 0},
-            bool loopVerticalAxis = true);
+            bool loopVerticalAxis = false);
 
     static void drawHorizontalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, uint16_t width,
-            const Graphics::Color &color, bool loopVerticalAxis = true);
+            const Graphics::Color &color, bool loopVerticalAxis = false);
 
     static void drawVerticalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, uint16_t height,
-            const Graphics::Color &color, bool loopVerticalAxis = true);
+            const Graphics::Color &color, bool loopVerticalAxis = false);
 
     static void drawFilledRectangle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
-            const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis = true);
+            const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis = false);
 
     static void drawFilledCircle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &origin,
             uint16_t radius, const Graphics::Color &circleColor, const Graphics::Color &backgroundColor = {0, 0, 0},
-            bool loopVerticalAxis = true);
+            bool loopVerticalAxis = false);
 
     static uint16_t drawChar(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, char c,
             const FONT_INFO &fontInfo, const Graphics::Color &textColor, const Graphics::Color &backgroundColor = {0, 0, 0},
-            bool loopVerticalAxis = true);
+            bool loopVerticalAxis = false);
 
 private:
     static size_t positionToPixelNbr(const Graphics::Vec2D &position, const Graphics::Vec2D &basePosition,
