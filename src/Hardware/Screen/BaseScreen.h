@@ -32,7 +32,7 @@ public:
     virtual void clearFramebuffer(const Graphics::Color &color) = 0;
 
     virtual bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
-                            Vec2D_t &actualPosition, const uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
+                            Vec2D_t &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
                             bool loopVerticalAxis) = 0;
 
     virtual void drawPixel(const Vec2D_t &position, const Graphics::Color &color) = 0;

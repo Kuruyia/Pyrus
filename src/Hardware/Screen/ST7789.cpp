@@ -343,7 +343,7 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
     // Set the window
     const size_t descriptorOffset = c - fontInfo.startChar;
     const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
-    const Vec2D_t glyphSize = {descriptor.widthBits, fontInfo.height};
+    Vec2D_t glyphSize = {descriptor.widthBits, fontInfo.height};
 
     setWindow(position, glyphSize);
 
@@ -370,8 +370,16 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
     // Allocate the buffer
     auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
 
+    // Check if the glyph will overflow on the X axis
+    uint16_t overflowX = 0;
+    if (position.x + descriptor.widthBits > FRAMEBUFFER_WIDTH)
+    {
+        overflowX = position.x + descriptor.widthBits - FRAMEBUFFER_WIDTH;
+        glyphSize.x -= overflowX;
+    }
+
     // Calculate the geometry of this glyph
-    const uint16_t pixelCount = descriptor.widthBits * fontInfo.height;
+    const uint16_t pixelCount = glyphSize.x * glyphSize.y;
     const uint8_t bytesPerLine = (descriptor.widthBits % 8 > 0) ? descriptor.widthBits / 8 + 1 : descriptor.widthBits / 8;
 
     // Calculate how many parts we must send to the screen
@@ -380,6 +388,7 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
 
     // Those hold the current position of the cursor
     size_t actualPixel = 0;
+    size_t actualPixelInGlyph = 0;
     Vec2D_t actualPosition = position;
 
     // How many times we reset the Y axis
@@ -394,22 +403,30 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
         // Read data from the font definition
         while (actualPixel < endPixel)
         {
-            const uint8_t bitInBlock = actualPixel % descriptor.widthBits;
-            const size_t actualByte = (bitInBlock / 8) + (bytesPerLine * (actualPixel / descriptor.widthBits));
-            const uint8_t actualVal = fontInfo.data[descriptor.offset + actualByte] & (1 << (bitInBlock % 8));
-
-            if (actualVal)
+            const uint8_t bitInBlock = actualPixelInGlyph % descriptor.widthBits;
+            if (bitInBlock < glyphSize.x)
             {
-                buffer[bufferPos++] = higherTextColor;
-                buffer[bufferPos++] = lowerTextColor;
+                const size_t actualByte = (bitInBlock / 8) + (bytesPerLine * (actualPixelInGlyph / descriptor.widthBits));
+                const uint8_t actualVal = fontInfo.data[descriptor.offset + actualByte] & (1 << (bitInBlock % 8));
+
+                if (actualVal)
+                {
+                    buffer[bufferPos++] = higherTextColor;
+                    buffer[bufferPos++] = lowerTextColor;
+                }
+                else
+                {
+                    buffer[bufferPos++] = higherBackgroundColor;
+                    buffer[bufferPos++] = lowerBackgroundColor;
+                }
+
+                ++actualPixel;
+                ++actualPixelInGlyph;
             }
             else
             {
-                buffer[bufferPos++] = higherBackgroundColor;
-                buffer[bufferPos++] = lowerBackgroundColor;
+                actualPixelInGlyph += overflowX;
             }
-
-            ++actualPixel;
         }
 
         // Draw the buffer
@@ -428,7 +445,7 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
 }
 
 bool Hardware::Screen::ST7789::drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
-        Vec2D_t &actualPosition, const uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
+        Vec2D_t &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
         const bool loopVerticalAxis)
 {
     // Each pixel is 2 bytes in the buffer

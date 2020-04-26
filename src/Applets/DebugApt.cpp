@@ -35,6 +35,10 @@ void Applet::DebugApt::draw(Hardware::Screen::BaseScreen &target)
     // Draw widgets
     m_clkText.draw(target);
     m_bleText.draw(target);
+
+    // Draw a char out of bounds
+    target.drawChar({232, 64}, 'U', ubuntu_24ptFontInfo,
+            {255, 255, 255}, {0, 0, 0}, false);
 }
 
 bool Applet::DebugApt::allowsStatusBar() const
