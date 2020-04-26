@@ -9,7 +9,8 @@ namespace Widget
 
 class Container : public BaseContainer {
 public:
-    Container(const std::string &id, Vec2D_t position, Vec2D_t size, Color565_t backgroundColor = {0, 0, 0});
+    Container(const std::string &id, Vec2D_t position, Vec2D_t size,
+            const Graphics::Color &backgroundColor = {0, 0, 0});
     ~Container() override = default;
 
     void draw(Hardware::Screen::BaseScreen &target) override;
@@ -24,7 +25,7 @@ public:
 
 private:
     Vec2D_t getLastAbsolutePosition() const;
-    Color565_t getParentBackgroundColor() const;
+    Graphics::Color getParentBackgroundColor() const;
 
     Vec2D_t m_size;
 

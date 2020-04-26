@@ -68,7 +68,7 @@ bool Widget::BaseWidget::isDirty(Widget::BaseWidget::DirtyState state)
     return m_dirty.test(state);
 }
 
-Color565_t Widget::BaseWidget::getParentBackgroundColor() const
+Graphics::Color Widget::BaseWidget::getParentBackgroundColor() const
 {
     if (m_parent == nullptr)
         return {0, 0, 0};

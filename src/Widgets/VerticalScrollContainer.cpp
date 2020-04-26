@@ -1,7 +1,8 @@
 #include <libraries/delay/nrf_delay.h>
 #include "VerticalScrollContainer.h"
 
-Widget::VerticalScrollContainer::VerticalScrollContainer(const std::string &id, Vec2D_t position, Vec2D_t size, Color565_t backgroundColor)
+Widget::VerticalScrollContainer::VerticalScrollContainer(const std::string &id, Vec2D_t position, Vec2D_t size,
+        const Graphics::Color &backgroundColor)
 : BaseContainer(id, position, backgroundColor)
 , m_size(size)
 , m_lastPosition({0, 0})
@@ -96,7 +97,7 @@ Vec2D_t Widget::VerticalScrollContainer::getLastAbsolutePosition() const
     return m_parent->getAbsolutePosition() + m_lastPosition;
 }
 
-Color565_t Widget::VerticalScrollContainer::getParentBackgroundColor() const
+Graphics::Color Widget::VerticalScrollContainer::getParentBackgroundColor() const
 {
     if (m_parent == nullptr)
         return {0, 0, 0};

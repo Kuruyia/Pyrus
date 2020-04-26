@@ -17,7 +17,8 @@ public:
     };
 
     Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
-         Color565_t textColor = {31, 63, 31}, Color565_t backgroundColor = {0, 0, 0});
+         const Graphics::Color &textColor = {255, 255, 255},
+         const Graphics::Color &backgroundColor = {0, 0, 0});
     ~Text() override = default;
 
     void draw(Hardware::Screen::BaseScreen &target) override;
@@ -35,11 +36,11 @@ public:
     uint16_t getHeight() const override;
     Vec2D_t getSize() const override;
 
-    void setTextColor(Color565_t textColor);
-    const Color565_t &getTextColor() const;
+    void setTextColor(const Graphics::Color &textColor);
+    const Graphics::Color &getTextColor() const;
 
-    void setBackgroundColor(Color565_t backgroundColor);
-    const Color565_t &getBackgroundColor() const;
+    void setBackgroundColor(const Graphics::Color &backgroundColor);
+    const Graphics::Color &getBackgroundColor() const;
 
     void setHorizontalAlignment(HorizontalAlignment horizontalAlignment);
     HorizontalAlignment getHorizontalAlignment() const;
@@ -56,8 +57,8 @@ private:
     Vec2D_t m_lastDrawPosition;
     Vec2D_t m_lastSize;
 
-    Color565_t m_textColor;
-    Color565_t m_backgroundColor;
+    Graphics::Color m_textColor;
+    Graphics::Color m_backgroundColor;
 
     uint16_t m_width;
 

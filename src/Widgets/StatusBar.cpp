@@ -13,10 +13,10 @@ Widget::StatusBar::StatusBar(const std::string &id, const Vec2D_t position, cons
 {
     m_mainText = dynamic_cast<Text *>(&addChild(std::make_unique<Widget::Text>("statusPrimary", primaryText,
                                                                                fontInfo, Vec2D_t{4, 0},
-                                                                               Color565_t{31, 63, 31})));
+                                                                               Graphics::Color(255, 255, 255))));
     m_secondaryText = dynamic_cast<Text *>(&addChild(std::make_unique<Widget::Text>("statusSecondary", secondaryText, fontInfo,
                                                                                     Vec2D_t{static_cast<uint16_t>(width - 4), 0},
-                                                                                    Color565_t{25, 51, 25})));
+                                                                                    Graphics::Color(200, 200, 200))));
 
     m_size.y = (m_mainText->getHeight() > m_secondaryText->getHeight()) ? m_mainText->getHeight() : m_secondaryText->getHeight();
     m_size.y += 3;
@@ -46,7 +46,7 @@ void Widget::StatusBar::draw(Hardware::Screen::BaseScreen &target)
     m_secondaryText->draw(target);
 
     target.drawRectangle({m_position.x, static_cast<uint16_t>(m_position.y + m_size.y - 1)},
-            {m_size.x, 1}, {31, 63, 0}, true);
+            {m_size.x, 1}, {255, 255, 0}, true);
 
     // Reset the dirty flag
     clearDirty();

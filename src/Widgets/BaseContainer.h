@@ -11,7 +11,7 @@ namespace Widget
 
 class BaseContainer : public BaseWidget {
 public:
-    BaseContainer(std::string id, Vec2D_t position, Color565_t backgroundColor);
+    BaseContainer(std::string id, Vec2D_t position, const Graphics::Color &backgroundColor);
     ~BaseContainer() override = default;
 
     void setPosition(Vec2D_t position) override;
@@ -22,8 +22,8 @@ public:
     virtual std::unique_ptr<BaseWidget> &findChildById(const std::string &id);
     virtual const std::vector<std::unique_ptr<BaseWidget>> &getChildren();
 
-    virtual void setBackgroundColor(Color565_t backgroundColor);
-    virtual const Color565_t &getBackgroundColor() const;
+    virtual void setBackgroundColor(const Graphics::Color &backgroundColor);
+    virtual const Graphics::Color &getBackgroundColor() const;
 
     virtual void setDirtyWithChildren(DirtyState state, bool dirty);
 
@@ -31,7 +31,7 @@ protected:
     std::vector<std::unique_ptr<BaseWidget>> m_children;
     std::function<void(BaseWidget &)> m_newChildHandler;
 
-    Color565_t m_backgroundColor;
+    Graphics::Color m_backgroundColor;
 }; // class BaseContainer
 
 } // namespace Widget

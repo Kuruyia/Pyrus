@@ -4,7 +4,7 @@
 #define INTERCHAR_SIZE 2
 
 Widget::Text::Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
-                   Color565_t textColor, Color565_t backgroundColor)
+                   const Graphics::Color &textColor, const Graphics::Color &backgroundColor)
 : BaseWidget(id, position)
 , m_text(text)
 , m_fontInfo(fontInfo)
@@ -136,26 +136,26 @@ Vec2D_t Widget::Text::getSize() const
     return {getWidth(), getHeight()};
 }
 
-void Widget::Text::setTextColor(Color565_t textColor)
+void Widget::Text::setTextColor(const Graphics::Color &textColor)
 {
     m_textColor = textColor;
 
     setDirty(DirtyState::Color, true);
 }
 
-const Color565_t &Widget::Text::getTextColor() const
+const Graphics::Color &Widget::Text::getTextColor() const
 {
     return m_textColor;
 }
 
-void Widget::Text::setBackgroundColor(Color565_t backgroundColor)
+void Widget::Text::setBackgroundColor(const Graphics::Color &backgroundColor)
 {
     m_backgroundColor = backgroundColor;
 
     setDirty(DirtyState::Color, true);
 }
 
-const Color565_t &Widget::Text::getBackgroundColor() const
+const Graphics::Color &Widget::Text::getBackgroundColor() const
 {
     return m_backgroundColor;
 }

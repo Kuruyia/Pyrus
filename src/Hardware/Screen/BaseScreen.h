@@ -29,18 +29,18 @@ public:
     virtual void setTopFixedArea(uint16_t area) = 0;
     virtual const uint16_t &getTopFixedArea() const = 0;
 
-    virtual void clearFramebuffer(Color565_t color) = 0;
+    virtual void clearFramebuffer(const Graphics::Color &color) = 0;
 
     virtual bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
                             Vec2D_t &actualPosition, const uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
                             bool loopVerticalAxis) = 0;
 
-    virtual void drawPixel(const Vec2D_t &position, Color565_t color) = 0;
-    virtual void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
+    virtual void drawPixel(const Vec2D_t &position, const Graphics::Color &color) = 0;
+    virtual void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, const Graphics::Color &color,
                                bool loopVerticalAxis) = 0;
 
-    virtual uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
-                              const Color565_t &backgroundColor, bool loopVerticalAxis) = 0;
+    virtual uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Graphics::Color &textColor,
+                              const Graphics::Color &backgroundColor, bool loopVerticalAxis) = 0;
 }; // class BaseScreen
 
 } // namespace Screen

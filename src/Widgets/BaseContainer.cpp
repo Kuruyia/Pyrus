@@ -2,7 +2,7 @@
 
 #include "BaseContainer.h"
 
-Widget::BaseContainer::BaseContainer(std::string id, Vec2D_t position, Color565_t backgroundColor)
+Widget::BaseContainer::BaseContainer(std::string id, Vec2D_t position, const Graphics::Color &backgroundColor)
 : BaseWidget(std::move(id), position)
 , m_backgroundColor(backgroundColor)
 {
@@ -56,14 +56,14 @@ const std::vector<std::unique_ptr<Widget::BaseWidget>> &Widget::BaseContainer::g
     return m_children;
 }
 
-void Widget::BaseContainer::setBackgroundColor(Color565_t color)
+void Widget::BaseContainer::setBackgroundColor(const Graphics::Color &color)
 {
     m_backgroundColor = color;
 
     setDirtyWithChildren(DirtyState::Color, true);
 }
 
-const Color565_t &Widget::BaseContainer::getBackgroundColor() const
+const Graphics::Color &Widget::BaseContainer::getBackgroundColor() const
 {
     return m_backgroundColor;
 }

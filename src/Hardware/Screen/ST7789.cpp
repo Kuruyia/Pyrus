@@ -258,19 +258,20 @@ const uint16_t &Hardware::Screen::ST7789::getTopFixedArea() const
     return m_topFixedArea;
 }
 
-void Hardware::Screen::ST7789::clearFramebuffer(Color565_t color)
+void Hardware::Screen::ST7789::clearFramebuffer(const Graphics::Color &color)
 {
     // Draw a rectangle taking the entire framebuffer
     drawRectangle({0, 0}, getFramebufferSize(), color, false);
 }
 
-void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, Color565_t color)
+void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, const Graphics::Color &color)
 {
     // Set the window
     setWindow(position, {1, 1});
 
     // Get raw color
-    uint16_t rawColor = ((color.g & 0x7) << 13) | (color.b << 8) | (color.r << 3) | (color.g >> 3);
+    const Graphics::Color color565 = color.convertToColorEncoding<5, 6, 5>();
+    uint16_t rawColor = (color565.getRed() << 11) | (color565.getGreen() << 5) | color565.getBlue();
 
     // Send the color to draw
     uint8_t lcdTxRamwrData[] = {
@@ -281,14 +282,15 @@ void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, Color565_t col
     sendCommand(ST7789_CMD_RAMWR, lcdTxRamwrData, sizeof(lcdTxRamwrData));
 }
 
-void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
+void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t &size, const Graphics::Color &color,
                                              bool loopVerticalAxis)
 {
     // Set the window
     setWindow(position, size);
 
     // Get raw color
-    uint16_t rawColor = ((color.g & 0x7) << 13) | (color.b << 8) | (color.r << 3) | (color.g >> 3);
+    const Graphics::Color color565 = color.convertToColorEncoding<5, 6, 5>();
+    uint16_t rawColor = __bswap16((color565.getRed() << 11) | (color565.getGreen() << 5) | color565.getBlue());
 
     // Send the pixels to draw
     static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
@@ -335,7 +337,7 @@ void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2
 }
 
 uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo,
-                                            const Color565_t &textColor, const Color565_t &backgroundColor,
+                                            const Graphics::Color &textColor, const Graphics::Color &backgroundColor,
                                             bool loopVerticalAxis)
 {
     // Set the window
@@ -346,11 +348,14 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
     setWindow(position, glyphSize);
 
     // Get raw color
-    const uint16_t rawTextColor = (textColor.r << 11) | (textColor.g << 5) | textColor.b;
+    const Graphics::Color textColor565 = textColor.convertToColorEncoding<5, 6, 5>();
+    uint16_t rawTextColor = (textColor565.getRed() << 11) | (textColor565.getGreen() << 5) | textColor565.getBlue();
     const uint8_t higherTextColor = rawTextColor >> 8;
     const uint8_t lowerTextColor = rawTextColor & 0xFF;
 
-    const uint16_t rawBackgroundColor = (backgroundColor.r << 11) | (backgroundColor.g << 5) | backgroundColor.b;
+    const Graphics::Color backgroundColor565 = backgroundColor.convertToColorEncoding<5, 6, 5>();
+    uint16_t rawBackgroundColor = (backgroundColor565.getRed() << 11) | (backgroundColor565.getGreen() << 5)
+            | backgroundColor565.getBlue();
     const uint8_t higherBackgroundColor = rawBackgroundColor >> 8;
     const uint8_t lowerBackgroundColor = rawBackgroundColor & 0xFF;
 

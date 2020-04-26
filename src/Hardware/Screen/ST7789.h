@@ -30,18 +30,18 @@ public:
     void setTopFixedArea(uint16_t area) override;
     const uint16_t &getTopFixedArea() const override;
 
-    void clearFramebuffer(Color565_t color) override;
+    void clearFramebuffer(const Graphics::Color &color) override;
 
     bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
                     Vec2D_t &actualPosition, const uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
                     bool loopVerticalAxis) override;
 
-    void drawPixel(const Vec2D_t &position, Color565_t color) override;
-    void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, Color565_t color,
+    void drawPixel(const Vec2D_t &position, const Graphics::Color &color) override;
+    void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, const Graphics::Color &color,
                        bool loopVerticalAxis) override;
 
-    uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Color565_t &textColor,
-                      const Color565_t &backgroundColor, bool loopVerticalAxis) override;
+    uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Graphics::Color &textColor,
+                      const Graphics::Color &backgroundColor, bool loopVerticalAxis) override;
 
 private:
     void setCommandPin();

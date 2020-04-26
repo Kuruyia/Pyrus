@@ -58,3 +58,4 @@ list(APPEND SOURCE_FILES
         main.cpp)
 
 nRF5x_addExecutable(Pyrus-fw "${SOURCE_FILES}")
+target_link_libraries(Pyrus-fw m)

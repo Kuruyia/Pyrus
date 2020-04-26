@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "Container.h"
 
-Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t size, Color565_t backgroundColor)
+Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t size, const Graphics::Color &backgroundColor)
 : BaseContainer(id, position, backgroundColor)
 , m_size(size)
 , m_lastPosition({0, 0})
@@ -85,7 +85,7 @@ Vec2D_t Widget::Container::getLastAbsolutePosition() const
     return m_parent->getAbsolutePosition() + m_lastPosition;
 }
 
-Color565_t Widget::Container::getParentBackgroundColor() const
+Graphics::Color Widget::Container::getParentBackgroundColor() const
 {
     if (m_parent == nullptr)
         return {0, 0, 0};
