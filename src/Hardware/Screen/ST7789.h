@@ -32,9 +32,9 @@ public:
 
     void clearFramebuffer(const Graphics::Color &color) override;
 
-    uint32_t convertColorToRaw(const Graphics::Color &color) override;
-    size_t putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos) override;
-    uint8_t getPixelSize() override;
+    uint32_t convertColorToRaw(const Graphics::Color &color) const override;
+    size_t putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos) const override;
+    uint8_t getPixelSize() const override;
 
     void prepareDrawBuffer() override;
     bool drawBuffer(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const size_t &actualPixel,

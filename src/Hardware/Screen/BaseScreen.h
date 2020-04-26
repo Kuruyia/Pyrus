@@ -31,9 +31,9 @@ public:
 
     virtual void clearFramebuffer(const Graphics::Color &color) = 0;
 
-    virtual uint32_t convertColorToRaw(const Graphics::Color &color) = 0;
-    virtual size_t putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos) = 0;
-    virtual uint8_t getPixelSize() = 0;
+    virtual uint32_t convertColorToRaw(const Graphics::Color &color) const = 0;
+    virtual size_t putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos) const = 0;
+    virtual uint8_t getPixelSize() const = 0;
 
     virtual void prepareDrawBuffer() = 0;
     virtual bool drawBuffer(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const size_t &actualPixel,

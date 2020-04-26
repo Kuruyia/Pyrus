@@ -1,6 +1,125 @@
+#include <algorithm>
+#include <cstring>
+
 #include "GfxUtils.h"
 
 #define BUFFER_SIZE 254
+
+void Graphics::GfxUtils::drawLine(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+                                  Graphics::Vec2D secondPoint, const Graphics::Color &color, bool loopVerticalAxis)
+{
+    // This is an implementation of the Bresenham's line algorithm
+
+    // Reorder the points
+    if (secondPoint.x < firstPoint.x)
+        std::swap(firstPoint, secondPoint);
+
+    // Bresenham's algorithm parameters
+    const int16_t dx = secondPoint.x - firstPoint.x;
+    const int16_t dy = secondPoint.y - firstPoint.y;
+    int16_t D = 2 * dy - dx;
+    Graphics::Vec2D cursorPosition = firstPoint;
+
+    // Bresenham's algorithm
+    for (; cursorPosition.x <= secondPoint.x; ++cursorPosition.x)
+    {
+        target.drawPixel(cursorPosition, color);
+
+        if (D > 0)
+        {
+            ++cursorPosition.y;
+            D = D - 2 * dx;
+        }
+
+        D = D + 2 * dy;
+    }
+}
+
+void Graphics::GfxUtils::drawFastLine(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+                                      Graphics::Vec2D secondPoint, const Graphics::Color &lineColor,
+                                      const Graphics::Color &backgroundColor, bool loopVerticalAxis)
+{
+    // This is an implementation of the Bresenham's line algorithm
+
+    // Reorder the points
+    if (secondPoint.y < firstPoint.y)
+        std::swap(firstPoint, secondPoint);
+
+    // Set the window
+    Graphics::Vec2D size {static_cast<int16_t>(std::max(firstPoint.x, secondPoint.x) - std::min(firstPoint.x, secondPoint.x)),
+                          static_cast<int16_t>(secondPoint.y - firstPoint.y)};
+    Graphics::Vec2D position {std::min(firstPoint.x, secondPoint.x), firstPoint.y};
+    target.setWindow(position, size);
+
+    // Get some properties from the target
+    uint32_t rawLineColor = target.convertColorToRaw(lineColor);
+    uint32_t rawBackgroundColor = target.convertColorToRaw(backgroundColor);
+
+    // Calculate how many parts we must send to the screen
+    const uint16_t pixelCount = size.x * size.y;
+    const uint8_t pixelSize = target.getPixelSize();
+    const size_t totalBufferSize = size.x * size.y * pixelSize;
+    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
+
+    // Keep track of the current position
+    size_t actualPixel = 0;
+    Graphics::Vec2D actualPosition = position;
+
+    // How many times we reset the Y axis
+    unsigned verticalLoopCount = 0;
+
+    // Prepare a large buffer of pixels for faster transmission
+    auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
+
+    // Bresenham's algorithm parameters
+    const int16_t dx = secondPoint.x - firstPoint.x;
+    const int16_t dy = secondPoint.y - firstPoint.y;
+    int16_t D = 2 * dy - dx;
+    Graphics::Vec2D cursorPosition = firstPoint;
+    size_t cursorPixelNbr = positionToPixelNbr(cursorPosition, position, size);
+
+    target.prepareDrawBuffer();
+
+    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
+    {
+        // Clear the buffer
+        fillBufferWithColor(target, buffer, BUFFER_SIZE, rawBackgroundColor);
+
+        // Calculate the number of pixels to feed to the screen and the next cursor position
+        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y) % BUFFER_SIZE : BUFFER_SIZE / pixelSize;
+        const size_t endPixel = (actualStep == numberOfStep - 1) ? pixelCount : (BUFFER_SIZE / pixelSize) * (actualStep + 1);
+
+        while (cursorPixelNbr < endPixel &&
+        ((cursorPosition.x <= secondPoint.x && firstPoint.x < secondPoint.x) || (cursorPosition.x >= secondPoint.x && firstPoint.x > secondPoint.x)))
+        {
+            target.putPixelInBuffer(buffer, rawLineColor, (cursorPixelNbr * pixelSize) % BUFFER_SIZE);
+
+            if (D > 0)
+            {
+                ++cursorPosition.y;
+                D = D - 2 * dx;
+            }
+
+            D = D + 2 * dy;
+            if (firstPoint.x < secondPoint.x)
+                ++cursorPosition.x;
+            else if (firstPoint.x > secondPoint.x)
+                --cursorPosition.x;
+
+            cursorPixelNbr = positionToPixelNbr(cursorPosition, position, size);
+        }
+
+        // Draw the buffer
+        const bool mustContinue = target.drawBuffer(position, size, actualPixel, actualPosition, buffer,
+                                                    pixelsToFeed, verticalLoopCount, loopVerticalAxis);
+
+        if (!mustContinue)
+            break;
+    }
+
+    // Free the buffer
+    free(buffer);
+}
 
 void Graphics::GfxUtils::drawFilledRectangle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
                                              const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis)
@@ -25,8 +144,7 @@ void Graphics::GfxUtils::drawFilledRectangle(Hardware::Screen::BaseScreen &targe
 
     // Prepare a large buffer of pixels for faster transmission
     auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
-    size_t i = 0;
-    while ((i = target.putPixelInBuffer(buffer, rawColor, i)) < BUFFER_SIZE) {}
+    fillBufferWithColor(target, buffer, BUFFER_SIZE, rawColor);
 
     target.prepareDrawBuffer();
 
@@ -213,4 +331,18 @@ uint16_t Graphics::GfxUtils::drawChar(Hardware::Screen::BaseScreen &target, cons
 
     // Return the char width
     return descriptor.widthBits;
+}
+
+inline size_t Graphics::GfxUtils::positionToPixelNbr(const Graphics::Vec2D &position, const Graphics::Vec2D &basePosition,
+                                              const Graphics::Vec2D &size)
+{
+    const Graphics::Vec2D normPosition = position - basePosition;
+    return normPosition.y * size.x + normPosition.x;
+}
+
+inline void Graphics::GfxUtils::fillBufferWithColor(const Hardware::Screen::BaseScreen &target, uint8_t *buffer,
+                                                const size_t size, const uint32_t rawColor)
+{
+    size_t i = 0;
+    while ((i = target.putPixelInBuffer(buffer, rawColor, i)) < size) {}
 }

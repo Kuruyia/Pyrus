@@ -357,13 +357,13 @@ bool Hardware::Screen::ST7789::drawBuffer(const Graphics::Vec2D &position, const
     return true;
 }
 
-uint32_t Hardware::Screen::ST7789::convertColorToRaw(const Graphics::Color &color)
+uint32_t Hardware::Screen::ST7789::convertColorToRaw(const Graphics::Color &color) const
 {
     Graphics::Color color565 = color.convertToColorEncoding<5, 6, 5>();
     return (color565.getRed() << 11) | (color565.getGreen() << 5) | color565.getBlue();
 }
 
-size_t Hardware::Screen::ST7789::putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos)
+size_t Hardware::Screen::ST7789::putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos) const
 {
     buffer[pos] = static_cast<uint8_t>(rawColor >> 8);
     buffer[pos + 1] = static_cast<uint8_t>(rawColor & 0xFF);
@@ -371,7 +371,7 @@ size_t Hardware::Screen::ST7789::putPixelInBuffer(uint8_t *buffer, uint32_t rawC
     return pos + 2;
 }
 
-uint8_t Hardware::Screen::ST7789::getPixelSize()
+uint8_t Hardware::Screen::ST7789::getPixelSize() const
 {
     return 2;
 }
