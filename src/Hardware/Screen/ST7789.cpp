@@ -336,14 +336,22 @@ void Hardware::Screen::ST7789::drawRectangle(const Graphics::Vec2D &position, co
     free(lcdTxRamwrData);
 }
 
-uint16_t Hardware::Screen::ST7789::drawChar(const Graphics::Vec2D &position, const char c, const FONT_INFO &fontInfo,
+uint16_t Hardware::Screen::ST7789::drawChar(const Graphics::Vec2D &position, char c, const FONT_INFO &fontInfo,
                                             const Graphics::Color &textColor, const Graphics::Color &backgroundColor,
                                             bool loopVerticalAxis)
 {
+    // Check if the char is supported
+    if (c < fontInfo.startChar || c > fontInfo.endChar)
+        c = '?';
+
     // Set the window
     const size_t descriptorOffset = c - fontInfo.startChar;
     const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
     Graphics::Vec2D glyphSize = {descriptor.widthBits, fontInfo.height};
+
+    // Check if the character will be seen on the X axis
+    if (position.x < -descriptor.widthBits || position.x > FRAMEBUFFER_WIDTH)
+        return descriptor.widthBits;
 
     setWindow(position, glyphSize);
 
