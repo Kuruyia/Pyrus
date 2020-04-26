@@ -35,6 +35,7 @@ list(APPEND SOURCE_FILES
         Applets/TestApt.cpp
         Fonts/Ubuntu24Font.c
         Graphics/Color.h
+        Graphics/GfxUtils.cpp
         Graphics/Vec2D.h
         Hardware/BLE/Clients/AppleMedia/AppleMediaNrf5.cpp
         Hardware/BLE/Clients/AppleMedia/BaseAppleMedia.cpp

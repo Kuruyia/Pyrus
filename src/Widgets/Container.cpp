@@ -1,4 +1,6 @@
 #include <algorithm>
+
+#include "../Graphics/GfxUtils.h"
 #include "Container.h"
 
 Widget::Container::Container(const std::string &id, Graphics::Vec2D position, Graphics::Vec2D size, const Graphics::Color &backgroundColor)
@@ -22,7 +24,8 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
             if (m_loopVerticalPosition)
                 lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
-            target.drawRectangle(lastAbsolutePosition, m_lastSize, getParentBackgroundColor(), m_loopVerticalPosition);
+            Graphics::GfxUtils::drawRectangle(target, lastAbsolutePosition, m_lastSize,
+                    getParentBackgroundColor(), m_loopVerticalPosition);
             setDirty(DirtyState::Position, false);
         }
 
@@ -32,7 +35,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
             position.y %= target.getFramebufferSize().y;
 
         // Render the container
-        target.drawRectangle(position, m_size, m_backgroundColor, m_loopVerticalPosition);
+        Graphics::GfxUtils::drawRectangle(target, position, m_size, m_backgroundColor, m_loopVerticalPosition);
 
         // Store the geometry of this drawing
         m_lastPosition = m_position;

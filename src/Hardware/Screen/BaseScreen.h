@@ -31,16 +31,16 @@ public:
 
     virtual void clearFramebuffer(const Graphics::Color &color) = 0;
 
+    virtual uint32_t convertColorToRaw(const Graphics::Color &color) = 0;
+    virtual size_t putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos) = 0;
+    virtual uint8_t getPixelSize() = 0;
+
+    virtual void prepareDrawBuffer() = 0;
     virtual bool drawBuffer(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const size_t &actualPixel,
                             Graphics::Vec2D &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
                             bool loopVerticalAxis) = 0;
 
     virtual void drawPixel(const Graphics::Vec2D &position, const Graphics::Color &color) = 0;
-    virtual void drawRectangle(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const Graphics::Color &color,
-                               bool loopVerticalAxis) = 0;
-
-    virtual uint16_t drawChar(const Graphics::Vec2D &position, char c, const FONT_INFO &fontInfo, const Graphics::Color &textColor,
-                              const Graphics::Color &backgroundColor, bool loopVerticalAxis) = 0;
 }; // class BaseScreen
 
 } // namespace Screen

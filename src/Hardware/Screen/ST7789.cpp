@@ -5,6 +5,8 @@
 #include <hal/nrf_gpio.h>
 #include <libraries/delay/nrf_delay.h>
 
+#include "Graphics/GfxUtils.h"
+
 #include "ST7789.h"
 
 #define ST7789_CMD_SWRESET 0x01
@@ -261,7 +263,7 @@ const uint16_t &Hardware::Screen::ST7789::getTopFixedArea() const
 void Hardware::Screen::ST7789::clearFramebuffer(const Graphics::Color &color)
 {
     // Draw a rectangle taking the entire framebuffer
-    drawRectangle({0, 0}, getFramebufferSize(), color, false);
+    Graphics::GfxUtils::drawRectangle(*this, {0, 0}, getFramebufferSize(), color, false);
 }
 
 void Hardware::Screen::ST7789::drawPixel(const Graphics::Vec2D &position, const Graphics::Color &color)
@@ -282,174 +284,14 @@ void Hardware::Screen::ST7789::drawPixel(const Graphics::Vec2D &position, const 
     sendCommand(ST7789_CMD_RAMWR, lcdTxRamwrData, sizeof(lcdTxRamwrData));
 }
 
-void Hardware::Screen::ST7789::drawRectangle(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const Graphics::Color &color,
-                                             bool loopVerticalAxis)
+void Hardware::Screen::ST7789::prepareDrawBuffer()
 {
-    // Set the window
-    setWindow(position, size);
-
-    // Get raw color
-    const Graphics::Color color565 = color.convertToColorEncoding<5, 6, 5>();
-    uint16_t rawColor = __bswap16((color565.getRed() << 11) | (color565.getGreen() << 5) | color565.getBlue());
-
-    // Send the pixels to draw
-    static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
-
-    // Calculate how many parts we must send to the screen
-    const size_t totalBufferSize = size.x * size.y * 2;
-    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
-
-    // Keep track of the current position
-    size_t actualPixel = 0;
-    Graphics::Vec2D actualPosition = position;
-
-    // How many times we reset the Y axis
-    unsigned verticalLoopCount = 0;
-
-    // Prepare a large buffer of pixels for faster transmission
-    auto *lcdTxRamwrData = (uint8_t *)malloc(BUFFER_SIZE);
-    for (size_t i = 0; i < BUFFER_SIZE; i += sizeof(rawColor))
-    {
-        memcpy(lcdTxRamwrData + i, &rawColor, sizeof(rawColor));
-    }
-    nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
-
     setCommandPin();
-    APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
-    setDataPin();
-
-    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
-    {
-        // Calculate the number of pixels to feed to the screen and the next cursor position
-        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y) % BUFFER_SIZE : BUFFER_SIZE / 2;
-        actualPixel += pixelsToFeed;
-
-        // Draw the buffer
-        const bool mustContinue = drawBuffer(position, size, actualPixel, actualPosition, lcdTxRamwrData,
-                pixelsToFeed,verticalLoopCount, loopVerticalAxis);
-
-        if (!mustContinue)
-            break;
-    }
-
-    // Free the buffer
-    free(lcdTxRamwrData);
-}
-
-uint16_t Hardware::Screen::ST7789::drawChar(const Graphics::Vec2D &position, char c, const FONT_INFO &fontInfo,
-                                            const Graphics::Color &textColor, const Graphics::Color &backgroundColor,
-                                            bool loopVerticalAxis)
-{
-    // Check if the char is supported
-    if (c < fontInfo.startChar || c > fontInfo.endChar)
-        c = '?';
-
-    // Set the window
-    const size_t descriptorOffset = c - fontInfo.startChar;
-    const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
-    Graphics::Vec2D glyphSize = {descriptor.widthBits, fontInfo.height};
-
-    // Check if the character will be seen on the X axis
-    if (position.x < -descriptor.widthBits || position.x > FRAMEBUFFER_WIDTH)
-        return descriptor.widthBits;
-
-    setWindow(position, glyphSize);
-
-    // Get raw color
-    const Graphics::Color textColor565 = textColor.convertToColorEncoding<5, 6, 5>();
-    uint16_t rawTextColor = (textColor565.getRed() << 11) | (textColor565.getGreen() << 5) | textColor565.getBlue();
-    const uint8_t higherTextColor = rawTextColor >> 8;
-    const uint8_t lowerTextColor = rawTextColor & 0xFF;
-
-    const Graphics::Color backgroundColor565 = backgroundColor.convertToColorEncoding<5, 6, 5>();
-    uint16_t rawBackgroundColor = (backgroundColor565.getRed() << 11) | (backgroundColor565.getGreen() << 5)
-            | backgroundColor565.getBlue();
-    const uint8_t higherBackgroundColor = rawBackgroundColor >> 8;
-    const uint8_t lowerBackgroundColor = rawBackgroundColor & 0xFF;
-
-    // Prepare the Screen controller to receive data
     static uint8_t lcdTxRamwrCmd  = ST7789_CMD_RAMWR;
     nrfx_spim_xfer_desc_t lcdXferRamwrCmd  = NRFX_SPIM_XFER_TX(&lcdTxRamwrCmd, 1);
-
-    setCommandPin();
     APP_ERROR_CHECK(nrfx_spim_xfer(&lcdSpi, &lcdXferRamwrCmd, 0));
+
     setDataPin();
-
-    // Allocate the buffer
-    auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
-
-    // Check if the glyph will overflow on the X axis
-    uint16_t overflowX = 0;
-    if (position.x + descriptor.widthBits > FRAMEBUFFER_WIDTH)
-    {
-        overflowX = position.x + descriptor.widthBits - FRAMEBUFFER_WIDTH;
-        glyphSize.x -= overflowX;
-    }
-
-    // Calculate the geometry of this glyph
-    const uint16_t pixelCount = glyphSize.x * glyphSize.y;
-    const uint8_t bytesPerLine = (descriptor.widthBits % 8 > 0) ? descriptor.widthBits / 8 + 1 : descriptor.widthBits / 8;
-
-    // Calculate how many parts we must send to the screen
-    const size_t totalBufferSize = pixelCount * 2;
-    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
-
-    // Those hold the current position of the cursor
-    size_t actualPixel = 0;
-    size_t actualPixelInGlyph = 0;
-    Graphics::Vec2D actualPosition = position;
-
-    // How many times we reset the Y axis
-    unsigned verticalLoopCount = 0;
-
-    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
-    {
-        // Prepare the buffer to send data to the Screen
-        const size_t endPixel = (actualStep == numberOfStep - 1) ? pixelCount : (BUFFER_SIZE / 2) * (actualStep + 1);
-        size_t bufferPos = 0;
-
-        // Read data from the font definition
-        while (actualPixel < endPixel)
-        {
-            const uint8_t bitInBlock = actualPixelInGlyph % descriptor.widthBits;
-            if (bitInBlock < glyphSize.x)
-            {
-                const size_t actualByte = (bitInBlock / 8) + (bytesPerLine * (actualPixelInGlyph / descriptor.widthBits));
-                const uint8_t actualVal = fontInfo.data[descriptor.offset + actualByte] & (1 << (bitInBlock % 8));
-
-                if (actualVal)
-                {
-                    buffer[bufferPos++] = higherTextColor;
-                    buffer[bufferPos++] = lowerTextColor;
-                }
-                else
-                {
-                    buffer[bufferPos++] = higherBackgroundColor;
-                    buffer[bufferPos++] = lowerBackgroundColor;
-                }
-
-                ++actualPixel;
-                ++actualPixelInGlyph;
-            }
-            else
-            {
-                actualPixelInGlyph += overflowX;
-            }
-        }
-
-        // Draw the buffer
-        const bool mustContinue = drawBuffer(position, glyphSize, actualPixel, actualPosition, buffer,
-                bufferPos / 2, verticalLoopCount, loopVerticalAxis);
-
-        if (!mustContinue)
-            break;
-    }
-
-    // Free the buffer
-    free(buffer);
-
-    // Return the char width
-    return descriptor.widthBits;
 }
 
 bool Hardware::Screen::ST7789::drawBuffer(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const size_t &actualPixel,
@@ -513,4 +355,23 @@ bool Hardware::Screen::ST7789::drawBuffer(const Graphics::Vec2D &position, const
     }
 
     return true;
+}
+
+uint32_t Hardware::Screen::ST7789::convertColorToRaw(const Graphics::Color &color)
+{
+    Graphics::Color color565 = color.convertToColorEncoding<5, 6, 5>();
+    return (color565.getRed() << 11) | (color565.getGreen() << 5) | color565.getBlue();
+}
+
+size_t Hardware::Screen::ST7789::putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos)
+{
+    buffer[pos] = static_cast<uint8_t>(rawColor >> 8);
+    buffer[pos + 1] = static_cast<uint8_t>(rawColor & 0xFF);
+
+    return pos + 2;
+}
+
+uint8_t Hardware::Screen::ST7789::getPixelSize()
+{
+    return 2;
 }

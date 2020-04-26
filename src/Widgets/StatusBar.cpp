@@ -1,3 +1,4 @@
+#include "../Graphics/GfxUtils.h"
 #include "BaseContainer.h"
 
 #include "StatusBar.h"
@@ -38,14 +39,15 @@ void Widget::StatusBar::draw(Hardware::Screen::BaseScreen &target)
         if (m_loopVerticalPosition)
             lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
-        target.drawRectangle(lastAbsolutePosition, m_lastSize, getParentBackgroundColor(), m_loopVerticalPosition);
+        Graphics::GfxUtils::drawRectangle(target, lastAbsolutePosition, m_lastSize,
+                getParentBackgroundColor(), m_loopVerticalPosition);
     }
 
     // Draw children widgets
     m_mainText->draw(target);
     m_secondaryText->draw(target);
 
-    target.drawRectangle({m_position.x, static_cast<int16_t>(m_position.y + m_size.y - 1)},
+    Graphics::GfxUtils::drawRectangle(target, {m_position.x, static_cast<int16_t>(m_position.y + m_size.y - 1)},
             {m_size.x, 1}, {255, 255, 0}, true);
 
     // Reset the dirty flag

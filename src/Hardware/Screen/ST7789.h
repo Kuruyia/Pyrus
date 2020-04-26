@@ -32,16 +32,16 @@ public:
 
     void clearFramebuffer(const Graphics::Color &color) override;
 
+    uint32_t convertColorToRaw(const Graphics::Color &color) override;
+    size_t putPixelInBuffer(uint8_t *buffer, uint32_t rawColor, size_t pos) override;
+    uint8_t getPixelSize() override;
+
+    void prepareDrawBuffer() override;
     bool drawBuffer(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const size_t &actualPixel,
                     Graphics::Vec2D &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
                     bool loopVerticalAxis) override;
 
     void drawPixel(const Graphics::Vec2D &position, const Graphics::Color &color) override;
-    void drawRectangle(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const Graphics::Color &color,
-                       bool loopVerticalAxis) override;
-
-    uint16_t drawChar(const Graphics::Vec2D &position, char c, const FONT_INFO &fontInfo, const Graphics::Color &textColor,
-                      const Graphics::Color &backgroundColor, bool loopVerticalAxis) override;
 
 private:
     void setCommandPin();
