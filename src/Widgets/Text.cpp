@@ -32,8 +32,8 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
         if (m_loopVerticalPosition)
             lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
-        Graphics::GfxUtils::drawRectangle(target, lastAbsolutePosition, m_lastSize,
-                getParentBackgroundColor(), m_loopVerticalPosition);
+        Graphics::GfxUtils::drawFilledRectangle(target, lastAbsolutePosition, m_lastSize,
+                                                getParentBackgroundColor(), m_loopVerticalPosition);
     }
 
     // Recompute width if it's dirty
@@ -51,7 +51,7 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
         position.y %= target.getFramebufferSize().y;
 
     // Draw the background
-    Graphics::GfxUtils::drawRectangle(target, position, getSize(), m_backgroundColor, m_loopVerticalPosition);
+    Graphics::GfxUtils::drawFilledRectangle(target, position, getSize(), m_backgroundColor, m_loopVerticalPosition);
 
     // Loop through all the characters and draw them
     for (const char c : m_text)

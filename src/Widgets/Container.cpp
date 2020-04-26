@@ -24,8 +24,8 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
             if (m_loopVerticalPosition)
                 lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
-            Graphics::GfxUtils::drawRectangle(target, lastAbsolutePosition, m_lastSize,
-                    getParentBackgroundColor(), m_loopVerticalPosition);
+            Graphics::GfxUtils::drawFilledRectangle(target, lastAbsolutePosition, m_lastSize,
+                                                    getParentBackgroundColor(), m_loopVerticalPosition);
             setDirty(DirtyState::Position, false);
         }
 
@@ -35,7 +35,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
             position.y %= target.getFramebufferSize().y;
 
         // Render the container
-        Graphics::GfxUtils::drawRectangle(target, position, m_size, m_backgroundColor, m_loopVerticalPosition);
+        Graphics::GfxUtils::drawFilledRectangle(target, position, m_size, m_backgroundColor, m_loopVerticalPosition);
 
         // Store the geometry of this drawing
         m_lastPosition = m_position;

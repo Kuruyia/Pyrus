@@ -2,8 +2,8 @@
 
 #define BUFFER_SIZE 254
 
-void Graphics::GfxUtils::drawRectangle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
-                                       const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis)
+void Graphics::GfxUtils::drawFilledRectangle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
+                                             const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis)
 {
     // Set the window
     target.setWindow(position, size);
@@ -39,6 +39,73 @@ void Graphics::GfxUtils::drawRectangle(Hardware::Screen::BaseScreen &target, con
         // Draw the buffer
         const bool mustContinue = target.drawBuffer(position, size, actualPixel, actualPosition, buffer,
                 pixelsToFeed,verticalLoopCount, loopVerticalAxis);
+
+        if (!mustContinue)
+            break;
+    }
+
+    // Free the buffer
+    free(buffer);
+}
+
+void Graphics::GfxUtils::drawFilledCircle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &origin,
+                                          uint16_t radius, const Graphics::Color &circleColor,
+                                          const Graphics::Color &backgroundColor, bool loopVerticalAxis)
+{
+    // This is an implementation of https://stackoverflow.com/a/1237519
+
+    // Set the window
+    Graphics::Vec2D size {static_cast<int16_t>(radius*2), static_cast<int16_t>(radius*2)};
+    Graphics::Vec2D position {static_cast<int16_t>(origin.x - radius), static_cast<int16_t>(origin.y - radius)};
+    target.setWindow(position, size);
+
+    const uint32_t squareRadius = radius * radius;
+
+    // Get some properties from the target
+    uint32_t rawCircleColor = target.convertColorToRaw(circleColor);
+    uint32_t rawBackgroundColor = target.convertColorToRaw(backgroundColor);
+
+    // Calculate how many parts we must send to the screen
+    const uint8_t pixelSize = target.getPixelSize();
+    const size_t totalBufferSize = size.x * size.y * pixelSize;
+    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
+
+    // Keep track of the current position
+    size_t actualPixel = 0;
+    Graphics::Vec2D actualPosition = position;
+    Graphics::Vec2D radiusPosition {static_cast<int16_t>(-radius), static_cast<int16_t>(-radius)};
+
+    // How many times we reset the Y axis
+    unsigned verticalLoopCount = 0;
+
+    // Prepare a large buffer of pixels for faster transmission
+    auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
+
+    target.prepareDrawBuffer();
+
+    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
+    {
+        // Calculate the number of pixels to feed to the screen and the next cursor position
+        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y) % BUFFER_SIZE : BUFFER_SIZE / pixelSize;
+        size_t bufferPos = 0;
+
+        for (size_t i = 0; i < pixelsToFeed; ++i)
+        {
+            if (static_cast<uint16_t>(radiusPosition.x * radiusPosition.x) + static_cast<uint16_t>(radiusPosition.y * radiusPosition.y) <= squareRadius)
+                bufferPos = target.putPixelInBuffer(buffer, rawCircleColor, bufferPos);
+            else
+                bufferPos = target.putPixelInBuffer(buffer, rawBackgroundColor, bufferPos);
+
+            if (++radiusPosition.x == radius)
+            {
+                radiusPosition.x = -radius;
+                ++radiusPosition.y;
+            }
+        }
+
+        // Draw the buffer
+        const bool mustContinue = target.drawBuffer(position, size, actualPixel, actualPosition, buffer,
+                                                    pixelsToFeed, verticalLoopCount, loopVerticalAxis);
 
         if (!mustContinue)
             break;

@@ -33,6 +33,7 @@ list(APPEND SOURCE_FILES
         Applets/DebugApt.cpp
         Applets/TestAMS.cpp
         Applets/TestApt.cpp
+        Applets/TestGfx.cpp
         Fonts/Ubuntu24Font.c
         Graphics/Color.h
         Graphics/GfxUtils.cpp

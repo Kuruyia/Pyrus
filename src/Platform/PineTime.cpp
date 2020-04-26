@@ -12,9 +12,9 @@ Platform::PineTime::PineTime()
     ret_code_t err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
 
-    Hardware::BLE::BaseBle &bleManager = getBleManager();
+    Hardware::BLE::BaseBle &bleManager = Hardware::BLE::BleNrf5::getInstance();
     bleManager.init();
-    bleManager.deleteBonds();
+//    bleManager.deleteBonds();
     bleManager.startAdvertising();
 }
 

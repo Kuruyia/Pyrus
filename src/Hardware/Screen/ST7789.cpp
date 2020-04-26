@@ -263,7 +263,7 @@ const uint16_t &Hardware::Screen::ST7789::getTopFixedArea() const
 void Hardware::Screen::ST7789::clearFramebuffer(const Graphics::Color &color)
 {
     // Draw a rectangle taking the entire framebuffer
-    Graphics::GfxUtils::drawRectangle(*this, {0, 0}, getFramebufferSize(), color, false);
+    Graphics::GfxUtils::drawFilledRectangle(*this, {0, 0}, getFramebufferSize(), color, false);
 }
 
 void Hardware::Screen::ST7789::drawPixel(const Graphics::Vec2D &position, const Graphics::Color &color)
