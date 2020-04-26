@@ -1,8 +1,8 @@
 #include <libraries/delay/nrf_delay.h>
 #include "VerticalScrollContainer.h"
 
-Widget::VerticalScrollContainer::VerticalScrollContainer(const std::string &id, Vec2D_t position, Vec2D_t size,
-        const Graphics::Color &backgroundColor)
+Widget::VerticalScrollContainer::VerticalScrollContainer(const std::string &id, Graphics::Vec2D position, Graphics::Vec2D size,
+                                                         const Graphics::Color &backgroundColor)
 : BaseContainer(id, position, backgroundColor)
 , m_size(size)
 , m_lastPosition({0, 0})
@@ -46,7 +46,7 @@ void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
     const uint16_t scrollEnd = m_verticalScrollOffset + target.getScreenSize().y;
     for (auto &widget: m_children)
     {
-        const Vec2D_t widgetAbsolutePosition = widget->getAbsolutePosition();
+        const Graphics::Vec2D widgetAbsolutePosition = widget->getAbsolutePosition();
         if (widgetAbsolutePosition.y + widget->getHeight() >= m_verticalScrollOffset &&
                 widgetAbsolutePosition.y < scrollEnd)
         {
@@ -59,7 +59,7 @@ void Widget::VerticalScrollContainer::draw(Hardware::Screen::BaseScreen &target)
     }
 }
 
-Vec2D_t Widget::VerticalScrollContainer::getAbsolutePosition() const
+Graphics::Vec2D Widget::VerticalScrollContainer::getAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return getPosition();
@@ -67,29 +67,29 @@ Vec2D_t Widget::VerticalScrollContainer::getAbsolutePosition() const
     return m_parent->getAbsolutePosition() + getPosition();
 }
 
-void Widget::VerticalScrollContainer::setSize(Vec2D_t size)
+void Widget::VerticalScrollContainer::setSize(Graphics::Vec2D size)
 {
     m_size = size;
 
     setDirtyWithChildren(DirtyState::Size, true);
 }
 
-uint16_t Widget::VerticalScrollContainer::getWidth() const
+int16_t Widget::VerticalScrollContainer::getWidth() const
 {
     return m_size.x;
 }
 
-uint16_t Widget::VerticalScrollContainer::getHeight() const
+int16_t Widget::VerticalScrollContainer::getHeight() const
 {
     return m_size.y;
 }
 
-Vec2D_t Widget::VerticalScrollContainer::getSize() const
+Graphics::Vec2D Widget::VerticalScrollContainer::getSize() const
 {
     return m_size;
 }
 
-Vec2D_t Widget::VerticalScrollContainer::getLastAbsolutePosition() const
+Graphics::Vec2D Widget::VerticalScrollContainer::getLastAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return m_lastPosition;

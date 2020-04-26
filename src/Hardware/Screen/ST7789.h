@@ -15,14 +15,14 @@ namespace Screen
 
 class ST7789 : public BaseScreen {
 public:
-    ST7789(const Vec2D_t &screenSize, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
+    ST7789(const Graphics::Vec2D &screenSize, uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t cd, uint8_t reset);
     ~ST7789() override = default;
 
-    void setWindow(const Vec2D_t &position, const Vec2D_t &size) override;
-    void getWindow(Vec2D_t &position, Vec2D_t &size) const override;
+    void setWindow(const Graphics::Vec2D &position, const Graphics::Vec2D &size) override;
+    void getWindow(Graphics::Vec2D &position, Graphics::Vec2D &size) const override;
 
-    const Vec2D_t &getScreenSize() const override;
-    Vec2D_t getFramebufferSize() const override;
+    const Graphics::Vec2D &getScreenSize() const override;
+    Graphics::Vec2D getFramebufferSize() const override;
 
     void setVerticalScrollOffset(uint16_t offset) override;
     const uint16_t &getVerticalScrollOffset() const override;
@@ -32,15 +32,15 @@ public:
 
     void clearFramebuffer(const Graphics::Color &color) override;
 
-    bool drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
-                    Vec2D_t &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
+    bool drawBuffer(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const size_t &actualPixel,
+                    Graphics::Vec2D &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
                     bool loopVerticalAxis) override;
 
-    void drawPixel(const Vec2D_t &position, const Graphics::Color &color) override;
-    void drawRectangle(const Vec2D_t &position, const Vec2D_t &size, const Graphics::Color &color,
+    void drawPixel(const Graphics::Vec2D &position, const Graphics::Color &color) override;
+    void drawRectangle(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const Graphics::Color &color,
                        bool loopVerticalAxis) override;
 
-    uint16_t drawChar(const Vec2D_t &position, char c, const FONT_INFO &fontInfo, const Graphics::Color &textColor,
+    uint16_t drawChar(const Graphics::Vec2D &position, char c, const FONT_INFO &fontInfo, const Graphics::Color &textColor,
                       const Graphics::Color &backgroundColor, bool loopVerticalAxis) override;
 
 private:
@@ -51,10 +51,10 @@ private:
 
     void sendCommand(uint8_t command, const uint8_t *data, size_t dataSize);
 
-    const Vec2D_t m_screenSize;
+    const Graphics::Vec2D m_screenSize;
 
-    Vec2D_t m_windowPosition;
-    Vec2D_t m_windowSize;
+    Graphics::Vec2D m_windowPosition;
+    Graphics::Vec2D m_windowSize;
 
     uint16_t m_verticalScrollOffset;
     uint16_t m_topFixedArea;

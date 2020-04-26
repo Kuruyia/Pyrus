@@ -2,14 +2,14 @@
 
 #include "BaseContainer.h"
 
-Widget::BaseContainer::BaseContainer(std::string id, Vec2D_t position, const Graphics::Color &backgroundColor)
+Widget::BaseContainer::BaseContainer(std::string id, Graphics::Vec2D position, const Graphics::Color &backgroundColor)
 : BaseWidget(std::move(id), position)
 , m_backgroundColor(backgroundColor)
 {
 
 }
 
-void Widget::BaseContainer::setPosition(Vec2D_t position)
+void Widget::BaseContainer::setPosition(Graphics::Vec2D position)
 {
     BaseWidget::setPosition(position);
 

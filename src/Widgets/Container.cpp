@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "Container.h"
 
-Widget::Container::Container(const std::string &id, Vec2D_t position, Vec2D_t size, const Graphics::Color &backgroundColor)
+Widget::Container::Container(const std::string &id, Graphics::Vec2D position, Graphics::Vec2D size, const Graphics::Color &backgroundColor)
 : BaseContainer(id, position, backgroundColor)
 , m_size(size)
 , m_lastPosition({0, 0})
@@ -18,7 +18,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
         // Geometry has changed, we need to clear the last occupied space
         if (isDirty(DirtyState::Position) || isDirty(DirtyState::Size))
         {
-            Vec2D_t lastAbsolutePosition = getLastAbsolutePosition();
+            Graphics::Vec2D lastAbsolutePosition = getLastAbsolutePosition();
             if (m_loopVerticalPosition)
                 lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
@@ -27,7 +27,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
         }
 
         // Loop the vertical axis if enabled
-        Vec2D_t position = getAbsolutePosition();
+        Graphics::Vec2D position = getAbsolutePosition();
         if (m_loopVerticalPosition)
             position.y %= target.getFramebufferSize().y;
 
@@ -47,7 +47,7 @@ void Widget::Container::draw(Hardware::Screen::BaseScreen &target)
         widget->draw(target);
 }
 
-Vec2D_t Widget::Container::getAbsolutePosition() const
+Graphics::Vec2D Widget::Container::getAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return getPosition();
@@ -55,29 +55,29 @@ Vec2D_t Widget::Container::getAbsolutePosition() const
     return m_parent->getAbsolutePosition() + getPosition();
 }
 
-void Widget::Container::setSize(Vec2D_t size)
+void Widget::Container::setSize(Graphics::Vec2D size)
 {
     m_size = size;
 
     setDirty(DirtyState::Size, true);
 }
 
-uint16_t Widget::Container::getWidth() const
+int16_t Widget::Container::getWidth() const
 {
     return m_size.x;
 }
 
-uint16_t Widget::Container::getHeight() const
+int16_t Widget::Container::getHeight() const
 {
     return m_size.y;
 }
 
-Vec2D_t Widget::Container::getSize() const
+Graphics::Vec2D Widget::Container::getSize() const
 {
     return m_size;
 }
 
-Vec2D_t Widget::Container::getLastAbsolutePosition() const
+Graphics::Vec2D Widget::Container::getLastAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return m_lastPosition;

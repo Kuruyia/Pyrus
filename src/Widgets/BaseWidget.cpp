@@ -3,7 +3,7 @@
 #include "BaseContainer.h"
 #include "BaseWidget.h"
 
-Widget::BaseWidget::BaseWidget(std::string id, const Vec2D_t position)
+Widget::BaseWidget::BaseWidget(std::string id, const Graphics::Vec2D position)
 : m_parent(nullptr)
 , m_id(std::move(id))
 , m_dirty(1 << DirtyState::Global)
@@ -13,14 +13,14 @@ Widget::BaseWidget::BaseWidget(std::string id, const Vec2D_t position)
 
 }
 
-void Widget::BaseWidget::setPosition(Vec2D_t position)
+void Widget::BaseWidget::setPosition(Graphics::Vec2D position)
 {
     m_position = position;
 
     setDirty(DirtyState::Position, true);
 }
 
-const Vec2D_t &Widget::BaseWidget::getPosition() const
+const Graphics::Vec2D &Widget::BaseWidget::getPosition() const
 {
     return m_position;
 }

@@ -11,10 +11,10 @@ namespace Widget
 
 class BaseContainer : public BaseWidget {
 public:
-    BaseContainer(std::string id, Vec2D_t position, const Graphics::Color &backgroundColor);
+    BaseContainer(std::string id, Graphics::Vec2D position, const Graphics::Color &backgroundColor);
     ~BaseContainer() override = default;
 
-    void setPosition(Vec2D_t position) override;
+    void setPosition(Graphics::Vec2D position) override;
 
     BaseWidget &addChild(std::unique_ptr<BaseWidget> child);
     bool removeChild(const std::string &id);

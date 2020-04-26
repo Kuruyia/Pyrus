@@ -3,7 +3,7 @@
 
 #define INTERCHAR_SIZE 2
 
-Widget::Text::Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
+Widget::Text::Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Graphics::Vec2D position,
                    const Graphics::Color &textColor, const Graphics::Color &backgroundColor)
 : BaseWidget(id, position)
 , m_text(text)
@@ -26,7 +26,7 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     // Geometry has changed, we need to clear the last occupied space
     if (isDirty(DirtyState::Global) || isDirty(DirtyState::Position) || isDirty(DirtyState::Size))
     {
-        Vec2D_t lastAbsolutePosition = getLastAbsolutePosition();
+        Graphics::Vec2D lastAbsolutePosition = getLastAbsolutePosition();
         if (m_loopVerticalPosition)
             lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
@@ -40,7 +40,7 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     }
 
     // Store the position of this drawing
-    Vec2D_t position = getDrawPosition();
+    Graphics::Vec2D position = getDrawPosition();
     m_lastDrawPosition = position;
 
     // Loop the vertical axis if enabled
@@ -68,7 +68,7 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
 
     // Store the size of this drawing
     // Note that m_lastDrawPosition is used here because it holds the initial values of position
-    m_lastSize = {static_cast<uint16_t>(position.x - m_lastDrawPosition.x), m_fontInfo->height};
+    m_lastSize = {static_cast<int16_t>(position.x - m_lastDrawPosition.x), m_fontInfo->height};
 
     // Reset the dirty flag
     clearDirty();
@@ -98,7 +98,7 @@ const FONT_INFO *Widget::Text::getFont() const
     return m_fontInfo;
 }
 
-Vec2D_t Widget::Text::getAbsolutePosition() const
+Graphics::Vec2D Widget::Text::getAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return getPosition();
@@ -106,32 +106,32 @@ Vec2D_t Widget::Text::getAbsolutePosition() const
     return m_parent->getAbsolutePosition() + getPosition();
 }
 
-Vec2D_t Widget::Text::getDrawPosition() const
+Graphics::Vec2D Widget::Text::getDrawPosition() const
 {
-    Vec2D_t position = getAbsolutePosition();
+    Graphics::Vec2D position = getAbsolutePosition();
 
     switch (m_horizontalAlignment)
     {
         case HorizontalAlignment::Centered:
-            return {static_cast<uint16_t>(position.x - getWidth() / 2), position.y};
+            return {static_cast<int16_t>(position.x - getWidth() / 2), position.y};
         case HorizontalAlignment::Right:
-            return {static_cast<uint16_t>(position.x - getWidth()), position.y};
+            return {static_cast<int16_t>(position.x - getWidth()), position.y};
         default:
             return position;
     }
 }
 
-uint16_t Widget::Text::getWidth() const
+int16_t Widget::Text::getWidth() const
 {
     return m_width;
 }
 
-uint16_t Widget::Text::getHeight() const
+int16_t Widget::Text::getHeight() const
 {
     return m_fontInfo->height;
 }
 
-Vec2D_t Widget::Text::getSize() const
+Graphics::Vec2D Widget::Text::getSize() const
 {
     return {getWidth(), getHeight()};
 }
@@ -160,7 +160,7 @@ const Graphics::Color &Widget::Text::getBackgroundColor() const
     return m_backgroundColor;
 }
 
-Vec2D_t Widget::Text::getLastAbsolutePosition() const
+Graphics::Vec2D Widget::Text::getLastAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return m_lastDrawPosition;

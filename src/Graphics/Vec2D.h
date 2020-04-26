@@ -3,25 +3,29 @@
 
 #include <cstdint>
 
-struct Vec2D_t
+namespace Graphics {
+
+struct Vec2D
 {
-    uint16_t x;
-    uint16_t y;
+    int16_t x;
+    int16_t y;
 
-    Vec2D_t operator+(const Vec2D_t& v) const
+    Graphics::Vec2D operator+(const Graphics::Vec2D& v) const
     {
-        return {static_cast<uint16_t>(x + v.x), static_cast<uint16_t>(y + v.y)};
+        return {static_cast<int16_t>(x + v.x), static_cast<int16_t>(y + v.y)};
     }
 
-    Vec2D_t operator-(const Vec2D_t& v) const
+    Graphics::Vec2D operator-(const Graphics::Vec2D& v) const
     {
-        return {static_cast<uint16_t>(x - v.x), static_cast<uint16_t>(y - v.y)};
+        return {static_cast<int16_t>(x - v.x), static_cast<int16_t>(y - v.y)};
     }
 
-    bool operator==(const Vec2D_t& v) const
+    bool operator==(const Graphics::Vec2D& v) const
     {
         return x == v.x && y == v.y;
     }
-};
+}; // struct Vec2D
+
+} // namespace Graphics
 
 #endif //PYRUS_VEC2D_H

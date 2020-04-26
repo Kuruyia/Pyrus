@@ -23,22 +23,22 @@ public:
         Child,
     };
 
-    BaseWidget(std::string id, Vec2D_t position);
+    BaseWidget(std::string id, Graphics::Vec2D position);
     virtual ~BaseWidget() = default;
 
     virtual void draw(Hardware::Screen::BaseScreen &target) = 0;
 
-    virtual void setPosition(Vec2D_t position);
-    virtual const Vec2D_t &getPosition() const;
+    virtual void setPosition(Graphics::Vec2D position);
+    virtual const Graphics::Vec2D &getPosition() const;
 
-    virtual Vec2D_t getAbsolutePosition() const = 0;
+    virtual Graphics::Vec2D getAbsolutePosition() const = 0;
 
     virtual void setLoopVerticalPosition(bool loopVerticalPosition);
     virtual bool isLoopingVerticalPosition() const;
 
-    virtual uint16_t getWidth() const = 0;
-    virtual uint16_t getHeight() const = 0;
-    virtual Vec2D_t getSize() const = 0;
+    virtual int16_t getWidth() const = 0;
+    virtual int16_t getHeight() const = 0;
+    virtual Graphics::Vec2D getSize() const = 0;
 
     virtual void setParent(BaseContainer *parent);
     virtual const BaseContainer *getParent() const;
@@ -57,7 +57,7 @@ protected:
 
     std::bitset<16> m_dirty;
 
-    Vec2D_t m_position;
+    Graphics::Vec2D m_position;
     bool m_loopVerticalPosition;
 
 }; // class BaseWidget

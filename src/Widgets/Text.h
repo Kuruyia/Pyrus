@@ -16,7 +16,7 @@ public:
         Right,
     };
 
-    Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Vec2D_t position,
+    Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Graphics::Vec2D position,
          const Graphics::Color &textColor = {255, 255, 255},
          const Graphics::Color &backgroundColor = {0, 0, 0});
     ~Text() override = default;
@@ -29,12 +29,12 @@ public:
     void setFont(const FONT_INFO *fontInfo);
     const FONT_INFO *getFont() const;
 
-    Vec2D_t getAbsolutePosition() const override;
-    Vec2D_t getDrawPosition() const;
+    Graphics::Vec2D getAbsolutePosition() const override;
+    Graphics::Vec2D getDrawPosition() const;
 
-    uint16_t getWidth() const override;
-    uint16_t getHeight() const override;
-    Vec2D_t getSize() const override;
+    int16_t getWidth() const override;
+    int16_t getHeight() const override;
+    Graphics::Vec2D getSize() const override;
 
     void setTextColor(const Graphics::Color &textColor);
     const Graphics::Color &getTextColor() const;
@@ -46,7 +46,7 @@ public:
     HorizontalAlignment getHorizontalAlignment() const;
 
 private:
-    Vec2D_t getLastAbsolutePosition() const;
+    Graphics::Vec2D getLastAbsolutePosition() const;
 
     uint16_t computeWidth() const;
 
@@ -54,8 +54,8 @@ private:
     const FONT_INFO *m_fontInfo;
     HorizontalAlignment m_horizontalAlignment;
 
-    Vec2D_t m_lastDrawPosition;
-    Vec2D_t m_lastSize;
+    Graphics::Vec2D m_lastDrawPosition;
+    Graphics::Vec2D m_lastSize;
 
     Graphics::Color m_textColor;
     Graphics::Color m_backgroundColor;

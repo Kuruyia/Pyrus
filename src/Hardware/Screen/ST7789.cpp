@@ -27,7 +27,7 @@
 
 static const nrfx_spim_t lcdSpi = NRFX_SPIM_INSTANCE(0);
 
-Hardware::Screen::ST7789::ST7789(const Vec2D_t &screenSize, const uint8_t mosi, const uint8_t miso, const uint8_t clk,
+Hardware::Screen::ST7789::ST7789(const Graphics::Vec2D &screenSize, const uint8_t mosi, const uint8_t miso, const uint8_t clk,
                                  const uint8_t cs, const uint8_t cd, const uint8_t reset)
                               : m_screenSize(screenSize)
                               , m_windowPosition({0, 0})
@@ -166,7 +166,7 @@ inline void Hardware::Screen::ST7789::setDataPin()
     nrf_gpio_pin_set(m_cd);
 }
 
-void Hardware::Screen::ST7789::setWindow(const Vec2D_t &position, const Vec2D_t &size)
+void Hardware::Screen::ST7789::setWindow(const Graphics::Vec2D &position, const Graphics::Vec2D &size)
 {
     // Store the window parameters
     m_windowPosition = position;
@@ -197,18 +197,18 @@ void Hardware::Screen::ST7789::setWindow(const Vec2D_t &position, const Vec2D_t 
     sendCommand(ST7789_CMD_RASET, lcdTxRasetData, sizeof(lcdTxRasetData));
 }
 
-void Hardware::Screen::ST7789::getWindow(Vec2D_t &position, Vec2D_t &size) const
+void Hardware::Screen::ST7789::getWindow(Graphics::Vec2D &position, Graphics::Vec2D &size) const
 {
     position = m_windowPosition;
     size = m_windowSize;
 }
 
-Vec2D_t Hardware::Screen::ST7789::getFramebufferSize() const
+Graphics::Vec2D Hardware::Screen::ST7789::getFramebufferSize() const
 {
     return {FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT};
 }
 
-const Vec2D_t &Hardware::Screen::ST7789::getScreenSize() const
+const Graphics::Vec2D &Hardware::Screen::ST7789::getScreenSize() const
 {
     return m_screenSize;
 }
@@ -264,7 +264,7 @@ void Hardware::Screen::ST7789::clearFramebuffer(const Graphics::Color &color)
     drawRectangle({0, 0}, getFramebufferSize(), color, false);
 }
 
-void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, const Graphics::Color &color)
+void Hardware::Screen::ST7789::drawPixel(const Graphics::Vec2D &position, const Graphics::Color &color)
 {
     // Set the window
     setWindow(position, {1, 1});
@@ -282,7 +282,7 @@ void Hardware::Screen::ST7789::drawPixel(const Vec2D_t &position, const Graphics
     sendCommand(ST7789_CMD_RAMWR, lcdTxRamwrData, sizeof(lcdTxRamwrData));
 }
 
-void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2D_t &size, const Graphics::Color &color,
+void Hardware::Screen::ST7789::drawRectangle(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const Graphics::Color &color,
                                              bool loopVerticalAxis)
 {
     // Set the window
@@ -301,7 +301,7 @@ void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2
 
     // Keep track of the current position
     size_t actualPixel = 0;
-    Vec2D_t actualPosition = position;
+    Graphics::Vec2D actualPosition = position;
 
     // How many times we reset the Y axis
     unsigned verticalLoopCount = 0;
@@ -336,14 +336,14 @@ void Hardware::Screen::ST7789::drawRectangle(const Vec2D_t &position, const Vec2
     free(lcdTxRamwrData);
 }
 
-uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char c, const FONT_INFO &fontInfo,
+uint16_t Hardware::Screen::ST7789::drawChar(const Graphics::Vec2D &position, const char c, const FONT_INFO &fontInfo,
                                             const Graphics::Color &textColor, const Graphics::Color &backgroundColor,
                                             bool loopVerticalAxis)
 {
     // Set the window
     const size_t descriptorOffset = c - fontInfo.startChar;
     const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
-    Vec2D_t glyphSize = {descriptor.widthBits, fontInfo.height};
+    Graphics::Vec2D glyphSize = {descriptor.widthBits, fontInfo.height};
 
     setWindow(position, glyphSize);
 
@@ -389,7 +389,7 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
     // Those hold the current position of the cursor
     size_t actualPixel = 0;
     size_t actualPixelInGlyph = 0;
-    Vec2D_t actualPosition = position;
+    Graphics::Vec2D actualPosition = position;
 
     // How many times we reset the Y axis
     unsigned verticalLoopCount = 0;
@@ -444,16 +444,16 @@ uint16_t Hardware::Screen::ST7789::drawChar(const Vec2D_t &position, const char 
     return descriptor.widthBits;
 }
 
-bool Hardware::Screen::ST7789::drawBuffer(const Vec2D_t &position, const Vec2D_t &size, const size_t &actualPixel,
-        Vec2D_t &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
-        const bool loopVerticalAxis)
+bool Hardware::Screen::ST7789::drawBuffer(const Graphics::Vec2D &position, const Graphics::Vec2D &size, const size_t &actualPixel,
+                                          Graphics::Vec2D &actualPosition, uint8_t *buffer, size_t pixelsToFeed, unsigned &verticalLoopCount,
+                                          const bool loopVerticalAxis)
 {
     // Each pixel is 2 bytes in the buffer
     pixelsToFeed *= 2;
 
     // Calculate the new position
-    Vec2D_t nextPosition = {static_cast<uint16_t>(actualPixel % size.x + position.x),
-                            static_cast<uint16_t>(actualPixel / size.x + position.y - verticalLoopCount * FRAMEBUFFER_HEIGHT)};
+    Graphics::Vec2D nextPosition = {static_cast<int16_t>(actualPixel % size.x + position.x),
+                          static_cast<int16_t>(actualPixel / size.x + position.y - verticalLoopCount * FRAMEBUFFER_HEIGHT)};
 
     // Check if we are going to overflow on the Y axis
     if (nextPosition.y >= FRAMEBUFFER_HEIGHT)
@@ -470,7 +470,7 @@ bool Hardware::Screen::ST7789::drawBuffer(const Vec2D_t &position, const Vec2D_t
         {
             // Reset the window to the beginning of the framebuffer
             setWindow({position.x, 0},
-                      {size.x, static_cast<uint16_t>(size.y - actualPosition.y)});
+                      {size.x, static_cast<int16_t>(size.y - actualPosition.y)});
 
             // Transfer the rest of the pixels
             setCommandPin();

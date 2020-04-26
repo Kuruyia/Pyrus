@@ -2,8 +2,8 @@
 
 #include "StatusBar.h"
 
-Widget::StatusBar::StatusBar(const std::string &id, const Vec2D_t position, const uint16_t width,
-        const FONT_INFO *fontInfo, const std::string &primaryText, const std::string &secondaryText)
+Widget::StatusBar::StatusBar(const std::string &id, const Graphics::Vec2D position, const int16_t width,
+                             const FONT_INFO *fontInfo, const std::string &primaryText, const std::string &secondaryText)
 : BaseContainer(id, position, {0, 0, 0})
 , m_size({width, 0})
 , m_lastPosition(position)
@@ -12,10 +12,10 @@ Widget::StatusBar::StatusBar(const std::string &id, const Vec2D_t position, cons
 , m_secondaryText(nullptr)
 {
     m_mainText = dynamic_cast<Text *>(&addChild(std::make_unique<Widget::Text>("statusPrimary", primaryText,
-                                                                               fontInfo, Vec2D_t{4, 0},
+                                                                               fontInfo, Graphics::Vec2D{4, 0},
                                                                                Graphics::Color(255, 255, 255))));
     m_secondaryText = dynamic_cast<Text *>(&addChild(std::make_unique<Widget::Text>("statusSecondary", secondaryText, fontInfo,
-                                                                                    Vec2D_t{static_cast<uint16_t>(width - 4), 0},
+                                                                                    Graphics::Vec2D{static_cast<int16_t>(width - 4), 0},
                                                                                     Graphics::Color(200, 200, 200))));
 
     m_size.y = (m_mainText->getHeight() > m_secondaryText->getHeight()) ? m_mainText->getHeight() : m_secondaryText->getHeight();
@@ -34,7 +34,7 @@ void Widget::StatusBar::draw(Hardware::Screen::BaseScreen &target)
     // Geometry has changed, we need to clear the last occupied space
     if (isDirty(DirtyState::Global) || isDirty(DirtyState::Position) || isDirty(DirtyState::Size))
     {
-        Vec2D_t lastAbsolutePosition = getLastAbsolutePosition();
+        Graphics::Vec2D lastAbsolutePosition = getLastAbsolutePosition();
         if (m_loopVerticalPosition)
             lastAbsolutePosition.y %= target.getFramebufferSize().y;
 
@@ -45,7 +45,7 @@ void Widget::StatusBar::draw(Hardware::Screen::BaseScreen &target)
     m_mainText->draw(target);
     m_secondaryText->draw(target);
 
-    target.drawRectangle({m_position.x, static_cast<uint16_t>(m_position.y + m_size.y - 1)},
+    target.drawRectangle({m_position.x, static_cast<int16_t>(m_position.y + m_size.y - 1)},
             {m_size.x, 1}, {255, 255, 0}, true);
 
     // Reset the dirty flag
@@ -56,14 +56,14 @@ void Widget::StatusBar::draw(Hardware::Screen::BaseScreen &target)
         widget->draw(target);
 }
 
-void Widget::StatusBar::setPosition(Vec2D_t position)
+void Widget::StatusBar::setPosition(Graphics::Vec2D position)
 {
     m_lastPosition = m_position;
 
     BaseContainer::setPosition(position);
 }
 
-Vec2D_t Widget::StatusBar::getAbsolutePosition() const
+Graphics::Vec2D Widget::StatusBar::getAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return getPosition();
@@ -71,7 +71,7 @@ Vec2D_t Widget::StatusBar::getAbsolutePosition() const
     return m_parent->getAbsolutePosition() + getPosition();
 }
 
-void Widget::StatusBar::setWidth(uint16_t width)
+void Widget::StatusBar::setWidth(int16_t width)
 {
     m_lastSize = m_size;
     m_size.x = width;
@@ -79,20 +79,20 @@ void Widget::StatusBar::setWidth(uint16_t width)
     setDirty(DirtyState::Size, true);
     m_mainText->setDirty(DirtyState::Global, true);
 
-    m_secondaryText->setPosition({static_cast<uint16_t>(width - 4), 0});
+    m_secondaryText->setPosition({static_cast<int16_t>(width - 4), 0});
 }
 
-uint16_t Widget::StatusBar::getWidth() const
+int16_t Widget::StatusBar::getWidth() const
 {
     return m_size.x;
 }
 
-uint16_t Widget::StatusBar::getHeight() const
+int16_t Widget::StatusBar::getHeight() const
 {
     return m_size.y;
 }
 
-Vec2D_t Widget::StatusBar::getSize() const
+Graphics::Vec2D Widget::StatusBar::getSize() const
 {
     return m_size;
 }
@@ -107,7 +107,7 @@ Widget::Text &Widget::StatusBar::getSecondaryText()
     return *m_secondaryText;
 }
 
-Vec2D_t Widget::StatusBar::getLastAbsolutePosition() const
+Graphics::Vec2D Widget::StatusBar::getLastAbsolutePosition() const
 {
     if (m_parent == nullptr)
         return m_lastPosition;
