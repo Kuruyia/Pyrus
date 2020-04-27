@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 
+#include "../Events/BaseEvent.h"
 #include "../Platform/BasePlatform.h"
 #include "../Hardware/Screen/BaseScreen.h"
 
@@ -13,7 +14,7 @@ class BaseApplet {
 public:
     explicit BaseApplet(const std::string &appletName);
 
-    virtual void processEvent() = 0;
+    virtual void processEvent(Event::BaseEvent *event) = 0;
     virtual void update(Platform::BasePlatform &platform) = 0;
     virtual void draw(Hardware::Screen::BaseScreen &target) = 0;
 

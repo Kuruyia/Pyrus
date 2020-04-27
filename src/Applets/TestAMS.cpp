@@ -107,7 +107,7 @@ Applet::TestAMS::~TestAMS()
     m_appleMedia.setEventCallback(nullptr);
 }
 
-void Applet::TestAMS::processEvent()
+void Applet::TestAMS::processEvent(Event::BaseEvent *event)
 {
 
 }

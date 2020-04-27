@@ -1,8 +1,10 @@
 #include "AppletManager.h"
 
-void Applet::AppletManager::addEvent()
+void Applet::AppletManager::dispatchEvent(Event::BaseEvent *event)
 {
+    if (m_applets.empty() || event == nullptr) return;
 
+    m_applets.top()->processEvent(event);
 }
 
 void Applet::AppletManager::update(Platform::BasePlatform &platform)
@@ -34,9 +36,6 @@ void Applet::AppletManager::update(Platform::BasePlatform &platform)
 
     // We potentially popped the last item, so check again
     if (m_applets.empty()) return;
-
-    // TODO: Write event management
-    m_applets.top()->processEvent();
 
     m_applets.top()->update(platform);
 }

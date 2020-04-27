@@ -34,6 +34,10 @@ list(APPEND SOURCE_FILES
         Applets/TestAMS.cpp
         Applets/TestApt.cpp
         Applets/TestGfx.cpp
+        Events/BaseEvent.cpp
+        Events/ButtonEvent.cpp
+        Events/EventIdentifiers.h
+        Events/EventManager.cpp
         Fonts/Ubuntu24Font.c
         Graphics/Color.h
         Graphics/GfxUtils.cpp

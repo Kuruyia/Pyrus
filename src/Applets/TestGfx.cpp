@@ -11,7 +11,7 @@ Applet::TestGfx::TestGfx()
 
 }
 
-void Applet::TestGfx::processEvent()
+void Applet::TestGfx::processEvent(Event::BaseEvent *event)
 {
 
 }

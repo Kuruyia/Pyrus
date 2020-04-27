@@ -12,7 +12,7 @@ class TestApt: public BaseApplet {
 public:
     TestApt();
 
-    void processEvent() override;
+    void processEvent(Event::BaseEvent *event) override;
     void update(Platform::BasePlatform &platform) override;
     void draw(Hardware::Screen::BaseScreen &target) override;
 

@@ -4,14 +4,15 @@
 #include <memory>
 #include <stack>
 
+#include "../Events/BaseEvent.h"
+
 #include "BaseApplet.h"
 
 namespace Applet {
 
 class AppletManager {
 public:
-    void addEvent();
-
+    void dispatchEvent(Event::BaseEvent *event);
     void update(Platform::BasePlatform &platform);
     void draw(Hardware::Screen::BaseScreen &target);
 

@@ -1,6 +1,8 @@
 #include "../Graphics/GfxUtils.h"
 #include "../Fonts/Ubuntu24Font.h"
 
+#include "../Events/ButtonEvent.h"
+
 #include "DebugApt.h"
 
 #define APPLET_NAME "DebugApt"
@@ -14,9 +16,18 @@ Applet::DebugApt::DebugApt()
 
 }
 
-void Applet::DebugApt::processEvent()
+void Applet::DebugApt::processEvent(Event::BaseEvent *event)
 {
+    switch (event->getEventId())
+    {
+        case Event::EventIdentifiers::Button:
+        {
+            auto *btnEvent = dynamic_cast<Event::ButtonEvent *>(event);
+            m_btnText.setText("Btn #" + std::to_string(btnEvent->getButtonId()) + " now " + ((btnEvent->isPressed()) ? "ON" : "OFF"));
+            break;
+        }
 
+    }
 }
 
 void Applet::DebugApt::update(Platform::BasePlatform &platform)
@@ -31,9 +42,6 @@ void Applet::DebugApt::update(Platform::BasePlatform &platform)
 
     // Show BLE state
     m_bleText.setText(platform.getBleManager().isConnected() ? "BLE C" : "BLE D");
-
-    // Update button state
-    m_btnText.setText(platform.getButtonManager().isButtonPressed(0) ? "Button ON" : "Button OFF");
 }
 
 void Applet::DebugApt::draw(Hardware::Screen::BaseScreen &target)

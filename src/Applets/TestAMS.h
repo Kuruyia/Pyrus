@@ -11,7 +11,7 @@ public:
     explicit TestAMS(Hardware::BLE::Clients::BaseAppleMedia &appleMedia);
     ~TestAMS();
 
-    void processEvent() override;
+    void processEvent(Event::BaseEvent *event) override;
     void update(Platform::BasePlatform &platform) override;
     void draw(Hardware::Screen::BaseScreen &target) override;
 

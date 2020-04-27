@@ -8,6 +8,8 @@
 #include "Applets/TestApt.h"
 #include "Applets/TestGfx.h"
 
+#include "Events/ButtonEvent.h"
+
 #include "Fonts/Ubuntu24Font.h"
 
 #include "Application.h"
@@ -60,7 +62,7 @@ Application::Application()
     );
 
     m_platform.getButtonManager().setButtonHandler([&](const uint8_t buttonId, const bool pressed) {
-        // TODO: Put this in the non-existant event handler
+        m_eventManager.pushEvent(std::make_unique<Event::ButtonEvent>(buttonId, pressed));
     });
 
     // Add default applet to the applet manager
@@ -86,6 +88,15 @@ void Application::run()
         } else {
             nrf_gpio_pin_set(22);
             nrf_gpio_pin_set(23);
+        }
+
+        // Dispatch events to the current applet
+        while (!m_eventManager.isEmpty())
+        {
+            std::unique_ptr<Event::BaseEvent> event;
+            m_eventManager.popEvent(event);
+
+            m_appletManager.dispatchEvent(event.get());
         }
 
         // Update applets

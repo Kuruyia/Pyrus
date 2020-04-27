@@ -15,7 +15,7 @@ Applet::TestApt::TestApt()
     m_counterText.setHorizontalAlignment(Widget::Text::HorizontalAlignment::Centered);
 }
 
-void Applet::TestApt::processEvent()
+void Applet::TestApt::processEvent(Event::BaseEvent *event)
 {
 
 }
