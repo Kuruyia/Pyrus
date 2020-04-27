@@ -15,10 +15,6 @@ public:
     static void drawLine(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint,
             const Graphics::Color &color, bool loopVerticalAxis = false);
 
-    static void drawFastLine(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint,
-            const Graphics::Color &lineColor, const Graphics::Color &backgroundColor = {0, 0, 0},
-            bool loopVerticalAxis = false);
-
     static void drawHorizontalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, uint16_t width,
             const Graphics::Color &color, bool loopVerticalAxis = false);
 
@@ -27,6 +23,18 @@ public:
 
     static void drawFilledRectangle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
             const Graphics::Vec2D &size, const Graphics::Color &color, bool loopVerticalAxis = false);
+
+    static void drawTriangle(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+                             Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint, const Graphics::Color &color,
+                             bool loopVerticalAxis = false);
+
+    static void drawFilledTriangle(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+            Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint, const Graphics::Color &triangleColor,
+            const Graphics::Color &backgroundColor = {0, 0, 0}, bool loopVerticalAxis = false);
+
+    static void drawFastFilledTriangle(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+            Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint, const Graphics::Color &triangleColor,
+            const Graphics::Color &backgroundColor = {0, 0, 0}, bool loopVerticalAxis = false);
 
     static void drawFilledCircle(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &origin,
             uint16_t radius, const Graphics::Color &circleColor, const Graphics::Color &backgroundColor = {0, 0, 0},

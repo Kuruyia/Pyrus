@@ -10,126 +10,103 @@ void Graphics::GfxUtils::drawLine(Hardware::Screen::BaseScreen &target, Graphics
 {
     // This is an implementation of the Bresenham's line algorithm
 
-    // Reorder the points
-    if (secondPoint.x < firstPoint.x)
-        std::swap(firstPoint, secondPoint);
-
     const Graphics::Vec2D fbSize = target.getFramebufferSize();
 
     // Bresenham's algorithm parameters
-    const int16_t dx = secondPoint.x - firstPoint.x;
-    const int16_t dy = secondPoint.y - firstPoint.y;
-    int16_t D = 2 * dy - dx;
-    Graphics::Vec2D cursorPosition = firstPoint;
+    Graphics::Vec2D delta = secondPoint - firstPoint;
+    Graphics::Vec2D absDelta {static_cast<int16_t>(std::abs(delta.x)), static_cast<int16_t>(std::abs(delta.y))};
+
+    Graphics::Vec2D p {static_cast<int16_t>(2 * absDelta.y - absDelta.x),
+                       static_cast<int16_t>(2 * absDelta.x - absDelta.y)};
+
+    Graphics::Vec2D currentPosition {};
+    Graphics::Vec2D endPosition {};
 
     // Bresenham's algorithm
-    while (cursorPosition.x <= secondPoint.x)
+    if (absDelta.y <= absDelta.x)
     {
-        target.drawPixel(cursorPosition, color);
-
-        if (D > 0)
+        if (delta.x >= 0)
         {
-            ++cursorPosition.y;
-            if (cursorPosition.y >= fbSize.y)
+            currentPosition = firstPoint;
+            endPosition.x = secondPoint.x;
+        }
+        else
+        {
+            currentPosition = secondPoint;
+            endPosition.x = firstPoint.x;
+        }
+
+        for (int16_t i = 0; currentPosition.x < endPosition.x; ++i)
+        {
+            target.drawPixel(currentPosition, color);
+
+            ++currentPosition.x;
+
+            if (p.x < 0)
+            {
+                p.x = p.x + 2 * absDelta.y;
+            }
+            else
+            {
+                if ((delta.x < 0 && delta.y < 0) || (delta.x > 0 && delta.y > 0))
+                {
+                    if (++currentPosition.y >= fbSize.y)
+                    {
+                        if (loopVerticalAxis)
+                            currentPosition.y %= fbSize.y;
+                        else
+                            return;
+                    }
+                }
+                else
+                {
+                    --currentPosition.y;
+                }
+
+                p.x = p.x + 2 * (absDelta.y - absDelta.x);
+            }
+        }
+    }
+    else
+    {
+        if (delta.y >= 0)
+        {
+            currentPosition = firstPoint;
+            endPosition.y = secondPoint.y;
+        }
+        else
+        {
+            currentPosition = secondPoint;
+            endPosition.y = firstPoint.y;
+        }
+
+        for (int16_t i = 0; currentPosition.y < endPosition.y; ++i)
+        {
+            target.drawPixel(currentPosition, color);
+
+            if (++currentPosition.y >= fbSize.y)
             {
                 if (loopVerticalAxis)
-                    cursorPosition.y %= fbSize.y;
+                    currentPosition.y %= fbSize.y;
                 else
                     return;
             }
 
-            D = D - 2 * dx;
-        }
-
-        D = D + 2 * dy;
-        ++cursorPosition.x;
-    }
-}
-
-void Graphics::GfxUtils::drawFastLine(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
-                                      Graphics::Vec2D secondPoint, const Graphics::Color &lineColor,
-                                      const Graphics::Color &backgroundColor, bool loopVerticalAxis)
-{
-    // This is an implementation of the Bresenham's line algorithm
-
-    // Reorder the points
-    if (secondPoint.y < firstPoint.y)
-        std::swap(firstPoint, secondPoint);
-
-    // Set the window
-    Graphics::Vec2D size {static_cast<int16_t>(std::max(firstPoint.x, secondPoint.x) - std::min(firstPoint.x, secondPoint.x)),
-                          static_cast<int16_t>(secondPoint.y - firstPoint.y)};
-    Graphics::Vec2D position {std::min(firstPoint.x, secondPoint.x), firstPoint.y};
-    target.setWindow(position, size);
-
-    // Get some properties from the target
-    uint32_t rawLineColor = target.convertColorToRaw(lineColor);
-    uint32_t rawBackgroundColor = target.convertColorToRaw(backgroundColor);
-
-    // Calculate how many parts we must send to the screen
-    const uint16_t pixelCount = size.x * size.y;
-    const uint8_t pixelSize = target.getPixelSize();
-    const size_t totalBufferSize = size.x * size.y * pixelSize;
-    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
-
-    // Keep track of the current position
-    size_t actualPixel = 0;
-    Graphics::Vec2D actualPosition = position;
-
-    // How many times we reset the Y axis
-    unsigned verticalLoopCount = 0;
-
-    // Prepare a large buffer of pixels for faster transmission
-    auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
-
-    // Bresenham's algorithm parameters
-    const int16_t dx = secondPoint.x - firstPoint.x;
-    const int16_t dy = secondPoint.y - firstPoint.y;
-    int16_t D = 2 * dy - dx;
-    Graphics::Vec2D cursorPosition = firstPoint;
-    size_t cursorPixelNbr = positionToPixelNbr(cursorPosition, position, size);
-
-    target.prepareDrawBuffer();
-
-    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
-    {
-        // Clear the buffer
-        fillBufferWithColor(target, buffer, BUFFER_SIZE, rawBackgroundColor);
-
-        // Calculate the number of pixels to feed to the screen and the next cursor position
-        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y) % BUFFER_SIZE : BUFFER_SIZE / pixelSize;
-        const size_t endPixel = (actualStep == numberOfStep - 1) ? pixelCount : (BUFFER_SIZE / pixelSize) * (actualStep + 1);
-
-        while (cursorPixelNbr < endPixel &&
-        ((cursorPosition.x <= secondPoint.x && firstPoint.x < secondPoint.x) || (cursorPosition.x >= secondPoint.x && firstPoint.x > secondPoint.x)))
-        {
-            target.putPixelInBuffer(buffer, rawLineColor, (cursorPixelNbr * pixelSize) % BUFFER_SIZE);
-
-            if (D > 0)
+            if (p.y <= 0)
             {
-                ++cursorPosition.y;
-                D = D - 2 * dx;
+                p.y = p.y + 2 * absDelta.x;
             }
+            else
+            {
+                if ((delta.x < 0 && delta.y < 0) || (delta.x > 0 && delta.y > 0))
+                    ++currentPosition.x;
+                else
+                    --currentPosition.x;
 
-            D = D + 2 * dy;
-            if (firstPoint.x < secondPoint.x)
-                ++cursorPosition.x;
-            else if (firstPoint.x > secondPoint.x)
-                --cursorPosition.x;
-
-            cursorPixelNbr = positionToPixelNbr(cursorPosition, position, size);
+                p.y = p.y + 2 * (absDelta.x - absDelta.y);
+            }
         }
-
-        // Draw the buffer
-        const bool mustContinue = target.drawBuffer(position, size, actualPixel, actualPosition, buffer,
-                                                    pixelsToFeed, verticalLoopCount, loopVerticalAxis);
-
-        if (!mustContinue)
-            break;
     }
-
-    // Free the buffer
-    free(buffer);
 }
 
 void Graphics::GfxUtils::drawHorizontalLine(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position,
@@ -180,6 +157,209 @@ void Graphics::GfxUtils::drawFilledRectangle(Hardware::Screen::BaseScreen &targe
         // Draw the buffer
         const bool mustContinue = target.drawBuffer(position, size, actualPixel, actualPosition, buffer,
                 pixelsToFeed,verticalLoopCount, loopVerticalAxis);
+
+        if (!mustContinue)
+            break;
+    }
+
+    // Free the buffer
+    free(buffer);
+}
+
+void Graphics::GfxUtils::drawTriangle(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+                                      Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint,
+                                      const Graphics::Color &color, bool loopVerticalAxis)
+{
+    drawLine(target, firstPoint, secondPoint, color, loopVerticalAxis);
+    drawLine(target, firstPoint, thirdPoint, color, loopVerticalAxis);
+    drawLine(target, secondPoint, thirdPoint, color, loopVerticalAxis);
+}
+
+void Graphics::GfxUtils::drawFilledTriangle(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+                                            Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint,
+                                            const Graphics::Color &triangleColor, const Graphics::Color &backgroundColor,
+                                            bool loopVerticalAxis)
+{
+    // This is an adaptation of Adafruit-GFX's filled triangle drawing algorithm
+
+    int16_t a, b, y, last;
+    const Graphics::Vec2D fbSize = target.getFramebufferSize();
+
+    // Reorder the points
+    if (thirdPoint.y < secondPoint.y)
+        std::swap(secondPoint, thirdPoint);
+    if (secondPoint.y < firstPoint.y)
+        std::swap(firstPoint, secondPoint);
+    if (thirdPoint.y < secondPoint.y)
+        std::swap(secondPoint, thirdPoint);
+
+    const Graphics::Vec2D d01 = secondPoint - firstPoint;
+    const Graphics::Vec2D d02 = thirdPoint - firstPoint;
+    const Graphics::Vec2D d12 = thirdPoint - secondPoint;
+    int32_t sa = 0;
+    int32_t sb = 0;
+
+    if (secondPoint.y == thirdPoint.y)
+        last = secondPoint.y;
+    else
+        last = secondPoint.y - 1;
+
+    y = firstPoint.y;
+    while (y <= last)
+    {
+        int16_t drawY = y;
+        if (y >= fbSize.y)
+        {
+            if (loopVerticalAxis)
+                drawY %= fbSize.y;
+            else
+                return;
+        }
+
+        a = firstPoint.x + sa / d01.y;
+        b = firstPoint.x + sb / d02.y;
+        sa += d01.x;
+        sb += d02.x;
+
+        if (a > b)
+            std::swap(a, b);
+
+        drawHorizontalLine(target, {a, drawY}, b - a + 1, triangleColor);
+
+        ++y;
+    }
+
+    sa = (int32_t)d12.x * (y - secondPoint.y);
+    sb = (int32_t)d02.x * (y - firstPoint.y);
+    while (y <= thirdPoint.y)
+    {
+        int16_t drawY = y;
+        if (y >= fbSize.y)
+        {
+            if (loopVerticalAxis)
+                drawY %= fbSize.y;
+            else
+                return;
+        }
+
+        a = secondPoint.x + sa / d12.y;
+        b = firstPoint.x + sb / d02.y;
+        sa += d12.x;
+        sb += d02.x;
+
+        if (a > b)
+            std::swap(a, b);
+
+        drawHorizontalLine(target, {a, drawY}, b - a + 1, triangleColor);
+
+        ++y;
+    }
+}
+
+void Graphics::GfxUtils::drawFastFilledTriangle(Hardware::Screen::BaseScreen &target, Graphics::Vec2D firstPoint,
+                                                Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint,
+                                                const Graphics::Color &triangleColor,
+                                                const Graphics::Color &backgroundColor, bool loopVerticalAxis)
+{
+    // This is an adaptation of Adafruit-GFX's filled triangle drawing algorithm
+
+    // Reorder the points
+    if (thirdPoint.y < secondPoint.y)
+        std::swap(secondPoint, thirdPoint);
+    if (secondPoint.y < firstPoint.y)
+        std::swap(firstPoint, secondPoint);
+    if (thirdPoint.y < secondPoint.y)
+        std::swap(secondPoint, thirdPoint);
+
+    // Set the window
+    Graphics::Vec2D position {std::min(std::min(firstPoint.x, secondPoint.x), thirdPoint.x), firstPoint.y};
+    const Graphics::Vec2D maxPosition {std::max(std::max(firstPoint.x, secondPoint.x), thirdPoint.x), thirdPoint.y};
+    const Graphics::Vec2D size = maxPosition - position;
+    target.setWindow(position, size);
+
+    // Get some properties from the target
+    uint32_t rawTriangleColor = target.convertColorToRaw(triangleColor);
+    uint32_t rawBackgroundColor = target.convertColorToRaw(backgroundColor);
+
+    // Calculate how many parts we must send to the screen
+    const uint8_t pixelSize = target.getPixelSize();
+    const size_t totalBufferSize = size.x * size.y * pixelSize;
+    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
+
+    // Keep track of the current position
+    size_t actualPixel = 0;
+    Graphics::Vec2D actualPosition = position;
+    Graphics::Vec2D cursorPosition = position;
+
+    // How many times we reset the Y axis
+    unsigned verticalLoopCount = 0;
+
+    // Prepare a large buffer of pixels for faster transmission
+    auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
+
+    // Algorithm parameters
+    int16_t a, b, last;
+    const Graphics::Vec2D d01 = secondPoint - firstPoint;
+    const Graphics::Vec2D d02 = thirdPoint - firstPoint;
+    const Graphics::Vec2D d12 = thirdPoint - secondPoint;
+    Graphics::Vec2D activeDistance = d01;
+    int16_t activeX = firstPoint.x;
+    int32_t sa = 0;
+    int32_t sb = 0;
+
+    if (secondPoint.y == thirdPoint.y)
+        last = secondPoint.y;
+    else
+        last = secondPoint.y - 1;
+
+    a = activeX + sa / activeDistance.y;
+    b = firstPoint.x + sb / d02.y;
+    sa += activeDistance.x;
+    sb += d02.x;
+
+    if (a > b)
+        std::swap(a, b);
+
+    target.prepareDrawBuffer();
+
+    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
+    {
+        // Calculate the number of pixels to feed to the screen and the next cursor position
+        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y) % BUFFER_SIZE : BUFFER_SIZE / pixelSize;
+        size_t bufferPos = 0;
+
+        for (size_t i = 0; i < pixelsToFeed; ++i)
+        {
+            if (cursorPosition.x >= a && cursorPosition.x <= b + 1)
+                bufferPos = target.putPixelInBuffer(buffer, rawTriangleColor, bufferPos);
+            else
+                bufferPos = target.putPixelInBuffer(buffer, rawBackgroundColor, bufferPos);
+
+            if (++cursorPosition.x == position.x + size.x)
+            {
+                cursorPosition.x = position.x;
+                if (++cursorPosition.y == last + 1)
+                {
+                    sa = (int32_t)d12.x * (cursorPosition.y - secondPoint.y);
+                    sb = (int32_t)d02.x * (cursorPosition.y - firstPoint.y);
+
+                    activeDistance = d12;
+                    activeX = secondPoint.x;
+                }
+
+                a = activeX + sa / activeDistance.y;
+                b = firstPoint.x + sb / d02.y;
+                sa += activeDistance.x;
+                sb += d02.x;
+
+                if (a > b)
+                    std::swap(a, b);
+            }
+        }
+
+        // Draw the buffer
+        const bool mustContinue = target.drawBuffer(position, size, actualPixel, actualPosition, buffer,
+                                                    pixelsToFeed, verticalLoopCount, loopVerticalAxis);
 
         if (!mustContinue)
             break;
