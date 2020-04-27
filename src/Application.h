@@ -3,7 +3,7 @@
 
 #include "Applets/AppletManager.h"
 
-#include "Platform/PineTime.h"
+#include "Platform/Nrf52Dk.h"
 
 #include "Widgets/StatusBar.h"
 #include "Widgets/Text.h"
@@ -17,7 +17,7 @@ public:
 private:
     bool m_running;
 
-    Platform::PineTime m_platform;
+    Platform::Nrf52Dk m_platform;
 
     Widget::StatusBar m_statusBar;
     Applet::AppletManager m_appletManager;

@@ -49,6 +49,7 @@ list(APPEND SOURCE_FILES
         Hardware/Screen/BaseScreen.h
         Hardware/Screen/ST7789.cpp
         Platform/BasePlatform.h
+        Platform/Nrf52Dk.cpp
         Platform/PineTime.cpp
         Widgets/BaseContainer.cpp
         Widgets/BaseWidget.cpp
