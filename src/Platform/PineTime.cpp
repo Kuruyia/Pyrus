@@ -1,5 +1,6 @@
 #include <libraries/timer/app_timer.h>
 
+#include "../Hardware/BLE/BleNrf5.h"
 #include "PineTime.h"
 
 Platform::PineTime::PineTime()
@@ -16,11 +17,19 @@ Platform::PineTime::PineTime()
     bleManager.init();
 //    bleManager.deleteBonds();
     bleManager.startAdvertising();
+
+    // Initialize the buttons
+    m_button.init();
 }
 
 Hardware::BLE::BaseBle &Platform::PineTime::getBleManager()
 {
     return Hardware::BLE::BleNrf5::getInstance();
+}
+
+Hardware::Button::BaseButton &Platform::PineTime::getButtonManager()
+{
+    return m_button;
 }
 
 Hardware::Clock::BaseClock &Platform::PineTime::getClockManager()

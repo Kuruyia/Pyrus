@@ -1,5 +1,6 @@
+#include <cstring>
+
 #include <hal/nrf_gpio.h>
-#include <libraries/button/app_button.h>
 #include <libraries/delay/nrf_delay.h>
 
 #include "Applets/DebugApt.h"
@@ -17,7 +18,7 @@ Application::Application()
         &ubuntu_24ptFontInfo, "--:--", "Pyrus")
 {
     // Set backlight pins as output
-    nrf_gpio_cfg_output(14);
+//    nrf_gpio_cfg_output(14);
     nrf_gpio_cfg_output(22);
     nrf_gpio_cfg_output(23);
 
@@ -25,25 +26,11 @@ Application::Application()
     nrf_gpio_cfg_input(12, NRF_GPIO_PIN_NOPULL);
 
     // Set the vibrator pin to output
-    nrf_gpio_cfg_output(16);
+//    nrf_gpio_cfg_output(16);
     nrf_gpio_pin_set(16);
 
-    // Initialize the button
-    nrf_gpio_cfg_output(15);
-    nrf_gpio_pin_set(15);
-
-    app_button_cfg_t pinetimeButton = {
-            13,
-            APP_BUTTON_ACTIVE_HIGH,
-            NRF_GPIO_PIN_PULLDOWN,
-            nullptr
-    };
-
-    app_button_init(&pinetimeButton, 1, 10);
-    app_button_enable();
-
     // Reset backlight pins
-    nrf_gpio_pin_clear(14);
+//    nrf_gpio_pin_clear(14);
     nrf_gpio_pin_set(22);
     nrf_gpio_pin_set(23);
 
@@ -71,6 +58,10 @@ Application::Application()
             }
         }
     );
+
+    m_platform.getButtonManager().setButtonHandler([&](const uint8_t buttonId, const bool pressed) {
+        // TODO: Put this in the non-existant event handler
+    });
 
     // Add default applet to the applet manager
     m_appletManager.pushApplet(std::make_unique<Applet::DebugApt>());

@@ -44,6 +44,9 @@ list(APPEND SOURCE_FILES
         Hardware/BLE/Clients/CurrentTime/CurrentTimeNrf5.cpp
         Hardware/BLE/BaseBle.cpp
         Hardware/BLE/BleNrf5.cpp
+        Hardware/Button/BaseButton.cpp
+        Hardware/Button/ButtonNrf52Dk.cpp
+        Hardware/Button/ButtonPineTime.cpp
         Hardware/Clock/BaseClock.h
         Hardware/Clock/ClockNrf52.cpp
         Hardware/Screen/BaseScreen.h

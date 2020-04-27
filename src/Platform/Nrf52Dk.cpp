@@ -1,5 +1,6 @@
 #include <libraries/timer/app_timer.h>
 
+#include "../Hardware/BLE/BleNrf5.h"
 #include "Nrf52Dk.h"
 
 Platform::Nrf52Dk::Nrf52Dk()
@@ -16,11 +17,19 @@ Platform::Nrf52Dk::Nrf52Dk()
     bleManager.init();
 //    bleManager.deleteBonds();
     bleManager.startAdvertising();
+
+    // Initialize the buttons
+    m_button.init();
 }
 
 Hardware::BLE::BaseBle &Platform::Nrf52Dk::getBleManager()
 {
     return Hardware::BLE::BleNrf5::getInstance();
+}
+
+Hardware::Button::BaseButton &Platform::Nrf52Dk::getButtonManager()
+{
+    return m_button;
 }
 
 Hardware::Clock::BaseClock &Platform::Nrf52Dk::getClockManager()
