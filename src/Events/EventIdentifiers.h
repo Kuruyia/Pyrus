@@ -4,6 +4,7 @@
 namespace Event {
 
 enum EventIdentifiers {
+    Back,
     Button
 }; // enum EventIdentifiers
 
