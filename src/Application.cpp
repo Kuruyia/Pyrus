@@ -61,12 +61,13 @@ Application::Application()
         }
     );
 
+    // Pass the button event to the event manager
     m_platform.getButtonManager().setButtonHandler([&](const uint8_t buttonId, const bool pressed) {
         m_eventManager.pushEvent(std::make_unique<Event::ButtonEvent>(buttonId, pressed));
     });
 
     // Add default applet to the applet manager
-    m_appletManager.pushApplet(std::make_unique<Applet::DebugApt>());
+    m_appletManager.pushApplet(std::make_unique<Applet::TestAMS>(m_platform.getBleManager().getAppleMediaClient()));
     m_statusBar.getSecondaryText().setText(m_appletManager.getCurrentApplet().getName());
 
     // Set the applet changed handler

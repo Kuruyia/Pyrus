@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <libraries/delay/nrf_delay.h>
 
+#include "../Events/ButtonEvent.h"
+
 #include "../Fonts/Ubuntu24Font.h"
 #include "../Hardware/BLE/Clients/AppleMedia/AppleMediaNrf5.h"
 
@@ -109,7 +111,37 @@ Applet::TestAMS::~TestAMS()
 
 void Applet::TestAMS::processEvent(Event::BaseEvent *event)
 {
+    using namespace Hardware::BLE::Clients;
 
+    switch (event->getEventId())
+    {
+        case Event::EventIdentifiers::Button:
+        {
+            auto *btnEvent = dynamic_cast<Event::ButtonEvent *>(event);
+            if (btnEvent->isPressed()) return;
+
+            switch (btnEvent->getButtonId())
+            {
+                case 1:
+                    m_appleMedia.sendRemoteCommand(AppleMediaNrf5::AppleMediaRemoteCommandID::TogglePlayPause);
+                    break;
+
+                case 2:
+                    m_appleMedia.sendRemoteCommand(AppleMediaNrf5::AppleMediaRemoteCommandID::SkipBackward);
+                    break;
+
+                case 3:
+                    m_appleMedia.sendRemoteCommand(AppleMediaNrf5::AppleMediaRemoteCommandID::SkipForward);
+                    break;
+
+            }
+
+            break;
+        }
+
+        default:
+            break;
+    }
 }
 
 void Applet::TestAMS::update(Platform::BasePlatform &platform)

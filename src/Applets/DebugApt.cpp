@@ -27,6 +27,8 @@ void Applet::DebugApt::processEvent(Event::BaseEvent *event)
             break;
         }
 
+        default:
+            break;
     }
 }
 
