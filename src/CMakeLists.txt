@@ -34,6 +34,7 @@ list(APPEND SOURCE_FILES
         Applets/Tests/TestAMS.cpp
         Applets/Tests/TestApt.cpp
         Applets/Tests/TestGfx.cpp
+        Applets/Tests/TestWrap.cpp
         Events/BaseEvent.h
         Events/BackEvent.cpp
         Events/ButtonEvent.cpp

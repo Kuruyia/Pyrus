@@ -11,6 +11,7 @@ Widget::Text::Text(const std::string &id, const std::string &text, const FONT_IN
 , m_text(text)
 , m_fontInfo(fontInfo)
 , m_horizontalAlignment(HorizontalAlignment::Left)
+, m_wrapMode(WrapMode::None)
 , m_lastDrawPosition({0, 0})
 , m_lastSize({0, 0})
 , m_textColor(textColor)
@@ -38,12 +39,11 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
 
     // Recompute width if it's dirty
     if (isDirty(DirtyState::Global) || isDirty(DirtyState::Size))
-    {
         m_width = computeWidth();
-    }
 
     // Store the position of this drawing
-    Graphics::Vec2D position = getDrawPosition();
+    const Graphics::Vec2D baseDrawPosition = getDrawPosition();
+    Graphics::Vec2D position = baseDrawPosition;
     m_lastDrawPosition = position;
 
     // Loop the vertical axis if enabled
@@ -53,21 +53,68 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     // Draw the background
     Graphics::GfxUtils::drawFilledRectangle(target, position, getSize(), m_backgroundColor, m_loopVerticalPosition);
 
-    // Loop through all the characters and draw them
-    for (const char c : m_text)
+    // Draw the text depending on the wrapping mode
+    if (m_wrapMode == WrapMode::Wrap)
     {
-        if (c != ' ')
+        size_t i = 0;
+        size_t prevI = 0;
+        do
         {
-            uint16_t charWidth = Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
-                    m_backgroundColor, m_loopVerticalPosition);
-            position.x += charWidth;
-        }
-        else
-        {
-            position.x += m_fontInfo->spacePixels;
-        }
+            i = m_text.find(' ', i);
+            if (i == std::string::npos)
+                i = m_text.size();
+            else
+                ++i;
 
-        position.x += INTERCHAR_SIZE;
+            const std::string subtext = m_text.substr(prevI, i - prevI);
+            if (m_sizeLimit.x > 0 && computeWidth(subtext) + (position.x - baseDrawPosition.x) >= m_sizeLimit.x)
+            {
+                position.x = baseDrawPosition.x;
+                position.y += m_fontInfo->height;
+            }
+
+            for (const char c : subtext)
+            {
+                if (c != ' ')
+                {
+                    uint16_t charWidth = Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
+                                                                      m_backgroundColor, m_loopVerticalPosition);
+                    position.x += charWidth;
+                }
+                else
+                {
+                    position.x += m_fontInfo->spacePixels;
+                }
+
+                position.x += INTERCHAR_SIZE;
+                if (m_sizeLimit.x > 0 && position.x - baseDrawPosition.x >= m_sizeLimit.x)
+                {
+                    position.x = baseDrawPosition.x;
+                    position.y += m_fontInfo->height;
+                }
+            }
+
+            prevI = i;
+        } while (i < m_text.size());
+    }
+    else
+    {
+        // Loop through all the characters and draw them
+        for (const char c : m_text)
+        {
+            if (c != ' ')
+            {
+                uint16_t charWidth = Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
+                                                                  m_backgroundColor, m_loopVerticalPosition);
+                position.x += charWidth;
+            }
+            else
+            {
+                position.x += m_fontInfo->spacePixels;
+            }
+
+            position.x += INTERCHAR_SIZE;
+        }
     }
 
     // Store the size of this drawing
@@ -172,13 +219,47 @@ Graphics::Vec2D Widget::Text::getLastAbsolutePosition() const
     return m_parent->getAbsolutePosition() + m_lastDrawPosition;
 }
 
-uint16_t Widget::Text::computeWidth() const
+void Widget::Text::setHorizontalAlignment(Widget::Text::HorizontalAlignment horizontalAlignment)
+{
+    m_horizontalAlignment = horizontalAlignment;
+
+    setDirty(DirtyState::Position, true);
+}
+
+Widget::Text::HorizontalAlignment Widget::Text::getHorizontalAlignment() const
+{
+    return m_horizontalAlignment;
+}
+
+void Widget::Text::setWrapMode(Widget::Text::WrapMode wrapMode)
+{
+    m_wrapMode = wrapMode;
+    setDirty(DirtyState::Global, true);
+}
+
+Widget::Text::WrapMode Widget::Text::getWrapMode() const
+{
+    return m_wrapMode;
+}
+
+void Widget::Text::setSizeLimit(const Graphics::Vec2D &sizeLimit)
+{
+    m_sizeLimit = sizeLimit;
+    setDirty(DirtyState::Size, true);
+}
+
+const Graphics::Vec2D &Widget::Text::getSizeLimit() const
+{
+    return m_sizeLimit;
+}
+
+uint16_t Widget::Text::computeWidth(const std::string &str) const
 {
     // Prepare the width
     uint16_t width = 0;
 
     // Loop through all the characters and count their width
-    for (const char c : m_text)
+    for (const char c : str)
     {
         if (c != ' ')
         {
@@ -199,14 +280,7 @@ uint16_t Widget::Text::computeWidth() const
     return width;
 }
 
-void Widget::Text::setHorizontalAlignment(Widget::Text::HorizontalAlignment horizontalAlignment)
+uint16_t Widget::Text::computeWidth() const
 {
-    m_horizontalAlignment = horizontalAlignment;
-
-    setDirty(DirtyState::Position, true);
-}
-
-Widget::Text::HorizontalAlignment Widget::Text::getHorizontalAlignment() const
-{
-    return m_horizontalAlignment;
+    return computeWidth(m_text);
 }

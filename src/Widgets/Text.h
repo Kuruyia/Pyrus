@@ -16,6 +16,11 @@ public:
         Right,
     };
 
+    enum WrapMode {
+        None,
+        Wrap
+    };
+
     Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Graphics::Vec2D position,
          const Graphics::Color &textColor = {255, 255, 255},
          const Graphics::Color &backgroundColor = {0, 0, 0});
@@ -45,14 +50,24 @@ public:
     void setHorizontalAlignment(HorizontalAlignment horizontalAlignment);
     HorizontalAlignment getHorizontalAlignment() const;
 
+    void setWrapMode(WrapMode wrapMode);
+    WrapMode getWrapMode() const;
+
+    void setSizeLimit(const Graphics::Vec2D &sizeLimit);
+    const Graphics::Vec2D &getSizeLimit() const;
+
 private:
     Graphics::Vec2D getLastAbsolutePosition() const;
 
     uint16_t computeWidth() const;
+    uint16_t computeWidth(const std::string &str) const;
 
     std::string m_text;
     const FONT_INFO *m_fontInfo;
     HorizontalAlignment m_horizontalAlignment;
+
+    WrapMode m_wrapMode;
+    Graphics::Vec2D m_sizeLimit;
 
     Graphics::Vec2D m_lastDrawPosition;
     Graphics::Vec2D m_lastSize;

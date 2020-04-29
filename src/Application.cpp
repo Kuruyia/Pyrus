@@ -7,6 +7,7 @@
 #include "Applets/Tests/TestAMS.h"
 #include "Applets/Tests/TestApt.h"
 #include "Applets/Tests/TestGfx.h"
+#include "Applets/Tests/TestWrap.h"
 
 #include "Events/ButtonEvent.h"
 
@@ -67,7 +68,7 @@ Application::Application()
     });
 
     // Add default applet to the applet manager
-    m_appletManager.pushApplet(std::make_unique<Applet::TestAMS>(m_platform.getBleManager().getAppleMediaClient()));
+    m_appletManager.pushApplet(std::make_unique<Applet::TestWrap>());
     m_statusBar.getSecondaryText().setText(m_appletManager.getCurrentApplet().getName());
 
     // Set the applet changed handler
