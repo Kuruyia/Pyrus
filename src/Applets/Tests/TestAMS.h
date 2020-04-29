@@ -1,8 +1,8 @@
 #ifndef PYRUS_TESTAMS_H
 #define PYRUS_TESTAMS_H
 
-#include "../Widgets/Text.h"
-#include "BaseApplet.h"
+#include "Widgets/Text.h"
+#include "Applets/BaseApplet.h"
 
 namespace Applet {
 

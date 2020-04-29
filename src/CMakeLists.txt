@@ -31,9 +31,9 @@ list(APPEND SOURCE_FILES
         Applets/AppletManager.cpp
         Applets/BaseApplet.cpp
         Applets/DebugApt.cpp
-        Applets/TestAMS.cpp
-        Applets/TestApt.cpp
-        Applets/TestGfx.cpp
+        Applets/Tests/TestAMS.cpp
+        Applets/Tests/TestApt.cpp
+        Applets/Tests/TestGfx.cpp
         Events/BaseEvent.h
         Events/BackEvent.cpp
         Events/ButtonEvent.cpp

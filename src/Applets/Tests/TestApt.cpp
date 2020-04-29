@@ -1,6 +1,6 @@
-#include "../Fonts/Ubuntu24Font.h"
+#include "Fonts/Ubuntu24Font.h"
 
-#include "DebugApt.h"
+#include "Applets/DebugApt.h"
 #include "TestApt.h"
 
 #define APPLET_NAME "TestApt"

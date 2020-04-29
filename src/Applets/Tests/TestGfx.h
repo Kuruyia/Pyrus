@@ -1,7 +1,7 @@
 #ifndef PYRUS_TESTGFX_H
 #define PYRUS_TESTGFX_H
 
-#include "BaseApplet.h"
+#include "Applets/BaseApplet.h"
 
 namespace Applet {
 

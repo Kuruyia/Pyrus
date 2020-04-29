@@ -1,10 +1,10 @@
 #include <algorithm>
 #include <libraries/delay/nrf_delay.h>
 
-#include "../Events/ButtonEvent.h"
+#include "Events/ButtonEvent.h"
 
-#include "../Fonts/Ubuntu24Font.h"
-#include "../Hardware/BLE/Clients/AppleMedia/AppleMediaNrf5.h"
+#include "Fonts/Ubuntu24Font.h"
+#include "Hardware/BLE/Clients/AppleMedia/AppleMediaNrf5.h"
 
 #include "TestAMS.h"
 

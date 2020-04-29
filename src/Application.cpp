@@ -4,9 +4,9 @@
 #include <libraries/delay/nrf_delay.h>
 
 #include "Applets/DebugApt.h"
-#include "Applets/TestAMS.h"
-#include "Applets/TestApt.h"
-#include "Applets/TestGfx.h"
+#include "Applets/Tests/TestAMS.h"
+#include "Applets/Tests/TestApt.h"
+#include "Applets/Tests/TestGfx.h"
 
 #include "Events/ButtonEvent.h"
 

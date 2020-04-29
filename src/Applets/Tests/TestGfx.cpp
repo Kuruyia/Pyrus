@@ -1,5 +1,5 @@
 #include <libraries/delay/nrf_delay.h>
-#include "../Graphics/GfxUtils.h"
+#include "Graphics/GfxUtils.h"
 
 #include "TestGfx.h"
 

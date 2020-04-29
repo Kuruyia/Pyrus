@@ -2,9 +2,9 @@
 #define PYRUS_TESTAPT_H
 
 #include <Widgets/StatusBar.h>
-#include "../Widgets/Text.h"
+#include "Widgets/Text.h"
 
-#include "BaseApplet.h"
+#include "Applets/BaseApplet.h"
 
 namespace Applet {
 
