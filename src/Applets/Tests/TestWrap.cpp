@@ -22,13 +22,14 @@ void Applet::TestWrap::processEvent(Event::BaseEvent *event)
 
 void Applet::TestWrap::update(Platform::BasePlatform &platform)
 {
-    if (platform.getScreenManager().getVerticalScrollOffset() != 300)
-        platform.getScreenManager().setVerticalScrollOffset(300);
+    if (platform.getScreenManager().getVerticalScrollOffset() != 160)
+        platform.getScreenManager().setVerticalScrollOffset(160);
 }
 
 void Applet::TestWrap::draw(Hardware::Screen::BaseScreen &target)
 {
     m_wrappedText.draw(target);
+    printf("done"); // Just to put a breakpoint here
 }
 
 bool Applet::TestWrap::allowsStatusBar() const

@@ -1,4 +1,3 @@
-#include <libraries/delay/nrf_delay.h>
 #include "../Graphics/GfxUtils.h"
 #include "Container.h"
 
@@ -74,12 +73,13 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
             {
                 position.x = baseDrawPosition.x;
                 position.y += m_fontInfo->height;
+                if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - baseDrawPosition.y) >= m_sizeLimit.y)
+                    break;
             }
 
             // Draw all the chars of this word
             for (const char c : subtext)
             {
-                nrf_delay_ms(2);
                 if (c != ' ')
                 {
                     uint16_t charWidth = Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
@@ -96,11 +96,13 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
                 {
                     position.x = baseDrawPosition.x;
                     position.y += m_fontInfo->height;
+                    if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - baseDrawPosition.y) >= m_sizeLimit.y)
+                        break;
                 }
             }
 
             prevI = i;
-        } while (i < m_text.size());
+        } while (i < m_text.size() && (m_sizeLimit.y == 0 || m_fontInfo->height + (position.y - baseDrawPosition.y) < m_sizeLimit.y));
     }
     else
     {
