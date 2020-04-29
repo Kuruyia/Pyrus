@@ -436,7 +436,7 @@ void Graphics::GfxUtils::drawFilledCircle(Hardware::Screen::BaseScreen &target, 
     free(buffer);
 }
 
-uint16_t Graphics::GfxUtils::drawChar(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, char c,
+uint16_t Graphics::GfxUtils::drawChar(Hardware::Screen::BaseScreen &target, Graphics::Vec2D position, char c,
                                       const FONT_INFO &fontInfo, const Graphics::Color &textColor,
                                       const Graphics::Color &backgroundColor, bool loopVerticalAxis)
 {
@@ -455,6 +455,13 @@ uint16_t Graphics::GfxUtils::drawChar(Hardware::Screen::BaseScreen &target, cons
     // Check if the character will be seen on the X axis
     if (position.x < -descriptor.widthBits || position.x > framebufferSize.x)
         return descriptor.widthBits;
+
+    // Check if the character will be seen on the Y axis
+    if ((position.y < -fontInfo.height || position.y > framebufferSize.y) && !loopVerticalAxis)
+        return descriptor.widthBits;
+
+    if (loopVerticalAxis)
+        position.y %= framebufferSize.y;
 
     target.setWindow(position, glyphSize);
 

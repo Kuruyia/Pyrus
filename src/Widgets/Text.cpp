@@ -1,3 +1,4 @@
+#include <libraries/delay/nrf_delay.h>
 #include "../Graphics/GfxUtils.h"
 #include "Container.h"
 
@@ -60,12 +61,14 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
         size_t prevI = 0;
         do
         {
+            // Find the next space character
             i = m_text.find(' ', i);
             if (i == std::string::npos)
                 i = m_text.size();
             else
                 ++i;
 
+            // Extract the next word and check if it needs to be on a new line
             const std::string subtext = m_text.substr(prevI, i - prevI);
             if (m_sizeLimit.x > 0 && computeWidth(subtext) + (position.x - baseDrawPosition.x) >= m_sizeLimit.x)
             {
@@ -73,8 +76,10 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
                 position.y += m_fontInfo->height;
             }
 
+            // Draw all the chars of this word
             for (const char c : subtext)
             {
+                nrf_delay_ms(2);
                 if (c != ' ')
                 {
                     uint16_t charWidth = Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,

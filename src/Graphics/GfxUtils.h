@@ -40,7 +40,7 @@ public:
             uint16_t radius, const Graphics::Color &circleColor, const Graphics::Color &backgroundColor = {0, 0, 0},
             bool loopVerticalAxis = false);
 
-    static uint16_t drawChar(Hardware::Screen::BaseScreen &target, const Graphics::Vec2D &position, char c,
+    static uint16_t drawChar(Hardware::Screen::BaseScreen &target, Graphics::Vec2D position, char c,
             const FONT_INFO &fontInfo, const Graphics::Color &textColor, const Graphics::Color &backgroundColor = {0, 0, 0},
             bool loopVerticalAxis = false);
 

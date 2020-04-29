@@ -13,10 +13,10 @@ Platform::Nrf52Dk::Nrf52Dk()
     ret_code_t err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
 
-    Hardware::BLE::BaseBle &bleManager = Hardware::BLE::BleNrf5::getInstance();
-    bleManager.init();
+//    Hardware::BLE::BaseBle &bleManager = Hardware::BLE::BleNrf5::getInstance();
+//    bleManager.init();
 //    bleManager.deleteBonds();
-    bleManager.startAdvertising();
+//    bleManager.startAdvertising();
 
     // Initialize the buttons
     m_button.init();
