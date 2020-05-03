@@ -82,9 +82,14 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
             {
                 if (c != ' ')
                 {
-                    uint16_t charWidth = Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
-                                                                      m_backgroundColor, m_loopVerticalPosition);
-                    position.x += charWidth;
+                    Graphics::Vec2D glyphGeometry = {};
+                    Graphics::GfxUtils::getCharGeometry(glyphGeometry, c, *m_fontInfo);
+
+                    if (position.y - baseDrawPosition.y >= m_startHeight)
+                        Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
+                                                     m_backgroundColor, m_loopVerticalPosition);
+
+                    position.x += glyphGeometry.x;
                 }
                 else
                 {

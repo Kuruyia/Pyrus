@@ -543,6 +543,17 @@ uint16_t Graphics::GfxUtils::drawChar(Hardware::Screen::BaseScreen &target, Grap
     return descriptor.widthBits;
 }
 
+void Graphics::GfxUtils::getCharGeometry(Graphics::Vec2D &geometry, char c, const FONT_INFO &fontInfo)
+{
+    // Check if the char is supported
+    if (c < fontInfo.startChar || c > fontInfo.endChar)
+        c = '?';
+
+    const size_t descriptorOffset = c - fontInfo.startChar;
+    const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
+    geometry = {descriptor.widthBits, fontInfo.height};
+}
+
 inline size_t Graphics::GfxUtils::positionToPixelNbr(const Graphics::Vec2D &position, const Graphics::Vec2D &basePosition,
                                               const Graphics::Vec2D &size)
 {

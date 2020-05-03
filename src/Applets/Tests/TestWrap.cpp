@@ -13,6 +13,7 @@ Applet::TestWrap::TestWrap()
     m_wrappedText.setWrapMode(Widget::Text::WrapMode::Wrap);
     m_wrappedText.setSizeLimit({240, 320});
     m_wrappedText.setLoopVerticalPosition(true);
+    m_wrappedText.setStartHeight(60);
 }
 
 void Applet::TestWrap::processEvent(Event::BaseEvent *event)

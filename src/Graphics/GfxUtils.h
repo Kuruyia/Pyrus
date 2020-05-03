@@ -44,6 +44,8 @@ public:
             const FONT_INFO &fontInfo, const Graphics::Color &textColor, const Graphics::Color &backgroundColor = {0, 0, 0},
             bool loopVerticalAxis = false);
 
+    static void getCharGeometry(Graphics::Vec2D &geometry, char c, const FONT_INFO &fontInfo);
+
 private:
     static size_t positionToPixelNbr(const Graphics::Vec2D &position, const Graphics::Vec2D &basePosition,
                                      const Graphics::Vec2D &size);
