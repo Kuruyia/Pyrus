@@ -23,8 +23,9 @@ void Applet::TestWrap::processEvent(Event::BaseEvent *event)
 
 void Applet::TestWrap::update(Platform::BasePlatform &platform)
 {
-    if (platform.getScreenManager().getVerticalScrollOffset() != 160)
-        platform.getScreenManager().setVerticalScrollOffset(160);
+    m_offset += 10;
+    m_wrappedText.setStartHeight(m_offset);
+    platform.getScreenManager().setVerticalScrollOffset(m_offset);
 }
 
 void Applet::TestWrap::draw(Hardware::Screen::BaseScreen &target)

@@ -56,6 +56,9 @@ public:
     void setSizeLimit(const Graphics::Vec2D &sizeLimit);
     const Graphics::Vec2D &getSizeLimit() const;
 
+    void setStartHeight(uint16_t startHeight);
+    uint16_t getStartHeight() const;
+
 private:
     enum DirtyStateExtension
     {
@@ -64,8 +67,12 @@ private:
 
     Graphics::Vec2D getLastAbsolutePosition() const;
 
-    uint16_t computeWidth() const;
     uint16_t computeWidth(const std::string &str) const;
+    uint16_t computeWidth() const;
+
+    void drawAndGetSize(Hardware::Screen::BaseScreen *target, Graphics::Vec2D &size);
+    void drawStringAt(Hardware::Screen::BaseScreen *target, const std::string &str, Graphics::Vec2D &position,
+                      int16_t &maxCursorX, const Graphics::Vec2D &basePosition);
 
     std::string m_text;
     const FONT_INFO *m_fontInfo;
@@ -75,6 +82,9 @@ private:
     Graphics::Vec2D m_sizeLimit;
 
     Graphics::Vec2D m_size;
+
+    size_t m_startChar;
+    uint16_t m_startHeight;
 
     Graphics::Vec2D m_lastDrawPosition;
     Graphics::Vec2D m_lastSize;

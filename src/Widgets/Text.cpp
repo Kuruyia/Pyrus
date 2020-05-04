@@ -12,6 +12,10 @@ Widget::Text::Text(const std::string &id, const std::string &text, const FONT_IN
 , m_fontInfo(fontInfo)
 , m_horizontalAlignment(HorizontalAlignment::Left)
 , m_wrapMode(WrapMode::None)
+, m_sizeLimit({0, 0})
+, m_size({0, 0})
+, m_startChar(0)
+, m_startHeight(0)
 , m_lastDrawPosition({0, 0})
 , m_lastSize({0, 0})
 , m_textColor(textColor)
@@ -133,14 +137,6 @@ const Graphics::Color &Widget::Text::getBackgroundColor() const
     return m_backgroundColor;
 }
 
-Graphics::Vec2D Widget::Text::getLastAbsolutePosition() const
-{
-    if (m_parent == nullptr)
-        return m_lastDrawPosition;
-
-    return m_parent->getAbsolutePosition() + m_lastDrawPosition;
-}
-
 void Widget::Text::setHorizontalAlignment(Widget::Text::HorizontalAlignment horizontalAlignment)
 {
     m_horizontalAlignment = horizontalAlignment;
@@ -173,6 +169,28 @@ void Widget::Text::setSizeLimit(const Graphics::Vec2D &sizeLimit)
 const Graphics::Vec2D &Widget::Text::getSizeLimit() const
 {
     return m_sizeLimit;
+}
+
+void Widget::Text::setStartHeight(uint16_t startHeight)
+{
+    // Only set dirty if the change would be visible
+    if (m_startHeight / m_fontInfo->height != startHeight / m_fontInfo->height)
+        setDirty(DirtyState::Global, true);
+
+    m_startHeight = startHeight;
+}
+
+uint16_t Widget::Text::getStartHeight() const
+{
+    return m_startHeight;
+}
+
+Graphics::Vec2D Widget::Text::getLastAbsolutePosition() const
+{
+    if (m_parent == nullptr)
+        return m_lastDrawPosition;
+
+    return m_parent->getAbsolutePosition() + m_lastDrawPosition;
 }
 
 uint16_t Widget::Text::computeWidth(const std::string &str) const
