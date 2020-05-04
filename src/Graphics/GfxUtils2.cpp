@@ -230,13 +230,176 @@ void Graphics::GfxUtils2::getCharGeometry(Graphics::Vec2D &geometry, char c, con
     geometry = {descriptor.widthBits, fontInfo.height};
 }
 
+void Graphics::GfxUtils2::drawLine(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint)
+{
+    // This is an implementation of the Bresenham's line algorithm
+
+    const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
+
+    // Get the drawing window
+    Graphics::Vec2D windowStart = {};
+    Graphics::Vec2D windowEnd = {};
+
+    getDrawingWindow(windowStart, windowEnd);
+
+    // Correct the drawing window if vertical looping is enabled
+    int16_t verticalLoopCount = 0;
+    if (m_loopVerticalAxis)
+    {
+        verticalLoopCount = std::min(firstPoint.y, secondPoint.y) / fbSize.y;
+
+        windowStart.y -= fbSize.y * verticalLoopCount;
+        windowEnd.y -= fbSize.y * verticalLoopCount;
+    }
+
+    // Bresenham's algorithm parameters
+    Graphics::Vec2D delta = secondPoint - firstPoint;
+    Graphics::Vec2D absDelta {static_cast<int16_t>(std::abs(delta.x)), static_cast<int16_t>(std::abs(delta.y))};
+
+    Graphics::Vec2D p {static_cast<int16_t>(2 * absDelta.y - absDelta.x),
+                       static_cast<int16_t>(2 * absDelta.x - absDelta.y)};
+
+    Graphics::Vec2D currentPosition {};
+    int16_t endPosition = -fbSize.y * verticalLoopCount;
+
+    // Bresenham's algorithm
+    if (absDelta.y <= absDelta.x)
+    {
+        // Check which point to begin with
+        if (delta.x >= 0)
+        {
+            currentPosition = firstPoint;
+            endPosition += secondPoint.x;
+        }
+        else
+        {
+            currentPosition = secondPoint;
+            endPosition += firstPoint.x;
+        }
+
+        // We ensure the Y coordinate is in bounds, according to the vertical looping policy
+        if (currentPosition.y >= fbSize.y)
+        {
+            if (m_loopVerticalAxis)
+                currentPosition.y %= fbSize.y;
+            else
+                return;
+        }
+
+        // Draw all the pixels until we reach the end X coordinate
+        for (int16_t i = 0; currentPosition.x < endPosition; ++i)
+        {
+            if (currentPosition.x >= windowStart.x && currentPosition.x <= windowEnd.x &&
+                    currentPosition.y >= windowStart.y && currentPosition.y <= windowEnd.y)
+            {
+                m_target.drawPixel(currentPosition, m_fillColor);
+            }
+
+            ++currentPosition.x;
+
+            if (p.x < 0)
+            {
+                p.x = p.x + 2 * absDelta.y;
+            }
+            else
+            {
+                if ((delta.x < 0 && delta.y < 0) || (delta.x > 0 && delta.y > 0))
+                {
+                    // Increment the Y coordinate and check if it's still in bounds
+                    if (++currentPosition.y >= fbSize.y)
+                    {
+                        if (m_loopVerticalAxis)
+                        {
+                            currentPosition.y = 0;
+                            windowStart.y -= fbSize.y;
+                            windowEnd.y -= fbSize.y;
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    --currentPosition.y;
+                }
+
+                p.x = p.x + 2 * (absDelta.y - absDelta.x);
+            }
+        }
+    }
+    else
+    {
+        // Check which point to begin with
+        if (delta.y >= 0)
+        {
+            currentPosition = firstPoint;
+            endPosition += secondPoint.y;
+        }
+        else
+        {
+            currentPosition = secondPoint;
+            endPosition += firstPoint.y;
+        }
+
+        // We ensure the Y coordinate is in bounds, according to the vertical looping policy
+        if (currentPosition.y >= fbSize.y)
+        {
+            if (m_loopVerticalAxis)
+                currentPosition.y %= fbSize.y;
+            else
+                return;
+        }
+
+        // Draw all the pixels until we reach the end X coordinate
+        for (int16_t i = 0; currentPosition.y < endPosition; ++i)
+        {
+            if (currentPosition.x >= windowStart.x && currentPosition.x <= windowEnd.x &&
+                    currentPosition.y >= windowStart.y && currentPosition.y <= windowEnd.y)
+            {
+                m_target.drawPixel(currentPosition, m_fillColor);
+            }
+
+            // Increment the Y coordinate and check if it's still in bounds
+            if (++currentPosition.y >= fbSize.y)
+            {
+                if (m_loopVerticalAxis)
+                {
+                    currentPosition.y = 0;
+                    windowStart.y -= fbSize.y;
+                    windowEnd.y -= fbSize.y;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            if (p.y <= 0)
+            {
+                p.y = p.y + 2 * absDelta.x;
+            }
+            else
+            {
+                if ((delta.x < 0 && delta.y < 0) || (delta.x > 0 && delta.y > 0))
+                    ++currentPosition.x;
+                else
+                    --currentPosition.x;
+
+                p.y = p.y + 2 * (absDelta.x - absDelta.y);
+            }
+        }
+    }
+}
+
 void Graphics::GfxUtils2::getDrawingWindow(Graphics::Vec2D &windowStart, Graphics::Vec2D &windowEnd)
 {
+    const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
+
     if (m_clippingEnabled)
     {
         // Return the clipping window if enabled
-        const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
-
         windowStart = {std::max((int16_t)0, m_clippingStart.x), std::max((int16_t)0, m_clippingStart.y)};
         windowEnd = {std::min(fbSize.x, m_clippingEnd.x), m_loopVerticalAxis ? m_clippingEnd.y : std::min(fbSize.y, m_clippingEnd.y)};
     }
@@ -244,6 +407,6 @@ void Graphics::GfxUtils2::getDrawingWindow(Graphics::Vec2D &windowStart, Graphic
     {
         // Return the framebuffer window otherwise
         windowStart = {0, 0};
-        windowEnd = m_target.getFramebufferSize();
+        windowEnd = {fbSize.x, static_cast<int16_t>(m_loopVerticalAxis ? INT16_MAX : fbSize.y)};
     }
 }

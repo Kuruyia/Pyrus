@@ -32,6 +32,8 @@ public:
     void drawChar(Graphics::Vec2D position, char c, const FONT_INFO &fontInfo);
     static void getCharGeometry(Graphics::Vec2D &geometry, char c, const FONT_INFO &fontInfo);
 
+    void drawLine(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint);
+
 private:
     void getDrawingWindow(Graphics::Vec2D &windowStart, Graphics::Vec2D &windowEnd);
 
