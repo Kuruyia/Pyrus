@@ -6,6 +6,7 @@
 #include "Applets/DebugApt.h"
 #include "Applets/Tests/TestAMS.h"
 #include "Applets/Tests/TestApt.h"
+#include "Applets/Tests/TestClipping.h"
 #include "Applets/Tests/TestGfx.h"
 #include "Applets/Tests/TestWrap.h"
 
@@ -68,7 +69,7 @@ Application::Application()
     });
 
     // Add default applet to the applet manager
-    m_appletManager.pushApplet(std::make_unique<Applet::TestWrap>());
+    m_appletManager.pushApplet(std::make_unique<Applet::TestClipping>());
     m_statusBar.getSecondaryText().setText(m_appletManager.getCurrentApplet().getName());
 
     // Set the applet changed handler
