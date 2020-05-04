@@ -393,6 +393,107 @@ void Graphics::GfxUtils2::drawLine(Graphics::Vec2D firstPoint, Graphics::Vec2D s
     }
 }
 
+void Graphics::GfxUtils2::drawHorizontalLine(const Graphics::Vec2D &position, uint16_t width)
+{
+    drawFilledRectangle(position, {static_cast<int16_t>(width), 1});
+}
+
+void Graphics::GfxUtils2::drawVerticalLine(const Graphics::Vec2D &position, uint16_t height)
+{
+    drawFilledRectangle(position, {1, static_cast<int16_t>(height)});
+}
+
+void Graphics::GfxUtils2::drawFilledRectangle(Graphics::Vec2D position, Graphics::Vec2D size)
+{
+    const Vec2D fbSize = m_target.getFramebufferSize();
+
+    // Get the drawing window
+    Graphics::Vec2D windowStart = {};
+    Graphics::Vec2D windowEnd = {};
+    getDrawingWindow(windowStart, windowEnd);
+
+    // Check if the character will be seen on the X axis
+    if (position.x < windowStart.x - size.x || position.x > windowEnd.x)
+        return;
+
+    // Check if the character will be seen on the Y axis
+    if (position.y < windowStart.y - size.y || (position.y > windowEnd.y && (!m_loopVerticalAxis || m_clippingEnabled)))
+        return;
+
+    // Fix the position and size
+    if (position.x + size.x > windowEnd.x)
+    {
+        size.x = windowEnd.x - position.x;
+    }
+
+    if (position.x < windowStart.x)
+    {
+        size.x -= windowStart.x - position.x;
+        position.x = windowStart.x;
+    }
+
+    if (position.y + size.y > windowEnd.y)
+    {
+        size.y = windowEnd.y - position.y;
+    }
+
+    if (position.y < windowStart.y)
+    {
+        size.y -= windowStart.y - position.y;
+        position.y = windowStart.y;
+    }
+
+    // Check that the Y coordinate is in bounds
+    if (position.y >= fbSize.y)
+    {
+        if (m_loopVerticalAxis)
+            position.y %= fbSize.y;
+        else
+            return;
+    }
+
+    // Set the window
+    m_target.setWindow(position, size);
+
+    // Get some properties from the target
+    uint32_t rawColor = m_target.convertColorToRaw(m_fillColor);
+
+    // Calculate how many parts we must send to the screen
+    const uint8_t pixelSize = m_target.getPixelSize();
+    const size_t totalBufferSize = size.x * size.y * pixelSize;
+    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
+
+    // Keep track of the current position
+    size_t actualPixel = 0;
+    Graphics::Vec2D actualPosition = position;
+
+    // How many times we reset the Y axis
+    unsigned verticalLoopCount = 0;
+
+    // Prepare a large buffer of pixels for faster transmission
+    auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
+    fillBufferWithColor(buffer, BUFFER_SIZE, rawColor);
+
+    m_target.prepareDrawBuffer();
+
+    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
+    {
+        // Calculate the number of pixels to feed to the screen and the next cursor position
+        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (size.x * size.y) % (BUFFER_SIZE / pixelSize) : BUFFER_SIZE / pixelSize;
+        actualPixel += pixelsToFeed;
+
+        // Draw the buffer
+        const bool mustContinue = m_target.drawBuffer(position, size, actualPixel, actualPosition, buffer,
+                                                      pixelsToFeed,verticalLoopCount, m_loopVerticalAxis);
+
+        if (!mustContinue)
+            break;
+    }
+
+    // Free the buffer
+    free(buffer);
+}
+
 void Graphics::GfxUtils2::getDrawingWindow(Graphics::Vec2D &windowStart, Graphics::Vec2D &windowEnd)
 {
     const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
@@ -409,4 +510,10 @@ void Graphics::GfxUtils2::getDrawingWindow(Graphics::Vec2D &windowStart, Graphic
         windowStart = {0, 0};
         windowEnd = {fbSize.x, static_cast<int16_t>(m_loopVerticalAxis ? INT16_MAX : fbSize.y)};
     }
+}
+
+void Graphics::GfxUtils2::fillBufferWithColor(uint8_t *buffer, size_t size, uint32_t rawColor)
+{
+    size_t i = 0;
+    while ((i = m_target.putPixelInBuffer(buffer, rawColor, i)) < size) {}
 }

@@ -39,6 +39,10 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.drawLine({8, 88}, {28, 119});
     gfxUtils2.drawLine({28, 88}, {8, 119});
 
+    gfxUtils2.setClippingStart({140, 0});
+    gfxUtils2.setClippingEnd({150, 320});
+    gfxUtils2.drawFilledRectangle({140, 8}, {20, 20});
+
     /*
      * Left clipping
      */
@@ -49,8 +53,12 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.drawLine({36, 88}, {56, 119});
     gfxUtils2.drawLine({56, 88}, {36, 119});
 
+    gfxUtils2.setClippingStart({174, 0});
+    gfxUtils2.setClippingEnd({184, 320});
+    gfxUtils2.drawFilledRectangle({164, 8}, {20, 20});
+
     /*
-     * Top clipping
+     * Bottom clipping
      */
     gfxUtils2.setClippingStart({64, 8});
     gfxUtils2.setClippingEnd({84, 24});
@@ -61,8 +69,12 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.drawLine({64, 88}, {84, 119});
     gfxUtils2.drawLine({84, 88}, {64, 119});
 
+    gfxUtils2.setClippingStart({188, 8});
+    gfxUtils2.setClippingEnd({208, 18});
+    gfxUtils2.drawFilledRectangle({188, 8}, {20, 20});
+
     /*
-     * Bottom clipping
+     * Top clipping
      */
     gfxUtils2.setClippingStart({92, 24});
     gfxUtils2.setClippingEnd({112, 40});
@@ -72,6 +84,10 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.setClippingEnd({112, 120});
     gfxUtils2.drawLine({92, 88}, {112, 119});
     gfxUtils2.drawLine({112, 88}, {92, 119});
+
+    gfxUtils2.setClippingStart({212, 18});
+    gfxUtils2.setClippingEnd({232, 28});
+    gfxUtils2.drawFilledRectangle({212, 8}, {20, 20});
 
     /*
      * All-axis clipping
@@ -85,11 +101,15 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.drawLine({120, 88}, {134, 119});
     gfxUtils2.drawLine({134, 88}, {120, 119});
 
+    gfxUtils2.setClippingStart({179, 41});
+    gfxUtils2.setClippingEnd({189, 51});
+    gfxUtils2.drawFilledRectangle({174, 36}, {20, 20});
+
     // Test clipping on vertical looping
     gfxUtils2.setLoopVerticalAxis(true);
 
     /*
-     * Left clipping
+     * Right clipping
      */
     gfxUtils2.setClippingStart({0, 320});
     gfxUtils2.setClippingEnd({18, 640});
@@ -98,8 +118,12 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.drawLine({8, 320+36+88}, {28, 320+36+119});
     gfxUtils2.drawLine({28, 320+36+88}, {8, 320+36+119});
 
+    gfxUtils2.setClippingStart({140, 320});
+    gfxUtils2.setClippingEnd({150, 640});
+    gfxUtils2.drawFilledRectangle({140, 320+48+8}, {20, 20});
+
     /*
-     * Right clipping
+     * Left clipping
      */
     gfxUtils2.setClippingStart({46, 320});
     gfxUtils2.setClippingEnd({56, 640});
@@ -108,8 +132,12 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.drawLine({36, 320+36+88}, {56, 320+36+119});
     gfxUtils2.drawLine({56, 320+36+88}, {36, 320+36+119});
 
+    gfxUtils2.setClippingStart({174, 320});
+    gfxUtils2.setClippingEnd({184, 640});
+    gfxUtils2.drawFilledRectangle({164, 320+48+8}, {20, 20});
+
     /*
-     * Top clipping
+     * Bottom clipping
      */
     gfxUtils2.setClippingStart({64, 368});
     gfxUtils2.setClippingEnd({84, 384});
@@ -120,8 +148,12 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.drawLine({64, 320+36+88}, {84, 320+36+119});
     gfxUtils2.drawLine({84, 320+36+88}, {64, 320+36+119});
 
+    gfxUtils2.setClippingStart({188, 320+48+8});
+    gfxUtils2.setClippingEnd({208, 320+48+18});
+    gfxUtils2.drawFilledRectangle({188, 320+48+8}, {20, 20});
+
     /*
-     * Bottom clipping
+     * Top clipping
      */
     gfxUtils2.setClippingStart({92, 384});
     gfxUtils2.setClippingEnd({112, 400});
@@ -131,6 +163,10 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
     gfxUtils2.setClippingEnd({112, 320+36+120});
     gfxUtils2.drawLine({92, 320+36+88}, {112, 320+36+119});
     gfxUtils2.drawLine({112, 320+36+88}, {92, 320+36+119});
+
+    gfxUtils2.setClippingStart({212, 320+48+18});
+    gfxUtils2.setClippingEnd({232, 320+48+28});
+    gfxUtils2.drawFilledRectangle({212, 320+48+8}, {20, 20});
 
     /*
      * All-axis clipping
