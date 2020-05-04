@@ -14,7 +14,7 @@ Widget::Text::Text(const std::string &id, const std::string &text, const FONT_IN
 , m_wrapMode(WrapMode::None)
 , m_sizeLimit({0, 0})
 , m_size({0, 0})
-, m_startChar(0)
+, m_oldStartHeight(0)
 , m_startHeight(0)
 , m_lastDrawPosition({0, 0})
 , m_lastSize({0, 0})
@@ -177,6 +177,7 @@ void Widget::Text::setStartHeight(uint16_t startHeight)
     if (m_startHeight / m_fontInfo->height != startHeight / m_fontInfo->height)
         setDirty(DirtyState::Global, true);
 
+    m_oldStartHeight = m_startHeight;
     m_startHeight = startHeight;
 }
 
@@ -275,7 +276,7 @@ void Widget::Text::drawAndGetSize(Hardware::Screen::BaseScreen *target, Graphics
 
         // Store the size of this drawing
         // Note that m_lastDrawPosition is used here because it holds the initial values of position
-        m_lastSize = {static_cast<int16_t>(maxX - m_lastDrawPosition.x), static_cast<int16_t>(position.y - m_lastDrawPosition.y)};
+        m_lastSize = {static_cast<int16_t>(maxX - m_lastDrawPosition.x), static_cast<int16_t>(319)};
     }
     else
     {

@@ -10,6 +10,7 @@ Applet::TestWrap::TestWrap()
 //, m_wrappedText("wrappedText", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus ipsum nunc, pharetra ut lorem a, condimentum imperdiet dui.", &ubuntu_24ptFontInfo, {8, 8})
 //, m_wrappedText("wrappedText", "Lorem ipsum", &ubuntu_24ptFontInfo, {8, 340})
 , m_offset(0)
+, m_offsetIncrement(10)
 {
     m_wrappedText.setWrapMode(Widget::Text::WrapMode::Wrap);
     m_wrappedText.setSizeLimit({240, 320});
@@ -18,14 +19,14 @@ Applet::TestWrap::TestWrap()
 
 void Applet::TestWrap::processEvent(Event::BaseEvent *event)
 {
-    m_offset += 10;
+    m_offsetIncrement = -m_offsetIncrement;
 }
 
 void Applet::TestWrap::update(Platform::BasePlatform &platform)
 {
-    m_offset += 10;
+    m_offset += m_offsetIncrement;
     m_wrappedText.setStartHeight(m_offset);
-    platform.getScreenManager().setVerticalScrollOffset(m_offset);
+    platform.getScreenManager().setVerticalScrollOffset(200);
 }
 
 void Applet::TestWrap::draw(Hardware::Screen::BaseScreen &target)

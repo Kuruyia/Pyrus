@@ -21,8 +21,17 @@ public:
         Size,
         Color,
         Child,
+        Reserved1,
+        Reserved2,
+        Reserved3,
 
-        End,
+        User1,
+        User2,
+        User3,
+        User4,
+        User5,
+        User6,
+        User7
     };
 
     BaseWidget(std::string id, Graphics::Vec2D position);

@@ -21,6 +21,7 @@ private:
     Widget::Text m_wrappedText;
 
     uint16_t m_offset;
+    int16_t m_offsetIncrement;
 }; // class TestWrap
 
 } // namespace Applet

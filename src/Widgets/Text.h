@@ -60,11 +60,6 @@ public:
     uint16_t getStartHeight() const;
 
 private:
-    enum DirtyStateExtension
-    {
-        StartHeight = DirtyState::End,
-    };
-
     Graphics::Vec2D getLastAbsolutePosition() const;
 
     uint16_t computeWidth(const std::string &str) const;
@@ -83,7 +78,7 @@ private:
 
     Graphics::Vec2D m_size;
 
-    size_t m_startChar;
+    uint16_t m_oldStartHeight;
     uint16_t m_startHeight;
 
     Graphics::Vec2D m_lastDrawPosition;
