@@ -91,6 +91,10 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
 
     const Graphics::Vec2D framebufferSize = m_target.getFramebufferSize();
     const uint8_t pixelSize = m_target.getPixelSize();
+    Graphics::Vec2D correctedBasePosition = {
+            position.x,
+            static_cast<int16_t>(m_loopVerticalAxis ? position.y % framebufferSize.y : position.y)
+    };
 
     // Get the drawing window
     Graphics::Vec2D windowStart = {};
@@ -103,10 +107,7 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
         return;
 
     // Check if the character will be seen on the Y axis
-    if (m_loopVerticalAxis)
-        position.y %= framebufferSize.y;
-
-    if (position.y < windowStart.y - fontInfo.height || position.y > windowEnd.y)
+    if (position.y < windowStart.y - fontInfo.height || (position.y > windowEnd.y && (!m_loopVerticalAxis || m_clippingEnabled)))
         return;
 
     // Check if the glyph will overflow on the X axis
@@ -126,6 +127,25 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
         drawSize.x -= overflowLeftX;
     }
 
+    // Check if the glyph will overflow on the Y axis
+    uint16_t overflowBottomY = 0;
+    if (position.y + fontInfo.height > windowEnd.y)
+    {
+        overflowBottomY = position.y + fontInfo.height - windowEnd.y;
+        drawSize.y -= overflowBottomY;
+    }
+
+    uint16_t overflowTopY = 0;
+    if (position.y < windowStart.y)
+    {
+        overflowTopY = windowStart.y - position.y;
+
+        correctedBasePosition.y += overflowTopY;
+        drawSize.y -= overflowTopY;
+    }
+
+    // Set the proper window
+    position.y = correctedBasePosition.y;
     m_target.setWindow(position, drawSize);
 
     // Get raw color
@@ -148,7 +168,7 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
 
     // Those hold the current position of the cursor
     size_t actualPixel = 0;
-    size_t actualPixelInGlyph = 0;
+    size_t actualPixelInGlyph = descriptor.widthBits * overflowTopY;
     Graphics::Vec2D actualPosition = position;
 
     // How many times we reset the Y axis
@@ -164,23 +184,6 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
         while (actualPixel < endPixel)
         {
             const uint8_t bitInBlock = actualPixelInGlyph % descriptor.widthBits;
-//            if (bitInBlock < drawSize.x)
-//            {
-//                const size_t actualByte = (bitInBlock / 8) + (bytesPerLine * (actualPixelInGlyph / descriptor.widthBits));
-//                const uint8_t actualVal = fontInfo.data[descriptor.offset + actualByte] & (1 << (bitInBlock % 8));
-//
-//                if (actualVal)
-//                    bufferPos = m_target.putPixelInBuffer(buffer, rawTextColor, bufferPos);
-//                else
-//                    bufferPos = m_target.putPixelInBuffer(buffer, rawBackgroundColor, bufferPos);
-//
-//                ++actualPixel;
-//                ++actualPixelInGlyph;
-//            }
-//            else
-//            {
-//                actualPixelInGlyph += overflowRightX;
-//            }
             if (bitInBlock < overflowLeftX)
             {
                 actualPixelInGlyph += overflowLeftX;
@@ -235,7 +238,7 @@ void Graphics::GfxUtils2::getDrawingWindow(Graphics::Vec2D &windowStart, Graphic
         const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
 
         windowStart = {std::max((int16_t)0, m_clippingStart.x), std::max((int16_t)0, m_clippingStart.y)};
-        windowEnd = {std::min(fbSize.x, m_clippingEnd.x), std::max(fbSize.y, m_clippingEnd.y)};
+        windowEnd = {std::min(fbSize.x, m_clippingEnd.x), m_loopVerticalAxis ? m_clippingEnd.y : std::min(fbSize.y, m_clippingEnd.y)};
     }
     else
     {
