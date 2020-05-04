@@ -21,6 +21,8 @@ public:
         Size,
         Color,
         Child,
+
+        End,
     };
 
     BaseWidget(std::string id, Graphics::Vec2D position);

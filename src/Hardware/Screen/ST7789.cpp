@@ -219,11 +219,12 @@ void Hardware::Screen::ST7789::setVerticalScrollOffset(uint16_t offset)
 {
     // Store the offset
     m_verticalScrollOffset = offset;
+    m_verticalScrollOffset %= FRAMEBUFFER_HEIGHT;
 
     // Set the vertical scroll start address
     uint8_t lcdTxVscsadData[] = {
-            static_cast<uint8_t>(offset >> 8),
-            static_cast<uint8_t>(offset & 0xFF)
+            static_cast<uint8_t>(m_verticalScrollOffset >> 8),
+            static_cast<uint8_t>(m_verticalScrollOffset & 0xFF)
     };
 
     sendCommand(ST7789_CMD_VSCSAD, lcdTxVscsadData, sizeof(lcdTxVscsadData));

@@ -57,6 +57,11 @@ public:
     const Graphics::Vec2D &getSizeLimit() const;
 
 private:
+    enum DirtyStateExtension
+    {
+        StartHeight = DirtyState::End,
+    };
+
     Graphics::Vec2D getLastAbsolutePosition() const;
 
     uint16_t computeWidth() const;
@@ -68,6 +73,8 @@ private:
 
     WrapMode m_wrapMode;
     Graphics::Vec2D m_sizeLimit;
+
+    Graphics::Vec2D m_size;
 
     Graphics::Vec2D m_lastDrawPosition;
     Graphics::Vec2D m_lastSize;

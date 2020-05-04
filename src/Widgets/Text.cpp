@@ -41,97 +41,7 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     if (isDirty(DirtyState::Global) || isDirty(DirtyState::Size))
         m_width = computeWidth();
 
-    // Store the position of this drawing
-    const Graphics::Vec2D baseDrawPosition = getDrawPosition();
-    Graphics::Vec2D position = baseDrawPosition;
-    m_lastDrawPosition = position;
-
-    // Loop the vertical axis if enabled
-    if (m_loopVerticalPosition)
-        position.y %= target.getFramebufferSize().y;
-
-    // Draw the background
-    Graphics::GfxUtils::drawFilledRectangle(target, position, getSize(), m_backgroundColor, m_loopVerticalPosition);
-
-    // Draw the text depending on the wrapping mode
-    if (m_wrapMode == WrapMode::Wrap)
-    {
-        size_t i = 0;
-        size_t prevI = 0;
-        do
-        {
-            // Find the next space character
-            i = m_text.find(' ', i);
-            if (i == std::string::npos)
-                i = m_text.size();
-            else
-                ++i;
-
-            // Extract the next word and check if it needs to be on a new line
-            const std::string subtext = m_text.substr(prevI, i - prevI);
-            if (m_sizeLimit.x > 0 && computeWidth(subtext) + (position.x - baseDrawPosition.x) >= m_sizeLimit.x)
-            {
-                position.x = baseDrawPosition.x;
-                position.y += m_fontInfo->height;
-                if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - baseDrawPosition.y) >= m_sizeLimit.y)
-                    break;
-            }
-
-            // Draw all the chars of this word
-            for (const char c : subtext)
-            {
-                if (c != ' ')
-                {
-                    Graphics::Vec2D glyphGeometry = {};
-                    Graphics::GfxUtils::getCharGeometry(glyphGeometry, c, *m_fontInfo);
-
-                    if (position.y - baseDrawPosition.y >= m_startHeight)
-                        Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
-                                                     m_backgroundColor, m_loopVerticalPosition);
-
-                    position.x += glyphGeometry.x;
-                }
-                else
-                {
-                    position.x += m_fontInfo->spacePixels;
-                }
-
-                position.x += INTERCHAR_SIZE;
-                if (m_sizeLimit.x > 0 && position.x - baseDrawPosition.x >= m_sizeLimit.x)
-                {
-                    position.x = baseDrawPosition.x;
-                    position.y += m_fontInfo->height;
-                    if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - baseDrawPosition.y) >= m_sizeLimit.y)
-                        break;
-                }
-            }
-
-            prevI = i;
-        } while (i < m_text.size() && (m_sizeLimit.y == 0 || m_fontInfo->height + (position.y - baseDrawPosition.y) < m_sizeLimit.y));
-    }
-    else
-    {
-        // Loop through all the characters and draw them
-        for (const char c : m_text)
-        {
-            if (c != ' ')
-            {
-                uint16_t charWidth = Graphics::GfxUtils::drawChar(target, position, c, *m_fontInfo, m_textColor,
-                                                                  m_backgroundColor, m_loopVerticalPosition);
-                position.x += charWidth;
-            }
-            else
-            {
-                position.x += m_fontInfo->spacePixels;
-            }
-
-            position.x += INTERCHAR_SIZE;
-        }
-    }
-
-    // Store the size of this drawing
-    // Note that m_lastDrawPosition is used here because it holds the initial values of position
-    m_lastSize = {static_cast<int16_t>(position.x - m_lastDrawPosition.x), m_fontInfo->height};
+    drawAndGetSize(&target, m_size);
 
     // Reset the dirty flag
     clearDirty();
@@ -295,4 +205,137 @@ uint16_t Widget::Text::computeWidth(const std::string &str) const
 uint16_t Widget::Text::computeWidth() const
 {
     return computeWidth(m_text);
+}
+
+void Widget::Text::drawAndGetSize(Hardware::Screen::BaseScreen *target, Graphics::Vec2D &size)
+{
+    // Store the position of this drawing
+    const Graphics::Vec2D baseDrawPosition = getDrawPosition();
+    Graphics::Vec2D position = baseDrawPosition;
+
+    // Save last draw position, take starting height into account
+    m_lastDrawPosition = position;
+    m_lastDrawPosition.y += m_startHeight;
+
+    // Loop the vertical axis if enabled
+    if (m_loopVerticalPosition && target != nullptr)
+        position.y %= target->getFramebufferSize().y;
+
+    // Draw the text depending on the wrapping mode
+    if (m_wrapMode == WrapMode::Wrap)
+    {
+        int16_t maxX = position.x;
+        size_t i = 0;
+        size_t prevI = 0;
+
+        do
+        {
+            // Find the next space character
+            i = m_text.find(' ', i);
+            if (i == std::string::npos)
+                i = m_text.size();
+            else
+                ++i;
+
+            // Extract the next word and check if it needs to be on a new line
+            const std::string subtext = m_text.substr(prevI, i - prevI);
+            if (m_sizeLimit.x > 0 && computeWidth(subtext) + (position.x - baseDrawPosition.x) >= m_sizeLimit.x)
+            {
+                maxX = std::max(position.x, maxX);
+                position.x = baseDrawPosition.x;
+
+                position.y += m_fontInfo->height;
+                if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - baseDrawPosition.y) >= m_sizeLimit.y + m_startHeight)
+                    break;
+            }
+
+            // Draw the word
+            drawStringAt(target, subtext, position, maxX, baseDrawPosition);
+
+            prevI = i;
+        } while (i < m_text.size() && (m_sizeLimit.y == 0 || m_fontInfo->height + (position.y - baseDrawPosition.y) < m_sizeLimit.y + m_startHeight));
+
+        // Store the size of this drawing
+        // Note that m_lastDrawPosition is used here because it holds the initial values of position
+        m_lastSize = {static_cast<int16_t>(maxX - m_lastDrawPosition.x), static_cast<int16_t>(position.y - m_lastDrawPosition.y)};
+    }
+    else
+    {
+        // Loop through all the characters and draw them
+        for (const char c : m_text)
+        {
+            if (c != ' ')
+            {
+                Graphics::Vec2D glyphGeometry = {};
+                Graphics::GfxUtils::getCharGeometry(glyphGeometry, c, *m_fontInfo);
+
+                if (target != nullptr)
+                    Graphics::GfxUtils::drawChar(*target, position, c, *m_fontInfo, m_textColor,
+                                                 m_backgroundColor, m_loopVerticalPosition);
+
+                position.x += glyphGeometry.x;
+            }
+            else
+            {
+                position.x += m_fontInfo->spacePixels;
+            }
+
+            position.x += INTERCHAR_SIZE;
+        }
+
+        // Store the size of this drawing
+        // Note that m_lastDrawPosition is used here because it holds the initial values of position
+        m_lastSize = {static_cast<int16_t>(position.x - m_lastDrawPosition.x), m_fontInfo->height};
+    }
+}
+
+void Widget::Text::drawStringAt(Hardware::Screen::BaseScreen *target, const std::string &str, Graphics::Vec2D &position,
+                                int16_t &maxCursorX, const Graphics::Vec2D &basePosition)
+{
+    for (const char c : str)
+    {
+        if (c != ' ')
+        {
+            // Character is not a space, draw it
+            Graphics::Vec2D glyphGeometry = {};
+            Graphics::GfxUtils::getCharGeometry(glyphGeometry, c, *m_fontInfo);
+
+            if (position.y - basePosition.y >= m_startHeight - m_fontInfo->height && target != nullptr)
+                Graphics::GfxUtils::drawChar(*target, position, c, *m_fontInfo, m_textColor,
+                                             m_backgroundColor, m_loopVerticalPosition);
+
+            position.x += glyphGeometry.x;
+        }
+        else
+        {
+            // Character is a space, move forward the cursor
+            position.x += m_fontInfo->spacePixels;
+        }
+
+        // Add some space between characters
+        position.x += INTERCHAR_SIZE;
+
+        // Check if we reached the size limit
+        if (m_sizeLimit.x > 0 && position.x - basePosition.x >= m_sizeLimit.x)
+        {
+            if (m_wrapMode == WrapMode::Wrap)
+            {
+                // Wrap the text
+                maxCursorX = std::max(maxCursorX, position.x);
+                position.x = basePosition.x;
+
+                position.y += m_fontInfo->height;
+                if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - basePosition.y) >= m_sizeLimit.y + m_startHeight)
+                    break;
+            }
+            else
+            {
+                // Exit the loop
+                break;
+            }
+        }
+    }
+
+    // Update the maxCursorX one last time
+    maxCursorX = std::max(maxCursorX, position.x);
 }
