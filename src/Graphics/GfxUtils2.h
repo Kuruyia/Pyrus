@@ -33,6 +33,8 @@ public:
     static void getCharGeometry(Graphics::Vec2D &geometry, char c, const FONT_INFO &fontInfo);
 
 private:
+    void getDrawingWindow(Graphics::Vec2D &windowStart, Graphics::Vec2D &windowEnd);
+
     Hardware::Screen::BaseScreen &m_target;
 
     Graphics::Color m_fillColor;

@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "GfxUtils2.h"
 
 #define BUFFER_SIZE 254
@@ -84,23 +86,47 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
     // Set the window
     const size_t descriptorOffset = c - fontInfo.startChar;
     const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
-    Graphics::Vec2D glyphSize = {descriptor.widthBits, fontInfo.height};
+    const Graphics::Vec2D glyphSize = {descriptor.widthBits, fontInfo.height};
+    Graphics::Vec2D drawSize = glyphSize;
 
     const Graphics::Vec2D framebufferSize = m_target.getFramebufferSize();
     const uint8_t pixelSize = m_target.getPixelSize();
 
+    // Get the drawing window
+    Graphics::Vec2D windowStart = {};
+    Graphics::Vec2D windowEnd = {};
+
+    getDrawingWindow(windowStart, windowEnd);
+
     // Check if the character will be seen on the X axis
-    if (position.x < -descriptor.widthBits || position.x > framebufferSize.x)
+    if (position.x < windowStart.x - descriptor.widthBits || position.x > windowEnd.x)
         return;
 
     // Check if the character will be seen on the Y axis
-    if ((position.y < -fontInfo.height || position.y > framebufferSize.y) && !m_loopVerticalAxis)
-        return;
-
     if (m_loopVerticalAxis)
         position.y %= framebufferSize.y;
 
-    m_target.setWindow(position, glyphSize);
+    if (position.y < windowStart.y - fontInfo.height || position.y > windowEnd.y)
+        return;
+
+    // Check if the glyph will overflow on the X axis
+    uint16_t overflowRightX = 0;
+    if (position.x + descriptor.widthBits > windowEnd.x)
+    {
+        overflowRightX = position.x + descriptor.widthBits - windowEnd.x;
+        drawSize.x -= overflowRightX;
+    }
+
+    uint16_t overflowLeftX = 0;
+    if (position.x < windowStart.x)
+    {
+        overflowLeftX = windowStart.x - position.x;
+
+        position.x += overflowLeftX;
+        drawSize.x -= overflowLeftX;
+    }
+
+    m_target.setWindow(position, drawSize);
 
     // Get raw color
     uint32_t rawTextColor = m_target.convertColorToRaw(m_fillColor);
@@ -112,16 +138,8 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
     // Allocate the buffer
     auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
 
-    // Check if the glyph will overflow on the X axis
-    uint16_t overflowX = 0;
-    if (position.x + descriptor.widthBits > framebufferSize.x)
-    {
-        overflowX = position.x + descriptor.widthBits - framebufferSize.x;
-        glyphSize.x -= overflowX;
-    }
-
     // Calculate the geometry of this glyph
-    const uint16_t pixelCount = glyphSize.x * glyphSize.y;
+    const uint16_t pixelCount = drawSize.x * drawSize.y;
     const uint8_t bytesPerLine = (descriptor.widthBits % 8 > 0) ? descriptor.widthBits / 8 + 1 : descriptor.widthBits / 8;
 
     // Calculate how many parts we must send to the screen
@@ -146,7 +164,32 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
         while (actualPixel < endPixel)
         {
             const uint8_t bitInBlock = actualPixelInGlyph % descriptor.widthBits;
-            if (bitInBlock < glyphSize.x)
+//            if (bitInBlock < drawSize.x)
+//            {
+//                const size_t actualByte = (bitInBlock / 8) + (bytesPerLine * (actualPixelInGlyph / descriptor.widthBits));
+//                const uint8_t actualVal = fontInfo.data[descriptor.offset + actualByte] & (1 << (bitInBlock % 8));
+//
+//                if (actualVal)
+//                    bufferPos = m_target.putPixelInBuffer(buffer, rawTextColor, bufferPos);
+//                else
+//                    bufferPos = m_target.putPixelInBuffer(buffer, rawBackgroundColor, bufferPos);
+//
+//                ++actualPixel;
+//                ++actualPixelInGlyph;
+//            }
+//            else
+//            {
+//                actualPixelInGlyph += overflowRightX;
+//            }
+            if (bitInBlock < overflowLeftX)
+            {
+                actualPixelInGlyph += overflowLeftX;
+            }
+            else if (bitInBlock >= glyphSize.x - overflowRightX)
+            {
+                actualPixelInGlyph += overflowRightX;
+            }
+            else
             {
                 const size_t actualByte = (bitInBlock / 8) + (bytesPerLine * (actualPixelInGlyph / descriptor.widthBits));
                 const uint8_t actualVal = fontInfo.data[descriptor.offset + actualByte] & (1 << (bitInBlock % 8));
@@ -159,14 +202,10 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
                 ++actualPixel;
                 ++actualPixelInGlyph;
             }
-            else
-            {
-                actualPixelInGlyph += overflowX;
-            }
         }
 
         // Draw the buffer
-        const bool mustContinue = m_target.drawBuffer(position, glyphSize, actualPixel, actualPosition, buffer,
+        const bool mustContinue = m_target.drawBuffer(position, drawSize, actualPixel, actualPosition, buffer,
                                                     bufferPos / pixelSize, verticalLoopCount, m_loopVerticalAxis);
 
         if (!mustContinue)
@@ -186,4 +225,22 @@ void Graphics::GfxUtils2::getCharGeometry(Graphics::Vec2D &geometry, char c, con
     const size_t descriptorOffset = c - fontInfo.startChar;
     const FONT_CHAR_INFO descriptor = fontInfo.charInfo[descriptorOffset];
     geometry = {descriptor.widthBits, fontInfo.height};
+}
+
+void Graphics::GfxUtils2::getDrawingWindow(Graphics::Vec2D &windowStart, Graphics::Vec2D &windowEnd)
+{
+    if (m_clippingEnabled)
+    {
+        // Return the clipping window if enabled
+        const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
+
+        windowStart = {std::max((int16_t)0, m_clippingStart.x), std::max((int16_t)0, m_clippingStart.y)};
+        windowEnd = {std::min(fbSize.x, m_clippingEnd.x), std::max(fbSize.y, m_clippingEnd.y)};
+    }
+    else
+    {
+        // Return the framebuffer window otherwise
+        windowStart = {0, 0};
+        windowEnd = m_target.getFramebufferSize();
+    }
 }
