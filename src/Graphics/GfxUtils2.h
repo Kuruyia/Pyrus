@@ -38,6 +38,11 @@ public:
 
     void drawFilledRectangle(Graphics::Vec2D position, Graphics::Vec2D size);
 
+    void drawTriangle(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint);
+    void drawFilledTriangle(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint, Graphics::Vec2D thirdPoint);
+
+    void drawFilledCircle(const Graphics::Vec2D &origin, uint16_t radius);
+
 private:
     void getDrawingWindow(Graphics::Vec2D &windowStart, Graphics::Vec2D &windowEnd);
 

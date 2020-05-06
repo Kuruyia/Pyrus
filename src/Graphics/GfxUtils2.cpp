@@ -494,6 +494,202 @@ void Graphics::GfxUtils2::drawFilledRectangle(Graphics::Vec2D position, Graphics
     free(buffer);
 }
 
+void Graphics::GfxUtils2::drawTriangle(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint,
+                                       Graphics::Vec2D thirdPoint)
+{
+    drawLine(firstPoint, secondPoint);
+    drawLine(firstPoint, thirdPoint);
+    drawLine(secondPoint, thirdPoint);
+}
+
+void Graphics::GfxUtils2::drawFilledTriangle(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint,
+                                             Graphics::Vec2D thirdPoint)
+{
+    // This is an adaptation of Adafruit-GFX's filled triangle drawing algorithm
+
+    int16_t a, b, y, last;
+
+    // Reorder the points
+    if (thirdPoint.y < secondPoint.y)
+        std::swap(secondPoint, thirdPoint);
+    if (secondPoint.y < firstPoint.y)
+        std::swap(firstPoint, secondPoint);
+    if (thirdPoint.y < secondPoint.y)
+        std::swap(secondPoint, thirdPoint);
+
+    const Graphics::Vec2D d01 = secondPoint - firstPoint;
+    const Graphics::Vec2D d02 = thirdPoint - firstPoint;
+    const Graphics::Vec2D d12 = thirdPoint - secondPoint;
+    int32_t sa = 0;
+    int32_t sb = 0;
+
+    if (secondPoint.y == thirdPoint.y)
+        last = secondPoint.y;
+    else
+        last = secondPoint.y - 1;
+
+    y = firstPoint.y;
+    while (y <= last)
+    {
+        a = firstPoint.x + sa / d01.y;
+        b = firstPoint.x + sb / d02.y;
+        sa += d01.x;
+        sb += d02.x;
+
+        if (a > b)
+            std::swap(a, b);
+
+        drawHorizontalLine({a, y}, b - a + 1);
+
+        ++y;
+    }
+
+    sa = (int32_t)d12.x * (y - secondPoint.y);
+    sb = (int32_t)d02.x * (y - firstPoint.y);
+    while (y <= thirdPoint.y)
+    {
+        a = secondPoint.x + sa / d12.y;
+        b = firstPoint.x + sb / d02.y;
+        sa += d12.x;
+        sb += d02.x;
+
+        if (a > b)
+            std::swap(a, b);
+
+        drawHorizontalLine({a, y}, b - a + 1);
+
+        ++y;
+    }
+}
+
+void Graphics::GfxUtils2::drawFilledCircle(const Graphics::Vec2D &origin, const uint16_t radius)
+{
+    // This is an implementation of https://stackoverflow.com/a/1237519
+
+    const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
+
+    // Compute circle bounds
+    Graphics::Vec2D drawSize = {static_cast<int16_t>(radius*2), static_cast<int16_t>(radius*2)};
+    Graphics::Vec2D position = {static_cast<int16_t>(origin.x - radius), static_cast<int16_t>(origin.y - radius)};
+
+    // Get the drawing window
+    Graphics::Vec2D windowStart = {};
+    Graphics::Vec2D windowEnd = {};
+    getDrawingWindow(windowStart, windowEnd);
+
+    // Check if the character will be seen on the X axis
+    if (origin.x + radius < windowStart.x || origin.x - radius > windowEnd.x)
+        return;
+
+    // Check if the character will be seen on the Y axis
+    if (origin.y + radius < windowStart.y || (origin.y - radius > windowEnd.y && (!m_loopVerticalAxis || m_clippingEnabled)))
+        return;
+
+    // Check if the circle will overflow on the X axis
+    uint16_t overflowRightX = 0;
+    if (origin.x + radius > windowEnd.x)
+    {
+        overflowRightX = origin.x + radius - windowEnd.x;
+        drawSize.x -= overflowRightX;
+    }
+
+    uint16_t overflowLeftX = 0;
+    if (origin.x - radius < windowStart.x)
+    {
+        overflowLeftX = windowStart.x - origin.x + radius;
+
+        position.x += overflowLeftX;
+        drawSize.x -= overflowLeftX;
+    }
+
+    // Check if the circle will overflow on the Y axis
+    uint16_t overflowBottomY = 0;
+    if (origin.y + radius > windowEnd.y)
+    {
+        overflowBottomY = origin.y + radius - windowEnd.y;
+        drawSize.y -= overflowBottomY;
+    }
+
+    uint16_t overflowTopY = 0;
+    if (origin.y - radius < windowStart.y)
+    {
+        overflowTopY = windowStart.y - origin.y + radius;
+
+        position.y += overflowTopY;
+        drawSize.y -= overflowTopY;
+    }
+
+    int16_t overflowLeftFromRadius = -radius + overflowLeftX;
+    int16_t overflowRightFromRadius = radius - overflowRightX;
+
+    // Correct the Y axis if vertical looping enabled
+    if (m_loopVerticalAxis)
+        position.y %= fbSize.y;
+
+    // Set the window
+    m_target.setWindow(position, drawSize);
+
+    const uint32_t squareRadius = radius * radius;
+
+    // Get some properties from the target
+    uint32_t rawCircleColor = m_target.convertColorToRaw(m_fillColor);
+    uint32_t rawBackgroundColor = m_target.convertColorToRaw(m_backgroundColor);
+
+    // Calculate how many parts we must send to the screen
+    const uint8_t pixelSize = m_target.getPixelSize();
+    const size_t totalBufferSize = drawSize.x * drawSize.y * pixelSize;
+    const size_t numberOfStep = (totalBufferSize % BUFFER_SIZE > 0) ? totalBufferSize / BUFFER_SIZE + 1 : totalBufferSize / BUFFER_SIZE;
+
+    // Keep track of the current position
+    size_t actualPixel = 0;
+    Graphics::Vec2D actualPosition = position;
+    Graphics::Vec2D cursorPositionFromOrigin = {static_cast<int16_t>(-radius), static_cast<int16_t>(-radius + overflowTopY)};
+
+    // How many times we reset the Y axis
+    unsigned verticalLoopCount = 0;
+
+    // Prepare a large buffer of pixels for faster transmission
+    auto *buffer = (uint8_t *)malloc(BUFFER_SIZE);
+
+    m_target.prepareDrawBuffer();
+
+    for (size_t actualStep = 0; actualStep < numberOfStep; ++actualStep)
+    {
+        // Calculate the number of pixels to feed to the screen and the next cursor position
+        const size_t pixelsToFeed = (actualStep == numberOfStep - 1) ? (drawSize.x * drawSize.y) % (BUFFER_SIZE / pixelSize) : BUFFER_SIZE / pixelSize;
+        size_t bufferPos = 0;
+
+        for (size_t i = 0; i < pixelsToFeed; ++i)
+        {
+            // Fix cursor position if needed
+            if (cursorPositionFromOrigin.x < overflowLeftFromRadius)
+                cursorPositionFromOrigin.x = overflowLeftFromRadius;
+
+            // Check if the cursor is inside the circle
+            if (static_cast<uint16_t>(cursorPositionFromOrigin.x * cursorPositionFromOrigin.x) + static_cast<uint16_t>(cursorPositionFromOrigin.y * cursorPositionFromOrigin.y) <= squareRadius + radius)
+                bufferPos = m_target.putPixelInBuffer(buffer, rawCircleColor, bufferPos);
+            else
+                bufferPos = m_target.putPixelInBuffer(buffer, rawBackgroundColor, bufferPos);
+
+            if (++cursorPositionFromOrigin.x >= overflowRightFromRadius)
+            {
+                cursorPositionFromOrigin.x = -radius;
+                ++cursorPositionFromOrigin.y;
+            }
+        }
+
+        // Draw the buffer
+        const bool mustContinue = m_target.drawBuffer(position, drawSize, actualPixel, actualPosition, buffer,
+                                                    pixelsToFeed, verticalLoopCount, m_loopVerticalAxis);
+
+        if (!mustContinue)
+            break;
+    }
+
+    // Free the buffer
+    free(buffer);
+}
+
 void Graphics::GfxUtils2::getDrawingWindow(Graphics::Vec2D &windowStart, Graphics::Vec2D &windowEnd)
 {
     const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
