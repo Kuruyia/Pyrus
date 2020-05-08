@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include "Bresenham.h"
+
 #include "GfxUtils2.h"
 
 #define BUFFER_SIZE 254
@@ -232,9 +234,11 @@ void Graphics::GfxUtils2::getCharGeometry(Graphics::Vec2D &geometry, char c, con
 
 void Graphics::GfxUtils2::drawLine(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint)
 {
-    // This is an implementation of the Bresenham's line algorithm
-
     const Graphics::Vec2D fbSize = m_target.getFramebufferSize();
+
+    // Reorder the points
+    if (firstPoint.y > secondPoint.y)
+        std::swap(firstPoint, secondPoint);
 
     // Get the drawing window
     Graphics::Vec2D windowStart = {};
@@ -242,153 +246,49 @@ void Graphics::GfxUtils2::drawLine(Graphics::Vec2D firstPoint, Graphics::Vec2D s
 
     getDrawingWindow(windowStart, windowEnd);
 
+    // Check if the line will be seen on the Y axis
+    if (secondPoint.y < windowStart.y || (firstPoint.y > windowEnd.y && (!m_loopVerticalAxis || m_clippingEnabled)))
+        return;
+
     // Correct the drawing window if vertical looping is enabled
     int16_t verticalLoopCount = 0;
     if (m_loopVerticalAxis)
     {
-        verticalLoopCount = std::min(firstPoint.y, secondPoint.y) / fbSize.y;
+        verticalLoopCount = firstPoint.y / fbSize.y;
 
         windowStart.y -= fbSize.y * verticalLoopCount;
         windowEnd.y -= fbSize.y * verticalLoopCount;
+        firstPoint.y -= fbSize.y * verticalLoopCount;
+        secondPoint.y -= fbSize.y * verticalLoopCount;
     }
 
-    // Bresenham's algorithm parameters
-    Graphics::Vec2D delta = secondPoint - firstPoint;
-    Graphics::Vec2D absDelta {static_cast<int16_t>(std::abs(delta.x)), static_cast<int16_t>(std::abs(delta.y))};
+    // Prepare drawing
+    const uint8_t nbrOfSteps = m_loopVerticalAxis ? std::ceil((float)(secondPoint.y - firstPoint.y) / (float)fbSize.y) : 1;
+    Bresenham line(firstPoint, secondPoint);
 
-    Graphics::Vec2D p {static_cast<int16_t>(2 * absDelta.y - absDelta.x),
-                       static_cast<int16_t>(2 * absDelta.x - absDelta.y)};
-
-    Graphics::Vec2D currentPosition {};
-    int16_t endPosition = -fbSize.y * verticalLoopCount;
-
-    // Bresenham's algorithm
-    if (absDelta.y <= absDelta.x)
+    // Draw the line
+    Vec2D pixelPos = firstPoint;
+    for (uint8_t i = 0; i < nbrOfSteps; ++i)
     {
-        // Check which point to begin with
-        if (delta.x >= 0)
+        // Draw while we're in the framebuffer
+        while (pixelPos.y < fbSize.y && !line.hasFinished())
         {
-            currentPosition = firstPoint;
-            endPosition += secondPoint.x;
-        }
-        else
-        {
-            currentPosition = secondPoint;
-            endPosition += firstPoint.x;
-        }
-
-        // We ensure the Y coordinate is in bounds, according to the vertical looping policy
-        if (currentPosition.y >= fbSize.y)
-        {
-            if (m_loopVerticalAxis)
-                currentPosition.y %= fbSize.y;
-            else
-                return;
-        }
-
-        // Draw all the pixels until we reach the end X coordinate
-        for (int16_t i = 0; currentPosition.x < endPosition; ++i)
-        {
-            if (currentPosition.x >= windowStart.x && currentPosition.x <= windowEnd.x &&
-                    currentPosition.y >= windowStart.y && currentPosition.y <= windowEnd.y)
+            if (pixelPos.x >= windowStart.x && pixelPos.x <= windowEnd.x &&
+                    pixelPos.y >= windowStart.y && pixelPos.y <= windowEnd.y)
             {
-                m_target.drawPixel(currentPosition, m_fillColor);
+                m_target.drawPixel(pixelPos, m_fillColor);
             }
 
-            ++currentPosition.x;
-
-            if (p.x < 0)
-            {
-                p.x = p.x + 2 * absDelta.y;
-            }
-            else
-            {
-                if ((delta.x < 0 && delta.y < 0) || (delta.x > 0 && delta.y > 0))
-                {
-                    // Increment the Y coordinate and check if it's still in bounds
-                    if (++currentPosition.y >= fbSize.y)
-                    {
-                        if (m_loopVerticalAxis)
-                        {
-                            currentPosition.y = 0;
-                            windowStart.y -= fbSize.y;
-                            windowEnd.y -= fbSize.y;
-                        }
-                        else
-                        {
-                            return;
-                        }
-                    }
-                }
-                else
-                {
-                    --currentPosition.y;
-                }
-
-                p.x = p.x + 2 * (absDelta.y - absDelta.x);
-            }
-        }
-    }
-    else
-    {
-        // Check which point to begin with
-        if (delta.y >= 0)
-        {
-            currentPosition = firstPoint;
-            endPosition += secondPoint.y;
-        }
-        else
-        {
-            currentPosition = secondPoint;
-            endPosition += firstPoint.y;
+            pixelPos = line.getNextPoint();
         }
 
-        // We ensure the Y coordinate is in bounds, according to the vertical looping policy
-        if (currentPosition.y >= fbSize.y)
+        // Decrease the different Y coordinates if we're not at the last step
+        if (i != nbrOfSteps - 1)
         {
-            if (m_loopVerticalAxis)
-                currentPosition.y %= fbSize.y;
-            else
-                return;
-        }
-
-        // Draw all the pixels until we reach the end X coordinate
-        for (int16_t i = 0; currentPosition.y < endPosition; ++i)
-        {
-            if (currentPosition.x >= windowStart.x && currentPosition.x <= windowEnd.x &&
-                    currentPosition.y >= windowStart.y && currentPosition.y <= windowEnd.y)
-            {
-                m_target.drawPixel(currentPosition, m_fillColor);
-            }
-
-            // Increment the Y coordinate and check if it's still in bounds
-            if (++currentPosition.y >= fbSize.y)
-            {
-                if (m_loopVerticalAxis)
-                {
-                    currentPosition.y = 0;
-                    windowStart.y -= fbSize.y;
-                    windowEnd.y -= fbSize.y;
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            if (p.y <= 0)
-            {
-                p.y = p.y + 2 * absDelta.x;
-            }
-            else
-            {
-                if ((delta.x < 0 && delta.y < 0) || (delta.x > 0 && delta.y > 0))
-                    ++currentPosition.x;
-                else
-                    --currentPosition.x;
-
-                p.y = p.y + 2 * (absDelta.x - absDelta.y);
-            }
+            windowStart.y -= fbSize.y;
+            windowEnd.y -= fbSize.y;
+            firstPoint.y -= fbSize.y;
+            secondPoint.y -= fbSize.y;
         }
     }
 }

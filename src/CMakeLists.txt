@@ -42,6 +42,7 @@ list(APPEND SOURCE_FILES
         Events/EventIdentifiers.h
         Events/EventManager.cpp
         Fonts/Ubuntu24Font.c
+        Graphics/Bresenham.cpp
         Graphics/Color.h
         Graphics/GfxUtils.cpp
         Graphics/GfxUtils2.cpp
