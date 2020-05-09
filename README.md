@@ -44,5 +44,4 @@ nrfjprog --program Pyrus-fw.hex --sectorerase
 - JF002 for creating the [nrf52-baseproject](https://github.com/JF002/nrf52-baseproject) to easily get started on the nRF52 with CMake and CLion
 - Pine64 and The PineTime community for all the precious information written in [the wiki](https://wiki.pine64.org/index.php/PineTime)
 - Canonical for the [Ubuntu font](https://design.ubuntu.com/font/) (License for this font is provided [here](https://github.com/Arc13/Pyrus/tree/master/src/Fonts/ubuntu-font-licence-1.0.txt))
-- The [How to Code Your First Algorithm — Draw A Line](https://www.freecodecamp.org/news/how-to-code-your-first-algorithm-draw-a-line-ca121f9a1395/) article and the [Adafruit GFX library](https://github.com/adafruit/Adafruit-GFX-Library) for,
-respectively, the function to draw a line and a triangle
+- The [How to Code Your First Algorithm — Draw A Line](https://www.freecodecamp.org/news/how-to-code-your-first-algorithm-draw-a-line-ca121f9a1395/) article for the method and explanation on how to draw a line

@@ -293,14 +293,29 @@ void Graphics::GfxUtils2::drawLine(Graphics::Vec2D firstPoint, Graphics::Vec2D s
     }
 }
 
-void Graphics::GfxUtils2::drawHorizontalLine(const Graphics::Vec2D &position, uint16_t width)
+void Graphics::GfxUtils2::drawHorizontalLine(const Graphics::Vec2D &position, int16_t width)
 {
-    drawFilledRectangle(position, {static_cast<int16_t>(width), 1});
+    if (width > 0)
+    {
+        drawFilledRectangle(position, {width, 1});
+    }
+    else if (width < 0)
+    {
+        drawFilledRectangle({static_cast<int16_t>(position.x + width), position.y},
+                {static_cast<int16_t>(std::abs(width)), 1});
+    }
 }
 
-void Graphics::GfxUtils2::drawVerticalLine(const Graphics::Vec2D &position, uint16_t height)
+void Graphics::GfxUtils2::drawVerticalLine(const Graphics::Vec2D &position, int16_t height)
 {
-    drawFilledRectangle(position, {1, static_cast<int16_t>(height)});
+    if (height > 0)
+    {
+        drawFilledRectangle(position, {1, height});
+    }
+    else if (height < 0)
+    {
+        drawFilledRectangle({position.x, static_cast<int16_t>(position.y + height)}, {1, static_cast<int16_t>(std::abs(height))});
+    }
 }
 
 void Graphics::GfxUtils2::drawFilledRectangle(Graphics::Vec2D position, Graphics::Vec2D size)
@@ -405,10 +420,6 @@ void Graphics::GfxUtils2::drawTriangle(Graphics::Vec2D firstPoint, Graphics::Vec
 void Graphics::GfxUtils2::drawFilledTriangle(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint,
                                              Graphics::Vec2D thirdPoint)
 {
-    // This is an adaptation of Adafruit-GFX's filled triangle drawing algorithm
-
-    int16_t a, b, y, last;
-
     // Reorder the points
     if (thirdPoint.y < secondPoint.y)
         std::swap(secondPoint, thirdPoint);
@@ -417,48 +428,51 @@ void Graphics::GfxUtils2::drawFilledTriangle(Graphics::Vec2D firstPoint, Graphic
     if (thirdPoint.y < secondPoint.y)
         std::swap(secondPoint, thirdPoint);
 
-    const Graphics::Vec2D d01 = secondPoint - firstPoint;
-    const Graphics::Vec2D d02 = thirdPoint - firstPoint;
-    const Graphics::Vec2D d12 = thirdPoint - secondPoint;
-    int32_t sa = 0;
-    int32_t sb = 0;
+    // Get the drawing window
+    Graphics::Vec2D windowStart = {};
+    Graphics::Vec2D windowEnd = {};
 
-    if (secondPoint.y == thirdPoint.y)
-        last = secondPoint.y;
-    else
-        last = secondPoint.y - 1;
+    getDrawingWindow(windowStart, windowEnd);
 
-    y = firstPoint.y;
-    while (y <= last)
+    // Check if the line will be seen on the Y axis
+    if (thirdPoint.y < windowStart.y || (firstPoint.y > windowEnd.y && (!m_loopVerticalAxis || m_clippingEnabled)))
+        return;
+
+    // Prepare drawing
+    Bresenham mainLine(firstPoint, thirdPoint, true);
+
+    Bresenham firstLine(firstPoint, secondPoint, true);
+    Bresenham secondLine(secondPoint, thirdPoint, true);
+
+    bool switchedLine = false;
+    Bresenham &activeLine = firstLine;
+
+    // Draw the line
+    Vec2D mainPixelPos = firstPoint;
+    Vec2D activePixelPos = firstPoint;
+
+    // Draw while the lines are still drawing
+    while (!mainLine.hasFinished())
     {
-        a = firstPoint.x + sa / d01.y;
-        b = firstPoint.x + sb / d02.y;
-        sa += d01.x;
-        sb += d02.x;
+        drawHorizontalLine(mainPixelPos, activePixelPos.x - mainPixelPos.x + 1);
 
-        if (a > b)
-            std::swap(a, b);
+        mainPixelPos = mainLine.getNextY(false);
 
-        drawHorizontalLine({a, y}, b - a + 1);
+        // Check if the active line has finished its job
+        if (activeLine.hasFinished())
+        {
+            if (!switchedLine)
+            {
+                switchedLine = true;
+                activeLine = secondLine;
+            }
+            else
+            {
+                break;
+            }
+        }
 
-        ++y;
-    }
-
-    sa = (int32_t)d12.x * (y - secondPoint.y);
-    sb = (int32_t)d02.x * (y - firstPoint.y);
-    while (y <= thirdPoint.y)
-    {
-        a = secondPoint.x + sa / d12.y;
-        b = firstPoint.x + sb / d02.y;
-        sa += d12.x;
-        sb += d02.x;
-
-        if (a > b)
-            std::swap(a, b);
-
-        drawHorizontalLine({a, y}, b - a + 1);
-
-        ++y;
+        activePixelPos = activeLine.getNextY(true);
     }
 }
 

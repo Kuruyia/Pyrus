@@ -25,6 +25,8 @@ void Applet::TestClipping::draw(Hardware::Screen::BaseScreen &target)
 {
     Graphics::GfxUtils2 gfxUtils2(target);
 
+    gfxUtils2.drawFilledTriangle({120, 210}, {100, 230}, {140, 220});
+
     // Test every clipping axis
     gfxUtils2.setClippingEnabled(true);
 

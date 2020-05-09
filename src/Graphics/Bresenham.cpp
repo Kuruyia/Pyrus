@@ -3,10 +3,13 @@
 
 #include "Bresenham.h"
 
-Graphics::Bresenham::Bresenham(Vec2D firstPoint, Vec2D secondPoint)
-: m_firstPoint(firstPoint)
+Graphics::Bresenham::Bresenham(Vec2D firstPoint, Vec2D secondPoint, bool progressGuarantee)
+: m_progressGuarantee(progressGuarantee)
+, m_pointsSwapped(false)
+, m_firstPoint(firstPoint)
 , m_secondPoint(secondPoint)
 , m_currentPosition({0, 0})
+, m_incrementX(false)
 , m_delta({0, 0})
 , m_absDelta({0, 0})
 , m_p({0, 0})
@@ -15,22 +18,36 @@ Graphics::Bresenham::Bresenham(Vec2D firstPoint, Vec2D secondPoint)
     if (m_absDelta.x > m_absDelta.y)
     {
         if (m_firstPoint.x > m_secondPoint.x)
+        {
             std::swap(m_firstPoint, m_secondPoint);
+            m_pointsSwapped = true;
+        }
 
         m_incrementX = true;
     }
     else
     {
         if (m_firstPoint.y > m_secondPoint.y)
+        {
             std::swap(m_firstPoint, m_secondPoint);
-
-        m_incrementX = false;
+            m_pointsSwapped = true;
+        }
     }
 
     m_currentPosition = m_firstPoint;
 
     m_delta = {static_cast<int16_t>(secondPoint.x - firstPoint.x), static_cast<int16_t>(secondPoint.y - firstPoint.y)};
     m_p = {static_cast<int16_t>(2 * m_absDelta.y - m_absDelta.x), static_cast<int16_t>(2 * m_absDelta.x - m_absDelta.y)};
+}
+
+bool Graphics::Bresenham::getProgressGuarantee() const
+{
+    return m_progressGuarantee;
+}
+
+void Graphics::Bresenham::setProgressGuarantee(bool progressGuarantee)
+{
+    m_progressGuarantee = progressGuarantee;
 }
 
 void Graphics::Bresenham::simulateNextPoint(Vec2D &position, Vec2D &p)
@@ -95,7 +112,7 @@ Graphics::Vec2D Graphics::Bresenham::getNextPoint()
 {
     simulateNextPoint(m_currentPosition, m_p);
 
-    return m_currentPosition;
+    return getCurrentPosition();
 }
 
 Graphics::Vec2D Graphics::Bresenham::getNextX(bool skipToLastOfAxis)
@@ -127,7 +144,7 @@ Graphics::Vec2D Graphics::Bresenham::getNextX(bool skipToLastOfAxis)
         }
     }
 
-    return m_currentPosition;
+    return getCurrentPosition();
 }
 
 Graphics::Vec2D Graphics::Bresenham::getNextY(bool skipToLastOfAxis)
@@ -159,6 +176,47 @@ Graphics::Vec2D Graphics::Bresenham::getNextY(bool skipToLastOfAxis)
         }
     }
 
+    return getCurrentPosition();
+}
+
+Graphics::Vec2D Graphics::Bresenham::getOffset() const
+{
+    return {static_cast<int16_t>(m_currentPosition.x - m_firstPoint.x), static_cast<int16_t>(m_currentPosition.y - m_firstPoint.y)};
+}
+
+Graphics::Vec2D Graphics::Bresenham::getCurrentPosition() const
+{
+    // Return the current position according to the guarantee policy
+    if (m_progressGuarantee)
+    {
+        const Vec2D offset = getOffset();
+        Vec2D retPosition = {};
+
+        if (m_pointsSwapped)
+        {
+            retPosition = m_secondPoint;
+
+            retPosition.x -= offset.x;
+            retPosition.y -= offset.y;
+        }
+        else
+        {
+            retPosition = m_firstPoint;
+
+            retPosition.x += offset.x;
+            retPosition.y += offset.y;
+        }
+
+        return retPosition;
+    }
+    else
+    {
+        return m_currentPosition;
+    }
+}
+
+const Graphics::Vec2D &Graphics::Bresenham::getRawCurrentPosition() const
+{
     return m_currentPosition;
 }
 

@@ -33,8 +33,8 @@ public:
     static void getCharGeometry(Graphics::Vec2D &geometry, char c, const FONT_INFO &fontInfo);
 
     void drawLine(Graphics::Vec2D firstPoint, Graphics::Vec2D secondPoint);
-    void drawHorizontalLine(const Graphics::Vec2D &position, uint16_t width);
-    void drawVerticalLine(const Graphics::Vec2D &position, uint16_t height);
+    void drawHorizontalLine(const Graphics::Vec2D &position, int16_t width);
+    void drawVerticalLine(const Graphics::Vec2D &position, int16_t height);
 
     void drawFilledRectangle(Graphics::Vec2D position, Graphics::Vec2D size);
 
