@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "../Graphics/GfxUtils2.h"
+
 #include "BaseWidget.h"
 
 namespace Widget
@@ -16,12 +18,7 @@ public:
         Right,
     };
 
-    enum WrapMode {
-        None,
-        Wrap
-    };
-
-    Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Graphics::Vec2D position,
+    Text(const std::string &id, std::string text, const FONT_INFO *fontInfo, Graphics::Vec2D position,
          const Graphics::Color &textColor = {255, 255, 255},
          const Graphics::Color &backgroundColor = {0, 0, 0});
     ~Text() override = default;
@@ -50,14 +47,17 @@ public:
     void setHorizontalAlignment(HorizontalAlignment horizontalAlignment);
     HorizontalAlignment getHorizontalAlignment() const;
 
-    void setWrapMode(WrapMode wrapMode);
-    WrapMode getWrapMode() const;
+    void setWrapEnabled(bool wrapEnabled);
+    bool isWrapEnabled() const;
 
-    void setSizeLimit(const Graphics::Vec2D &sizeLimit);
-    const Graphics::Vec2D &getSizeLimit() const;
+    void setClippingEnabled(bool clippingEnabled);
+    bool isClippingEnabled() const;
 
-    void setStartHeight(uint16_t startHeight);
-    uint16_t getStartHeight() const;
+    void setClippingStart(const Graphics::Vec2D &clippingStart);
+    const Graphics::Vec2D &getClippingStart() const;
+
+    void setClippingEnd(const Graphics::Vec2D &clippingEnd);
+    const Graphics::Vec2D &getClippingEnd() const;
 
 private:
     Graphics::Vec2D getLastAbsolutePosition() const;
@@ -65,21 +65,20 @@ private:
     uint16_t computeWidth(const std::string &str) const;
     uint16_t computeWidth() const;
 
-    void drawAndGetSize(Hardware::Screen::BaseScreen *target, Graphics::Vec2D &size);
-    void drawStringAt(Hardware::Screen::BaseScreen *target, const std::string &str, Graphics::Vec2D &position,
+    void drawAndGetSize(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2D &size);
+    void drawStringAt(Graphics::GfxUtils2 *gfxTarget, const std::string &str, Graphics::Vec2D &position,
                       int16_t &maxCursorX, const Graphics::Vec2D &basePosition);
 
     std::string m_text;
     const FONT_INFO *m_fontInfo;
     HorizontalAlignment m_horizontalAlignment;
 
-    WrapMode m_wrapMode;
-    Graphics::Vec2D m_sizeLimit;
-
+    bool m_wrapEnabled;
     Graphics::Vec2D m_size;
 
-    uint16_t m_oldStartHeight;
-    uint16_t m_startHeight;
+    bool m_clippingEnabled;
+    Graphics::Vec2D m_clippingStart;
+    Graphics::Vec2D m_clippingEnd;
 
     Graphics::Vec2D m_lastDrawPosition;
     Graphics::Vec2D m_lastSize;

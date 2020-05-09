@@ -93,10 +93,6 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
 
     const Graphics::Vec2D framebufferSize = m_target.getFramebufferSize();
     const uint8_t pixelSize = m_target.getPixelSize();
-    Graphics::Vec2D correctedBasePosition = {
-            position.x,
-            static_cast<int16_t>(m_loopVerticalAxis ? position.y % framebufferSize.y : position.y)
-    };
 
     // Get the drawing window
     Graphics::Vec2D windowStart = {};
@@ -142,12 +138,12 @@ void Graphics::GfxUtils2::drawChar(Graphics::Vec2D position, char c, const FONT_
     {
         overflowTopY = windowStart.y - position.y;
 
-        correctedBasePosition.y += overflowTopY;
+        position.y += overflowTopY;
         drawSize.y -= overflowTopY;
     }
 
     // Set the proper window
-    position.y = correctedBasePosition.y;
+    position.y %= framebufferSize.y;
     m_target.setWindow(position, drawSize);
 
     // Get raw color

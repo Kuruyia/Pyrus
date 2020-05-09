@@ -1,21 +1,22 @@
-#include "../Graphics/GfxUtils.h"
 #include "Container.h"
 
 #include "Text.h"
 
+#include <utility>
+
 #define INTERCHAR_SIZE 2
 
-Widget::Text::Text(const std::string &id, const std::string &text, const FONT_INFO *fontInfo, Graphics::Vec2D position,
+Widget::Text::Text(const std::string &id, std::string text, const FONT_INFO *fontInfo, Graphics::Vec2D position,
                    const Graphics::Color &textColor, const Graphics::Color &backgroundColor)
 : BaseWidget(id, position)
-, m_text(text)
+, m_text(std::move(text))
 , m_fontInfo(fontInfo)
 , m_horizontalAlignment(HorizontalAlignment::Left)
-, m_wrapMode(WrapMode::None)
-, m_sizeLimit({0, 0})
+, m_wrapEnabled(false)
 , m_size({0, 0})
-, m_oldStartHeight(0)
-, m_startHeight(0)
+, m_clippingEnabled(false)
+, m_clippingStart({0, 0})
+, m_clippingEnd({0, 0})
 , m_lastDrawPosition({0, 0})
 , m_lastSize({0, 0})
 , m_textColor(textColor)
@@ -30,22 +31,32 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
     // Dirty flag not set, we don't need to redraw the widget
     if (m_dirty == 0) return;
 
+    // Setup the GfxUtils2 instance
+    std::unique_ptr<Graphics::GfxUtils2> gfxTarget = std::make_unique<Graphics::GfxUtils2>(target);
+    gfxTarget->setFillColor(m_backgroundColor);
+    gfxTarget->setBackgroundColor(m_backgroundColor);
+    gfxTarget->setLoopVerticalAxis(m_loopVerticalPosition);
+
+    if (m_clippingEnabled)
+    {
+        gfxTarget->setClippingEnabled(true);
+        gfxTarget->setClippingStart(m_clippingStart);
+        gfxTarget->setClippingEnd(m_clippingEnd);
+    }
+
     // Geometry has changed, we need to clear the last occupied space
     if (isDirty(DirtyState::Global) || isDirty(DirtyState::Position) || isDirty(DirtyState::Size))
     {
         Graphics::Vec2D lastAbsolutePosition = getLastAbsolutePosition();
-        if (m_loopVerticalPosition)
-            lastAbsolutePosition.y %= target.getFramebufferSize().y;
-
-        Graphics::GfxUtils::drawFilledRectangle(target, lastAbsolutePosition, m_lastSize,
-                                                getParentBackgroundColor(), m_loopVerticalPosition);
+        gfxTarget->drawFilledRectangle(lastAbsolutePosition, m_lastSize);
     }
 
     // Recompute width if it's dirty
     if (isDirty(DirtyState::Global) || isDirty(DirtyState::Size))
         m_width = computeWidth();
 
-    drawAndGetSize(&target, m_size);
+    gfxTarget->setFillColor(m_textColor);
+    drawAndGetSize(gfxTarget.get(), m_size);
 
     // Reset the dirty flag
     clearDirty();
@@ -149,41 +160,48 @@ Widget::Text::HorizontalAlignment Widget::Text::getHorizontalAlignment() const
     return m_horizontalAlignment;
 }
 
-void Widget::Text::setWrapMode(Widget::Text::WrapMode wrapMode)
+void Widget::Text::setWrapEnabled(bool wrapEnabled)
 {
-    m_wrapMode = wrapMode;
+    m_wrapEnabled = wrapEnabled;
     setDirty(DirtyState::Global, true);
 }
 
-Widget::Text::WrapMode Widget::Text::getWrapMode() const
+bool Widget::Text::isWrapEnabled() const
 {
-    return m_wrapMode;
+    return m_wrapEnabled;
 }
 
-void Widget::Text::setSizeLimit(const Graphics::Vec2D &sizeLimit)
+void Widget::Text::setClippingEnabled(bool clippingEnabled)
 {
-    m_sizeLimit = sizeLimit;
-    setDirty(DirtyState::Size, true);
+    m_clippingEnabled = clippingEnabled;
+    setDirty(DirtyState::Global, true);
 }
 
-const Graphics::Vec2D &Widget::Text::getSizeLimit() const
+bool Widget::Text::isClippingEnabled() const
 {
-    return m_sizeLimit;
+    return m_clippingEnabled;
 }
 
-void Widget::Text::setStartHeight(uint16_t startHeight)
+void Widget::Text::setClippingStart(const Graphics::Vec2D &clippingStart)
 {
-    // Only set dirty if the change would be visible
-    if (m_startHeight / m_fontInfo->height != startHeight / m_fontInfo->height)
-        setDirty(DirtyState::Global, true);
-
-    m_oldStartHeight = m_startHeight;
-    m_startHeight = startHeight;
+    m_clippingStart = clippingStart;
+    setDirty(DirtyState::Global, true);
 }
 
-uint16_t Widget::Text::getStartHeight() const
+const Graphics::Vec2D &Widget::Text::getClippingStart() const
 {
-    return m_startHeight;
+    return m_clippingStart;
+}
+
+void Widget::Text::setClippingEnd(const Graphics::Vec2D &clippingEnd)
+{
+    m_clippingEnd = clippingEnd;
+    setDirty(DirtyState::Global, true);
+}
+
+const Graphics::Vec2D &Widget::Text::getClippingEnd() const
+{
+    return m_clippingEnd;
 }
 
 Graphics::Vec2D Widget::Text::getLastAbsolutePosition() const
@@ -226,24 +244,23 @@ uint16_t Widget::Text::computeWidth() const
     return computeWidth(m_text);
 }
 
-void Widget::Text::drawAndGetSize(Hardware::Screen::BaseScreen *target, Graphics::Vec2D &size)
+void Widget::Text::drawAndGetSize(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2D &size)
 {
     // Store the position of this drawing
     const Graphics::Vec2D baseDrawPosition = getDrawPosition();
     Graphics::Vec2D position = baseDrawPosition;
 
     // Save last draw position, take starting height into account
-    m_lastDrawPosition = position;
-    m_lastDrawPosition.y += m_startHeight;
+    if (!m_clippingEnabled)
+        m_lastDrawPosition = position;
+    else
+        m_lastDrawPosition = m_clippingStart;
 
-    // Loop the vertical axis if enabled
-    if (m_loopVerticalPosition && target != nullptr)
-        position.y %= target->getFramebufferSize().y;
+    int16_t maxX = position.x;
 
     // Draw the text depending on the wrapping mode
-    if (m_wrapMode == WrapMode::Wrap)
+    if (m_wrapEnabled)
     {
-        int16_t maxX = position.x;
         size_t i = 0;
         size_t prevI = 0;
 
@@ -258,57 +275,46 @@ void Widget::Text::drawAndGetSize(Hardware::Screen::BaseScreen *target, Graphics
 
             // Extract the next word and check if it needs to be on a new line
             const std::string subtext = m_text.substr(prevI, i - prevI);
-            if (m_sizeLimit.x > 0 && computeWidth(subtext) + (position.x - baseDrawPosition.x) >= m_sizeLimit.x)
+            if (m_clippingEnabled && position.x + computeWidth(subtext) >= m_clippingEnd.x)
             {
                 maxX = std::max(position.x, maxX);
                 position.x = baseDrawPosition.x;
 
                 position.y += m_fontInfo->height;
-                if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - baseDrawPosition.y) >= m_sizeLimit.y + m_startHeight)
+                if (m_clippingEnabled && position.y >= m_clippingEnd.y)
                     break;
             }
 
             // Draw the word
-            drawStringAt(target, subtext, position, maxX, baseDrawPosition);
+            drawStringAt(gfxTarget, subtext, position, maxX, baseDrawPosition);
 
             prevI = i;
-        } while (i < m_text.size() && (m_sizeLimit.y == 0 || m_fontInfo->height + (position.y - baseDrawPosition.y) < m_sizeLimit.y + m_startHeight));
-
-        // Store the size of this drawing
-        // Note that m_lastDrawPosition is used here because it holds the initial values of position
-        m_lastSize = {static_cast<int16_t>(maxX - m_lastDrawPosition.x), static_cast<int16_t>(319)};
+        } while (i < m_text.size());
     }
     else
     {
-        // Loop through all the characters and draw them
-        for (const char c : m_text)
-        {
-            if (c != ' ')
-            {
-                Graphics::Vec2D glyphGeometry = {};
-                Graphics::GfxUtils::getCharGeometry(glyphGeometry, c, *m_fontInfo);
+        // Draw the word
+        drawStringAt(gfxTarget, m_text, position, maxX, baseDrawPosition);
+    }
 
-                if (target != nullptr)
-                    Graphics::GfxUtils::drawChar(*target, position, c, *m_fontInfo, m_textColor,
-                                                 m_backgroundColor, m_loopVerticalPosition);
-
-                position.x += glyphGeometry.x;
-            }
-            else
-            {
-                position.x += m_fontInfo->spacePixels;
-            }
-
-            position.x += INTERCHAR_SIZE;
-        }
-
-        // Store the size of this drawing
-        // Note that m_lastDrawPosition is used here because it holds the initial values of position
-        m_lastSize = {static_cast<int16_t>(position.x - m_lastDrawPosition.x), m_fontInfo->height};
+    // Store the size of this drawing
+    if (m_clippingEnabled)
+    {
+        m_lastSize = {
+                static_cast<int16_t>(std::min(maxX, m_clippingEnd.x) - std::max(baseDrawPosition.x, m_clippingStart.x)),
+                static_cast<int16_t>(std::min(static_cast<int16_t>(position.y + m_fontInfo->height), m_clippingEnd.y) - std::max(baseDrawPosition.y, m_clippingStart.y))
+        };
+    }
+    else
+    {
+        m_lastSize = {
+                static_cast<int16_t>(maxX - baseDrawPosition.x),
+                static_cast<int16_t>(position.y - baseDrawPosition.y + m_fontInfo->height)
+        };
     }
 }
 
-void Widget::Text::drawStringAt(Hardware::Screen::BaseScreen *target, const std::string &str, Graphics::Vec2D &position,
+void Widget::Text::drawStringAt(Graphics::GfxUtils2 *gfxTarget, const std::string &str, Graphics::Vec2D &position,
                                 int16_t &maxCursorX, const Graphics::Vec2D &basePosition)
 {
     for (const char c : str)
@@ -317,11 +323,10 @@ void Widget::Text::drawStringAt(Hardware::Screen::BaseScreen *target, const std:
         {
             // Character is not a space, draw it
             Graphics::Vec2D glyphGeometry = {};
-            Graphics::GfxUtils::getCharGeometry(glyphGeometry, c, *m_fontInfo);
+            Graphics::GfxUtils2::getCharGeometry(glyphGeometry, c, *m_fontInfo);
 
-            if (position.y - basePosition.y >= m_startHeight - m_fontInfo->height && target != nullptr)
-                Graphics::GfxUtils::drawChar(*target, position, c, *m_fontInfo, m_textColor,
-                                             m_backgroundColor, m_loopVerticalPosition);
+            if (gfxTarget != nullptr)
+                gfxTarget->drawChar(position, c, *m_fontInfo);
 
             position.x += glyphGeometry.x;
         }
@@ -335,16 +340,16 @@ void Widget::Text::drawStringAt(Hardware::Screen::BaseScreen *target, const std:
         position.x += INTERCHAR_SIZE;
 
         // Check if we reached the size limit
-        if (m_sizeLimit.x > 0 && position.x - basePosition.x >= m_sizeLimit.x)
+        if (m_clippingEnabled && position.x >= m_clippingEnd.x)
         {
-            if (m_wrapMode == WrapMode::Wrap)
+            if (m_wrapEnabled)
             {
                 // Wrap the text
                 maxCursorX = std::max(maxCursorX, position.x);
                 position.x = basePosition.x;
 
                 position.y += m_fontInfo->height;
-                if (m_sizeLimit.y > 0 && m_fontInfo->height + (position.y - basePosition.y) >= m_sizeLimit.y + m_startHeight)
+                if (m_clippingEnabled && position.y >= m_clippingEnd.y)
                     break;
             }
             else

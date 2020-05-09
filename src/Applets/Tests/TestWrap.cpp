@@ -1,8 +1,11 @@
 #include "../../Fonts/Ubuntu24Font.h"
+#include "../../Events/ButtonEvent.h"
 
 #include "TestWrap.h"
 
 #define APPLET_NAME "TestWrap"
+
+#define CLIPPING_SIZE_Y 319
 
 Applet::TestWrap::TestWrap()
 : BaseApplet(APPLET_NAME)
@@ -12,26 +15,57 @@ Applet::TestWrap::TestWrap()
 , m_offset(0)
 , m_offsetIncrement(10)
 {
-    m_wrappedText.setWrapMode(Widget::Text::WrapMode::Wrap);
-    m_wrappedText.setSizeLimit({240, 320});
+    m_wrappedText.setWrapEnabled(true);
+    m_wrappedText.setClippingEnabled(true);
+    m_wrappedText.setClippingStart({0, static_cast<int16_t>(m_offset)});
+    m_wrappedText.setClippingEnd({240, static_cast<int16_t>(CLIPPING_SIZE_Y + m_offset)});
     m_wrappedText.setLoopVerticalPosition(true);
 }
 
 void Applet::TestWrap::processEvent(Event::BaseEvent *event)
 {
-    m_offsetIncrement = -m_offsetIncrement;
+    using namespace Hardware::BLE::Clients;
+
+    switch (event->getEventId())
+    {
+        case Event::EventIdentifiers::Button:
+        {
+            auto *btnEvent = dynamic_cast<Event::ButtonEvent *>(event);
+            if (btnEvent->isPressed()) return;
+
+            switch (btnEvent->getButtonId())
+            {
+                case 0:
+                    m_offsetIncrement = -m_offsetIncrement;
+
+                    break;
+
+                case 1:
+                    m_offset += m_offsetIncrement;
+                    m_wrappedText.setClippingStart({0, static_cast<int16_t>(m_offset)});
+                    m_wrappedText.setClippingEnd({240, static_cast<int16_t>(CLIPPING_SIZE_Y + m_offset)});
+
+                    break;
+            }
+
+            break;
+        }
+
+        default:
+            break;
+    }
 }
 
 void Applet::TestWrap::update(Platform::BasePlatform &platform)
 {
-    m_offset += m_offsetIncrement;
-    m_wrappedText.setStartHeight(m_offset);
-    platform.getScreenManager().setVerticalScrollOffset(200);
+    if (platform.getScreenManager().getVerticalScrollOffset() != m_offset)
+        platform.getScreenManager().setVerticalScrollOffset(m_offset);
 }
 
 void Applet::TestWrap::draw(Hardware::Screen::BaseScreen &target)
 {
     m_wrappedText.draw(target);
+
     printf("done"); // Just to put a breakpoint here
 }
 
