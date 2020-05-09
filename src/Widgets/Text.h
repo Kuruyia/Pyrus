@@ -80,6 +80,9 @@ private:
     Graphics::Vec2D m_clippingStart;
     Graphics::Vec2D m_clippingEnd;
 
+    Graphics::Vec2D m_oldClippingStart;
+    Graphics::Vec2D m_oldClippingEnd;
+
     Graphics::Vec2D m_lastDrawPosition;
     Graphics::Vec2D m_lastSize;
 

@@ -29,7 +29,7 @@ Widget::Text::Text(const std::string &id, std::string text, const FONT_INFO *fon
 void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
 {
     // Dirty flag not set, we don't need to redraw the widget
-    if (m_dirty == 0) return;
+    if (m_dirty.none()) return;
 
     // Setup the GfxUtils2 instance
     std::unique_ptr<Graphics::GfxUtils2> gfxTarget = std::make_unique<Graphics::GfxUtils2>(target);
@@ -42,6 +42,55 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
         gfxTarget->setClippingEnabled(true);
         gfxTarget->setClippingStart(m_clippingStart);
         gfxTarget->setClippingEnd(m_clippingEnd);
+
+        // Check if clipping has changed since last time
+        if (isDirty(DirtyState::User1))
+        {
+            if (m_clippingStart.x < m_oldClippingStart.x)
+            {
+                gfxTarget->drawFilledRectangle(m_clippingStart, {
+                    static_cast<int16_t>(m_oldClippingStart.x - m_clippingStart.x),
+                    static_cast<int16_t>(m_clippingEnd.y - m_clippingStart.y)
+                });
+            }
+
+            if (m_clippingStart.y < m_oldClippingStart.y)
+            {
+                gfxTarget->drawFilledRectangle(m_clippingStart, {
+                        static_cast<int16_t>(m_clippingEnd.x - m_clippingStart.x),
+                        static_cast<int16_t>(m_oldClippingStart.y - m_clippingStart.y)
+                });
+            }
+
+            if (m_clippingEnd.x > m_oldClippingEnd.x)
+            {
+                gfxTarget->drawFilledRectangle({m_oldClippingEnd.x, m_clippingStart.y}, {
+                        static_cast<int16_t>(m_clippingEnd.x - m_oldClippingEnd.x),
+                        static_cast<int16_t>(m_clippingEnd.y - m_clippingStart.y)
+                });
+            }
+
+            if (m_clippingEnd.y > m_oldClippingEnd.y)
+            {
+                gfxTarget->drawFilledRectangle({m_clippingStart.x, m_oldClippingEnd.y}, {
+                        static_cast<int16_t>(m_clippingEnd.x - m_clippingStart.x),
+                        static_cast<int16_t>(m_clippingEnd.y - m_oldClippingEnd.y)
+                });
+            }
+
+            // Check if we're exclusively here because clipping has changed
+            if (m_dirty.count() == 1)
+            {
+                if (m_clippingStart.y < m_oldClippingStart.y && m_clippingEnd.y <= m_oldClippingEnd.y)
+                {
+                    gfxTarget->setClippingEnd({m_clippingEnd.x, m_oldClippingStart.y});
+                }
+                else if (m_clippingEnd.y > m_oldClippingEnd.y && m_clippingStart.y >= m_oldClippingStart.y)
+                {
+                    gfxTarget->setClippingStart({m_clippingStart.x, m_oldClippingEnd.y});
+                }
+            }
+        }
     }
 
     // Geometry has changed, we need to clear the last occupied space
@@ -184,8 +233,10 @@ bool Widget::Text::isClippingEnabled() const
 
 void Widget::Text::setClippingStart(const Graphics::Vec2D &clippingStart)
 {
+    m_oldClippingStart = m_clippingStart;
     m_clippingStart = clippingStart;
-    setDirty(DirtyState::Global, true);
+
+    setDirty(DirtyState::User1, true);
 }
 
 const Graphics::Vec2D &Widget::Text::getClippingStart() const
@@ -195,8 +246,10 @@ const Graphics::Vec2D &Widget::Text::getClippingStart() const
 
 void Widget::Text::setClippingEnd(const Graphics::Vec2D &clippingEnd)
 {
+    m_oldClippingEnd = m_clippingEnd;
     m_clippingEnd = clippingEnd;
-    setDirty(DirtyState::Global, true);
+
+    setDirty(DirtyState::User1, true);
 }
 
 const Graphics::Vec2D &Widget::Text::getClippingEnd() const

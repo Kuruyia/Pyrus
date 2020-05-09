@@ -5,7 +5,7 @@
 
 #define APPLET_NAME "TestWrap"
 
-#define CLIPPING_SIZE_Y 319
+#define CLIPPING_SIZE_Y 100
 
 Applet::TestWrap::TestWrap()
 : BaseApplet(APPLET_NAME)
