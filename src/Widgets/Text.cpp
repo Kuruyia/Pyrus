@@ -100,12 +100,8 @@ void Widget::Text::draw(Hardware::Screen::BaseScreen &target)
         gfxTarget->drawFilledRectangle(lastAbsolutePosition, m_lastSize);
     }
 
-    // Recompute width if it's dirty
-    if (isDirty(DirtyState::Global) || isDirty(DirtyState::Size))
-        m_width = computeWidth();
-
     gfxTarget->setFillColor(m_textColor);
-    drawAndGetSize(gfxTarget.get(), m_size);
+    drawTextAt(gfxTarget.get(), m_size);
 
     // Reset the dirty flag
     clearDirty();
@@ -160,12 +156,18 @@ Graphics::Vec2D Widget::Text::getDrawPosition() const
 
 int16_t Widget::Text::getWidth() const
 {
-    return m_width;
+    if (m_dirty.none() || m_wrapEnabled)
+        return m_size.x;
+    else
+        return computeWidth(m_text);
 }
 
 int16_t Widget::Text::getHeight() const
 {
-    return m_fontInfo->height;
+    if (m_wrapEnabled)
+        return m_size.y;
+    else
+        return m_fontInfo->height;
 }
 
 Graphics::Vec2D Widget::Text::getSize() const
@@ -292,12 +294,7 @@ uint16_t Widget::Text::computeWidth(const std::string &str) const
     return width;
 }
 
-uint16_t Widget::Text::computeWidth() const
-{
-    return computeWidth(m_text);
-}
-
-void Widget::Text::drawAndGetSize(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2D &size)
+void Widget::Text::drawTextAt(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2D &size)
 {
     // Store the position of this drawing
     const Graphics::Vec2D baseDrawPosition = getDrawPosition();
@@ -330,7 +327,7 @@ void Widget::Text::drawAndGetSize(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2
             const std::string subtext = m_text.substr(prevI, i - prevI);
             if (m_clippingEnabled && position.x + computeWidth(subtext) >= m_clippingEnd.x)
             {
-                maxX = std::max(position.x, maxX);
+                maxX = std::max(maxX, position.x);
                 position.x = baseDrawPosition.x;
 
                 position.y += m_fontInfo->height;
@@ -339,37 +336,30 @@ void Widget::Text::drawAndGetSize(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2
             }
 
             // Draw the word
-            drawStringAt(gfxTarget, subtext, position, maxX, baseDrawPosition);
+            Graphics::Vec2D currentSize = {0, 0};
+            drawStringAt(gfxTarget, subtext, position, currentSize, baseDrawPosition);
 
             prevI = i;
         } while (i < m_text.size());
+
+        // Set the size
+        size = {static_cast<int16_t>(maxX - baseDrawPosition.x), static_cast<int16_t>((position.y - baseDrawPosition.y) + m_fontInfo->height)};
     }
     else
     {
-        // Draw the word
-        drawStringAt(gfxTarget, m_text, position, maxX, baseDrawPosition);
+        // Draw the text
+        drawStringAt(gfxTarget, m_text, position, size, baseDrawPosition);
     }
 
     // Store the size of this drawing
-    if (m_clippingEnabled)
-    {
-        m_lastSize = {
-                static_cast<int16_t>(std::min(maxX, m_clippingEnd.x) - std::max(baseDrawPosition.x, m_clippingStart.x)),
-                static_cast<int16_t>(std::min(static_cast<int16_t>(position.y + m_fontInfo->height), m_clippingEnd.y) - std::max(baseDrawPosition.y, m_clippingStart.y))
-        };
-    }
-    else
-    {
-        m_lastSize = {
-                static_cast<int16_t>(maxX - baseDrawPosition.x),
-                static_cast<int16_t>(position.y - baseDrawPosition.y + m_fontInfo->height)
-        };
-    }
+    m_lastSize = size;
 }
 
 void Widget::Text::drawStringAt(Graphics::GfxUtils2 *gfxTarget, const std::string &str, Graphics::Vec2D &position,
-                                int16_t &maxCursorX, const Graphics::Vec2D &basePosition)
+                                Graphics::Vec2D &size, const Graphics::Vec2D &basePosition)
 {
+    int16_t maxX = position.x;
+
     for (const char c : str)
     {
         if (c != ' ')
@@ -398,7 +388,7 @@ void Widget::Text::drawStringAt(Graphics::GfxUtils2 *gfxTarget, const std::strin
             if (m_wrapEnabled)
             {
                 // Wrap the text
-                maxCursorX = std::max(maxCursorX, position.x);
+                maxX = std::max(maxX, position.x);
                 position.x = basePosition.x;
 
                 position.y += m_fontInfo->height;
@@ -413,6 +403,6 @@ void Widget::Text::drawStringAt(Graphics::GfxUtils2 *gfxTarget, const std::strin
         }
     }
 
-    // Update the maxCursorX one last time
-    maxCursorX = std::max(maxCursorX, position.x);
+    // Set the size
+    size = {static_cast<int16_t>(std::max(maxX, position.x) - basePosition.x), static_cast<int16_t>((position.y - basePosition.y) + m_fontInfo->height)};
 }

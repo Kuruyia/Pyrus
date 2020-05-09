@@ -63,11 +63,10 @@ private:
     Graphics::Vec2D getLastAbsolutePosition() const;
 
     uint16_t computeWidth(const std::string &str) const;
-    uint16_t computeWidth() const;
 
-    void drawAndGetSize(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2D &size);
+    void drawTextAt(Graphics::GfxUtils2 *gfxTarget, Graphics::Vec2D &size);
     void drawStringAt(Graphics::GfxUtils2 *gfxTarget, const std::string &str, Graphics::Vec2D &position,
-                      int16_t &maxCursorX, const Graphics::Vec2D &basePosition);
+                      Graphics::Vec2D &size, const Graphics::Vec2D &basePosition);
 
     std::string m_text;
     const FONT_INFO *m_fontInfo;
