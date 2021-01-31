@@ -1,6 +1,7 @@
 #ifndef PYRUS_BASEBUTTON_H
 #define PYRUS_BASEBUTTON_H
 
+#include <cinttypes>
 #include <functional>
 
 namespace Hardware {

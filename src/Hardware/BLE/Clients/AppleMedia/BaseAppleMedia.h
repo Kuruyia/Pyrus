@@ -2,6 +2,7 @@
 #define PYRUS_BASEAPPLEMEDIA_H
 
 #include <functional>
+#include <string>
 #include <vector>
 
 namespace Hardware {

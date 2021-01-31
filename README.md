@@ -11,7 +11,7 @@ This project is based on JF002's [nrf52-baseproject](https://github.com/JF002/nr
 
 ## Building
 You should follow the [instructions of the nrf52-baseproject](https://github.com/JF002/nrf52-baseproject/blob/master/README.md#nrf52-baseproject) to get a build environment ready to compile Pyrus.  
-This project is currently being compiled using [gcc-arm-none-eabi-8-2019-q3-update](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) (GCC 9 is known **not** to work), and the [nRF5 SDK 16.0.0](https://www.nordicsemi.com/Software-and-tools/Software/nRF5-SDK/Download#infotabs).
+This project is currently being compiled using [gcc-arm-none-eabi-10-2020-q4-major](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) and the [nRF5 SDK 17.0.2](https://www.nordicsemi.com/Software-and-tools/Software/nRF5-SDK/Download#infotabs).
 
 Once your environment is ready, you just have to run the following commands to compile this firmware:
 ```sh

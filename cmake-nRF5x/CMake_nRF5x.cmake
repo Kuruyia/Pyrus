@@ -79,7 +79,7 @@ macro(nRF5x_setup)
                 "${NRF5_SDK_PATH}/modules/nrfx/mdk/system_nrf52.c"
                 "${NRF5_SDK_PATH}/modules/nrfx/mdk/gcc_startup_nrf52.S"
                 )
-        set(SOFTDEVICE_PATH "${NRF5_SDK_PATH}/components/softdevice/s132/hex/s132_nrf52_7.0.1_softdevice.hex")
+        set(SOFTDEVICE_PATH "${NRF5_SDK_PATH}/components/softdevice/s132/hex/s132_nrf52_7.2.0_softdevice.hex")
     endif ()
 
     set(COMMON_FLAGS "-MP -MD -mthumb -mabi=aapcs -Wall -g3 -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin --short-enums ${CPU_FLAGS}")
